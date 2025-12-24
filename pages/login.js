@@ -1,9 +1,5 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -29,52 +25,59 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-lg">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-card-foreground">Login</h1>
+          <p className="text-sm text-muted-foreground mt-2">
             Enter your email and password to login to your account.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
-            <Button type="submit" className="w-full">
-              Login
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter>
-          <p className="text-sm text-gray-600">
+          </p>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="email" className="text-sm font-medium text-card-foreground">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              placeholder="m@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="password" className="text-sm font-medium text-card-foreground">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <button
+            type="submit"
+            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            Login
+          </button>
+        </form>
+        <div className="mt-6 text-center">
+          <p className="text-sm text-muted-foreground">
             Don&apos;t have an account?{' '}
-            <a href="/signup" className="text-blue-600 hover:underline">
+            <a href="/signup" className="text-primary hover:underline">
               Sign up
             </a>
           </p>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
