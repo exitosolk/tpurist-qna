@@ -32,9 +32,10 @@ export default function QuestionsPage() {
     try {
       const response = await fetch(`/api/questions?sort=${sort}`);
       const data = await response.json();
-      setQuestions(data.questions);
+      setQuestions(data.questions || []);
     } catch (error) {
       console.error("Error fetching questions:", error);
+      setQuestions([]);
     } finally {
       setLoading(false);
     }

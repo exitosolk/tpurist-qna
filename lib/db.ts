@@ -17,7 +17,9 @@ function convertQuery(text: string): string {
 export const query = async (text: string, params?: any[]) => {
   try {
     const convertedQuery = convertQuery(text);
-    const [result] = await pool.execute(convertedQuery, params || []);
+    
+    // Use query() instead of execute() to avoid prepared statement issues with subqueries
+    const [result] = await pool.query(convertedQuery, params || []);
     
     // Handle different result types
     if (Array.isArray(result)) {
