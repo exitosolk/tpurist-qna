@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+<<<<<<< HEAD
     "bcryptjs": "^3.0.3",
     "cookie": "^1.1.1",
     "jsonwebtoken": "^9.0.3",
@@ -22,5 +23,38 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "tailwindcss": "^4"
+=======
+    "@auth/core": "^0.34.3",
+    "@hookform/resolvers": "^5.2.2",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
+    "bcryptjs": "^3.0.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cookie-parser": "^1.4.7",
+    "jsonwebtoken": "^9.0.3",
+    "lucide-react": "^0.562.0",
+    "next": "16.1.0",
+    "next-auth": "^4.24.13",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-hook-form": "^7.69.0",
+    "tailwind-merge": "^3.4.0",
+    "zod": "^4.2.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.18",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.23",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.19",
+    "tw-animate-css": "^1.4.0",
+    "typescript": "^5"
+>>>>>>> 9efac6d5213ca1925391402eb89cc27a936c3e38
   }
 }
