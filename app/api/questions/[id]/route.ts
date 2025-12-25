@@ -10,7 +10,7 @@ export async function GET(
 
     // Increment view count
     await query(
-      "UPDATE questions SET views = views + 1 WHERE id = $1",
+      "UPDATE questions SET views = views + 1 WHERE id = ?",
       [questionId]
     );
 
@@ -22,15 +22,18 @@ export async function GET(
         u.display_name,
         u.avatar_url,
         u.reputation,
-        COALESCE(json_agg(
-          DISTINCT jsonb_build_object('id', t.id, 'name', t.name)
-        ) FILTER (WHERE t.id IS NOT NULL), '[]') as tags
+        COALESCE(
+          (SELECT JSON_ARRAYAGG(
+            JSON_OBJECT('id', t.id, 'name', t.name)
+          )
+          FROM question_tags qt2
+          JOIN tags t ON qt2.tag_id = t.id
+          WHERE qt2.question_id = q.id),
+          JSON_ARRAY()
+        ) as tags
       FROM questions q
       JOIN users u ON q.user_id = u.id
-      LEFT JOIN question_tags qt ON q.id = qt.question_id
-      LEFT JOIN tags t ON qt.tag_id = t.id
-      WHERE q.id = $1
-      GROUP BY q.id, u.username, u.display_name, u.avatar_url, u.reputation`,
+      WHERE q.id = ?`,
       [questionId]
     );
 
@@ -53,7 +56,7 @@ export async function GET(
         u.reputation
       FROM answers a
       JOIN users u ON a.user_id = u.id
-      WHERE a.question_id = $1
+      WHERE a.question_id = ?
       ORDER BY a.is_accepted DESC, a.score DESC, a.created_at ASC`,
       [questionId]
     );

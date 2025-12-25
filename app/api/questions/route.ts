@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
 
 // GET /api/questions - List all questions
@@ -20,13 +20,17 @@ export async function GET(req: Request) {
         u.display_name,
         u.avatar_url,
         u.reputation,
-        COALESCE(json_agg(
-          DISTINCT jsonb_build_object('id', t.id, 'name', t.name)
-        ) FILTER (WHERE t.id IS NOT NULL), '[]') as tags
+        COALESCE(
+          (SELECT JSON_ARRAYAGG(
+            JSON_OBJECT('id', t.id, 'name', t.name)
+          )
+          FROM question_tags qt2
+          JOIN tags t ON qt2.tag_id = t.id
+          WHERE qt2.question_id = q.id),
+          JSON_ARRAY()
+        ) as tags
       FROM questions q
       JOIN users u ON q.user_id = u.id
-      LEFT JOIN question_tags qt ON q.id = qt.question_id
-      LEFT JOIN tags t ON qt.tag_id = t.id
     `;
 
     const params: any[] = [];
@@ -34,29 +38,32 @@ export async function GET(req: Request) {
       queryText += ` WHERE EXISTS (
         SELECT 1 FROM question_tags qt2 
         JOIN tags t2 ON qt2.tag_id = t2.id 
-        WHERE qt2.question_id = q.id AND t2.name = $1
+        WHERE qt2.question_id = q.id AND t2.name = ?
       )`;
       params.push(tag);
     }
 
-    queryText += ` GROUP BY q.id, u.username, u.display_name, u.avatar_url, u.reputation`;
+    queryText += ` ORDER BY `;
 
     switch (sort) {
       case "newest":
-        queryText += ` ORDER BY q.created_at DESC`;
+        queryText += `q.created_at DESC`;
         break;
       case "votes":
-        queryText += ` ORDER BY q.score DESC`;
+        queryText += `q.score DESC`;
         break;
       case "active":
-        queryText += ` ORDER BY q.last_activity_at DESC`;
+        queryText += `q.last_activity_at DESC`;
         break;
       case "unanswered":
-        queryText += ` HAVING q.answer_count = 0 ORDER BY q.created_at DESC`;
+        queryText = queryText.replace(' ORDER BY ', ' WHERE q.answer_count = 0 ORDER BY ');
+        queryText += `q.created_at DESC`;
         break;
+      default:
+        queryText += `q.created_at DESC`;
     }
 
-    queryText += ` LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    queryText += ` LIMIT ? OFFSET ?`;
     params.push(limit, offset);
 
     const result = await query(queryText, params);
@@ -99,7 +106,7 @@ export async function POST(req: Request) {
 
     // Get user ID from email
     const userResult = await query(
-      "SELECT id FROM users WHERE email = $1",
+      "SELECT id FROM users WHERE email = ?",
       [session.user.email]
     );
 
@@ -115,49 +122,48 @@ export async function POST(req: Request) {
     // Create question
     const questionResult = await query(
       `INSERT INTO questions (user_id, title, body) 
-       VALUES ($1, $2, $3) 
-       RETURNING *`,
+       VALUES (?, ?, ?)`,
       [userId, title, questionBody]
     );
 
-    const question = questionResult.rows[0];
+    const questionId = questionResult.insertId;
 
     // Add tags
     if (tags && tags.length > 0) {
       for (const tagName of tags) {
         // Get or create tag
         let tagResult = await query(
-          "SELECT id FROM tags WHERE name = $1",
+          "SELECT id FROM tags WHERE name = ?",
           [tagName.toLowerCase()]
         );
 
         let tagId;
         if (tagResult.rows.length === 0) {
           const newTag = await query(
-            "INSERT INTO tags (name) VALUES ($1) RETURNING id",
+            "INSERT INTO tags (name) VALUES (?)",
             [tagName.toLowerCase()]
           );
-          tagId = newTag.rows[0].id;
+          tagId = newTag.insertId;
         } else {
           tagId = tagResult.rows[0].id;
         }
 
         // Link question to tag
         await query(
-          "INSERT INTO question_tags (question_id, tag_id) VALUES ($1, $2)",
-          [question.id, tagId]
+          "INSERT INTO question_tags (question_id, tag_id) VALUES (?, ?)",
+          [questionId, tagId]
         );
 
         // Update tag count
         await query(
-          "UPDATE tags SET question_count = question_count + 1 WHERE id = $1",
+          "UPDATE tags SET question_count = question_count + 1 WHERE id = ?",
           [tagId]
         );
       }
     }
 
     return NextResponse.json(
-      { question, message: "Question created successfully" },
+      { questionId, message: "Question created successfully" },
       { status: 201 }
     );
   } catch (error) {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
 
 export async function POST(
@@ -29,7 +29,7 @@ export async function POST(
 
     // Get user ID
     const userResult = await query(
-      "SELECT id FROM users WHERE email = $1",
+      "SELECT id FROM users WHERE email = ?",
       [session.user.email]
     );
 
@@ -46,24 +46,23 @@ export async function POST(
     // Create answer
     const answerResult = await query(
       `INSERT INTO answers (question_id, user_id, body) 
-       VALUES ($1, $2, $3) 
-       RETURNING *`,
+       VALUES (?, ?, ?)`,
       [questionId, userId, answerBody]
     );
 
-    const answer = answerResult.rows[0];
+    const answerId = answerResult.insertId;
 
     // Update question answer count and last activity
     await query(
       `UPDATE questions 
        SET answer_count = answer_count + 1, 
            last_activity_at = CURRENT_TIMESTAMP 
-       WHERE id = $1`,
+       WHERE id = ?`,
       [questionId]
     );
 
     return NextResponse.json(
-      { answer, message: "Answer posted successfully" },
+      { answerId, message: "Answer posted successfully" },
       { status: 201 }
     );
   } catch (error) {
