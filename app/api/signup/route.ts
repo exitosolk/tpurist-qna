@@ -17,7 +17,7 @@ export async function POST(req: Request) {
 
     // Check if user already exists
     const existingUser = await query(
-      "SELECT * FROM users WHERE email = $1 OR username = $2",
+      "SELECT * FROM users WHERE email = ? OR username = ?",
       [email, username]
     );
 
@@ -34,12 +34,19 @@ export async function POST(req: Request) {
     // Create user
     const result = await query(
       `INSERT INTO users (email, username, password_hash, display_name) 
-       VALUES ($1, $2, $3, $4) 
-       RETURNING id, email, username, display_name`,
+       VALUES (?, ?, ?, ?)`,
       [email, username, hashedPassword, displayName || username]
     );
 
-    const user = result.rows[0];
+    const userId = result.insertId;
+
+    // Get the created user
+    const userResult = await query(
+      "SELECT id, email, username, display_name FROM users WHERE id = ?",
+      [userId]
+    );
+
+    const user = userResult.rows[0];
 
     return NextResponse.json(
       { 
@@ -53,10 +60,19 @@ export async function POST(req: Request) {
       },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Signup error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      code: error.code,
+      sqlMessage: error.sqlMessage,
+      sql: error.sql
+    });
     return NextResponse.json(
-      { error: "Internal server error" },
+      { 
+        error: "Internal server error",
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     );
   }

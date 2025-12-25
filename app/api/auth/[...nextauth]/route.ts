@@ -18,32 +18,37 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const result = await query(
-          "SELECT * FROM users WHERE email = $1",
-          [credentials.email]
-        );
+        try {
+          const result = await query(
+            "SELECT * FROM users WHERE email = ?",
+            [credentials.email]
+          );
 
-        const user = result.rows[0];
+          const user = result.rows[0];
 
-        if (!user) {
+          if (!user) {
+            return null;
+          }
+
+          const isValidPassword = await bcrypt.compare(
+            credentials.password,
+            user.password_hash
+          );
+
+          if (!isValidPassword) {
+            return null;
+          }
+
+          return {
+            id: user.id.toString(),
+            email: user.email,
+            name: user.display_name || user.username,
+            image: user.avatar_url,
+          };
+        } catch (error) {
+          console.error("Auth error:", error);
           return null;
         }
-
-        const isValidPassword = await bcrypt.compare(
-          credentials.password,
-          user.password_hash
-        );
-
-        if (!isValidPassword) {
-          return null;
-        }
-
-        return {
-          id: user.id.toString(),
-          email: user.email,
-          name: user.display_name || user.username,
-          image: user.avatar_url,
-        };
       }
     }),
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET

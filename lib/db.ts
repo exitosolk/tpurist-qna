@@ -9,9 +9,33 @@ const pool = mysql.createPool({
   keepAliveInitialDelay: 0
 });
 
+// Helper to convert PostgreSQL placeholders ($1, $2) to MySQL (?)
+function convertQuery(text: string): string {
+  return text.replace(/\$\d+/g, () => '?');
+}
+
 export const query = async (text: string, params?: any[]) => {
-  const [rows] = await pool.execute(text, params);
-  return { rows };
+  try {
+    const convertedQuery = convertQuery(text);
+    const [result] = await pool.execute(convertedQuery, params || []);
+    
+    // Handle different result types
+    if (Array.isArray(result)) {
+      return { rows: result };
+    } else {
+      // For INSERT/UPDATE/DELETE, return result with insertId, affectedRows, etc.
+      return { rows: result, insertId: (result as any).insertId };
+    }
+  } catch (error: any) {
+    console.error('Database query error:', {
+      query: text,
+      params,
+      error: error.message,
+      code: error.code,
+      sqlMessage: error.sqlMessage
+    });
+    throw error;
+  }
 };
 
 export default pool;
