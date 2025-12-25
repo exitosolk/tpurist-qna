@@ -1,129 +1,174 @@
-# OneCeylon - Tourist Q&A Platform
+# OneCeylon - Travel Q&A Platform 🌴
 
-A modern Next.js application with authentication, built for oneceylon.space.
+Your **StackOverflow for travelers** exploring Sri Lanka! Built with Next.js 15, TypeScript, and PostgreSQL.
 
-## Features
+## 🚀 Quick Start
 
-- ✅ User authentication (signup, login, logout)
-- ✅ JWT-based session management
-- ✅ MySQL database integration
-- ✅ Secure password hashing with bcrypt
-- ✅ Responsive UI with Tailwind CSS
-- ✅ Server-side API routes
+### 1. Clone and Install
 
-## Tech Stack
+```bash
+git clone <repository-url>
+cd oneceylon
+npm install
+```
 
-- **Framework**: Next.js 16.1 (App Router)
-- **Language**: JavaScript
-- **Database**: MySQL
-- **Auth**: JWT + bcryptjs
-- **Styling**: Tailwind CSS
+### 2. Set Up Database
 
-## Getting Started
+Create a PostgreSQL database:
 
-### Prerequisites
+```bash
+createdb oneceylon
+psql -d oneceylon -f database/schema.sql
+```
 
-- Node.js 18+ installed
-- MySQL server running
-- npm or yarn
+Or use a cloud database (Supabase, Neon, Railway).
 
-### Installation
+### 3. Configure Environment
 
-1. **Clone or download the project**
+Create `.env.local`:
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/oneceylon
+NEXTAUTH_SECRET=your-random-secret-here
+NEXTAUTH_URL=http://localhost:3000
+```
 
-3. **Set up the database**
-   
-   Run the SQL schema in your MySQL server:
-   ```bash
-   mysql -u root -p < database/schema.sql
-   ```
-   
-   Or manually create the database and table using the schema in `database/schema.sql`
+Generate NEXTAUTH_SECRET:
+```bash
+openssl rand -base64 32
+```
 
-4. **Configure environment variables**
-   
-   Create `.env.local` file in the root directory:
-   ```env
-   DB_HOST=localhost
-   DB_USER=your_mysql_user
-   DB_PASSWORD=your_mysql_password
-   DB_NAME=touristqna
-   JWT_SECRET=your_random_secret_key_here
-   NEXT_PUBLIC_APP_URL=http://localhost:3000
-   ```
+### 4. Run Development Server
 
-5. **Run the development server**
-   ```bash
-   npm run dev
-   ```
-   
-   Open [http://localhost:3000](http://localhost:3000)
+```bash
+npm run dev
+```
 
-6. **Build for production**
-   ```bash
-   npm run build
-   npm start
-   ```
+Open [http://localhost:3000](http://localhost:3000)
 
-## Project Structure
+## ✨ Features
+
+- 🔐 **Authentication** - Secure login with NextAuth.js
+- ❓ **Q&A System** - Ask and answer travel questions
+- 🗳️ **Voting** - Upvote helpful content
+- 🏷️ **Tags** - Categorize by destinations
+- 👤 **User Profiles** - Reputation and badges
+- 💬 **Comments** - Discuss questions and answers
+- ✅ **Accepted Answers** - Mark best solutions
+- 🔍 **Search & Filter** - Find relevant content
+
+## 📁 Project Structure
 
 ```
 oneceylon/
-├── app/
-│   ├── api/
-│   │   ├── login/route.js      # Login endpoint
-│   │   ├── logout/route.js     # Logout endpoint
-│   │   ├── profile/route.js    # User profile endpoint
-│   │   └── signup/route.js     # Signup endpoint
-│   ├── login/page.js           # Login page
-│   ├── signup/page.js          # Signup page
-│   ├── profile/page.js         # User profile page
-│   ├── layout.js               # Root layout
-│   └── page.js                 # Home page
-├── lib/
-│   └── db.js                   # Database connection pool
-├── database/
-│   └── schema.sql              # MySQL database schema
-├── .env.local                  # Environment variables (create this)
-└── package.json
+├── app/                    # Next.js App Router
+│   ├── api/               # API routes
+│   │   ├── auth/         # NextAuth endpoints
+│   │   ├── questions/    # Questions CRUD
+│   │   ├── votes/        # Voting system
+│   │   └── signup/       # User registration
+│   ├── questions/        # Questions pages
+│   │   ├── [id]/        # Question detail
+│   │   └── ask/         # Ask question
+│   ├── login/           # Login page
+│   ├── signup/          # Registration page
+│   └── layout.tsx       # Root layout
+├── components/          # Reusable components
+├── database/           # Database schema
+├── lib/               # Utilities
+│   ├── db.ts         # Database connection
+│   └── utils.ts      # Helper functions
+├── public/           # Static assets
+└── DEPLOYMENT.md    # Deployment guide
 ```
 
-## API Endpoints
+## 🗄️ Database Schema
 
-### POST `/api/signup`
-Create a new user account
-```json
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "securepassword"
-}
+- **users** - User accounts and profiles
+- **questions** - Travel questions
+- **answers** - Question responses
+- **votes** - Upvotes/downvotes
+- **tags** - Topic categorization
+- **comments** - Discussion threads
+- **badges** - User achievements
+
+## 🛠️ Tech Stack
+
+- **Framework:** Next.js 15 (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **Database:** PostgreSQL
+- **ORM:** pg (native PostgreSQL)
+- **Auth:** NextAuth.js
+- **UI Components:** Radix UI
+- **Icons:** Lucide React
+- **Markdown:** react-markdown
+- **Date Formatting:** date-fns
+
+## 🌐 Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions for:
+- Vercel (Recommended)
+- VPS (DigitalOcean, AWS, etc.)
+- Docker
+
+Quick deploy to Vercel:
+```bash
+vercel
 ```
 
-### POST `/api/login`
-Login and receive JWT token in cookie
-```json
-{
-  "email": "john@example.com",
-  "password": "securepassword"
-}
+## 📝 Scripts
+
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run start    # Start production server
+npm run lint     # Run ESLint
 ```
 
-### GET `/api/profile`
-Get current user profile (requires authentication)
+## 🔒 Security
 
-### POST `/api/logout`
-Logout and clear authentication cookie
+- Passwords hashed with bcrypt
+- SQL injection protection with parameterized queries
+- CSRF protection with NextAuth
+- Environment variables for secrets
+- Secure session management
 
-## Deployment to VPS (oneceylon.space)
+## 🤝 Contributing
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
+Contributions welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
-## License
+## 📄 License
 
-MIT
+MIT License - see LICENSE file
+
+## 🆘 Support
+
+For issues or questions:
+- Check [DEPLOYMENT.md](DEPLOYMENT.md)
+- Review database schema in `database/schema.sql`
+- Check environment variables in `.env.local`
+
+## 🎯 Roadmap
+
+- [ ] Email notifications
+- [ ] Rich text editor
+- [ ] Image uploads
+- [ ] Advanced search
+- [ ] Mobile app
+- [ ] Multilingual support
+- [ ] Travel itineraries
+- [ ] Photo galleries
+- [ ] Maps integration
+
+## 🌟 Built for OneCeylon.space
+
+A community platform connecting travelers exploring Sri Lanka's beautiful destinations!
+
+---
+
+Made with ❤️ for travelers worldwide

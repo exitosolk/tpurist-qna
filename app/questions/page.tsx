@@ -1,0 +1,154 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
+
+interface Question {
+  id: number;
+  title: string;
+  body: string;
+  score: number;
+  views: number;
+  answer_count: number;
+  created_at: string;
+  username: string;
+  display_name: string;
+  reputation: number;
+  tags: Array<{ id: number; name: string }>;
+}
+
+export default function QuestionsPage() {
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState("newest");
+
+  useEffect(() => {
+    fetchQuestions();
+  }, [sort]);
+
+  const fetchQuestions = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/questions?sort=${sort}`);
+      const data = await response.json();
+      setQuestions(data.questions);
+    } catch (error) {
+      console.error("Error fetching questions:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="border-b bg-white shadow-sm">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-blue-600">OneCeylon</h1>
+          </Link>
+          <nav className="flex gap-4 items-center">
+            <Link href="/questions" className="text-gray-700 hover:text-blue-600 font-medium">
+              Questions
+            </Link>
+            <Link href="/tags" className="text-gray-700 hover:text-blue-600">Tags</Link>
+            <Link href="/users" className="text-gray-700 hover:text-blue-600">Users</Link>
+            <Link
+              href="/questions/ask"
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Ask Question
+            </Link>
+          </nav>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-bold">All Questions</h2>
+        </div>
+
+        <div className="mb-6 flex gap-2">
+          {["newest", "active", "votes", "unanswered"].map((sortOption) => (
+            <button
+              key={sortOption}
+              onClick={() => setSort(sortOption)}
+              className={`px-4 py-2 rounded ${
+                sort === sortOption
+                  ? "bg-blue-600 text-white"
+                  : "bg-white border hover:bg-gray-50"
+              }`}
+            >
+              {sortOption.charAt(0).toUpperCase() + sortOption.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        {loading ? (
+          <div className="text-center py-12">Loading...</div>
+        ) : questions.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+            <p className="text-gray-600 mb-4">No questions yet. Be the first to ask!</p>
+            <Link
+              href="/questions/ask"
+              className="inline-block px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Ask a Question
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {questions.map((question) => (
+              <div key={question.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+                <div className="flex gap-6">
+                  <div className="flex flex-col gap-2 text-sm text-gray-600 min-w-24">
+                    <div className="text-center">
+                      <div className="font-semibold text-lg">{question.score}</div>
+                      <div>votes</div>
+                    </div>
+                    <div className={`text-center ${question.answer_count > 0 ? 'text-green-600' : ''}`}>
+                      <div className="font-semibold text-lg">{question.answer_count}</div>
+                      <div>answers</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-semibold text-lg">{question.views}</div>
+                      <div>views</div>
+                    </div>
+                  </div>
+
+                  <div className="flex-1">
+                    <Link href={`/questions/${question.id}`}>
+                      <h3 className="text-xl font-semibold text-blue-600 hover:text-blue-800 mb-2">
+                        {question.title}
+                      </h3>
+                    </Link>
+                    <p className="text-gray-600 mb-3 line-clamp-2">
+                      {question.body.substring(0, 200)}...
+                    </p>
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-2 flex-wrap">
+                        {question.tags?.map((tag) => (
+                          <Link
+                            key={tag.id}
+                            href={`/questions?tag=${tag.name}`}
+                            className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm hover:bg-blue-100"
+                          >
+                            {tag.name}
+                          </Link>
+                        ))}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        asked {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })} by{" "}
+                        <span className="text-blue-600 font-medium">{question.display_name || question.username}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
