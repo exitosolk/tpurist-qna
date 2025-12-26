@@ -16,7 +16,7 @@ export async function GET() {
 
     // Get user profile
     const userResult = await query(
-      "SELECT id, email, username, display_name, reputation, created_at, avatar_url, bio FROM users WHERE email = ?",
+      "SELECT id, email, username, display_name, reputation, created_at, avatar_url, bio, email_verified FROM users WHERE email = ?",
       [session.user.email]
     );
 

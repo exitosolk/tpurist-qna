@@ -16,6 +16,7 @@ interface UserProfile {
   created_at: string;
   avatar_url?: string;
   bio?: string;
+  email_verified?: boolean;
 }
 
 interface Question {
@@ -55,6 +56,11 @@ export default function ProfilePage() {
   const [follows, setFollows] = useState<Follow[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"questions" | "answers" | "bookmarks">("questions");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ display_name: "", bio: "" });
+  const [saving, setSaving] = useState(false);
+  const [sendingVerification, setSendingVerification] = useState(false);
+  const [verificationMessage, setVerificationMessage] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -76,6 +82,10 @@ export default function ProfilePage() {
         setProfile(data.profile);
         setQuestions(data.questions || []);
         setAnswers(data.answers || []);
+        setEditForm({
+          display_name: data.profile.display_name || "",
+          bio: data.profile.bio || "",
+        });
       }
 
       // Fetch follows
@@ -88,6 +98,54 @@ export default function ProfilePage() {
       console.error("Error fetching profile:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    try {
+      const response = await fetch("/api/profile/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setProfile(data.user);
+        setIsEditing(false);
+      } else {
+        alert(data.error || "Failed to update profile");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSendVerification = async () => {
+    setSendingVerification(true);
+    setVerificationMessage("");
+    try {
+      const response = await fetch("/api/verify-email/send", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setVerificationMessage("Verification email sent! Check your inbox.");
+      } else {
+        setVerificationMessage(data.error || "Failed to send verification email");
+      }
+    } catch (error) {
+      console.error("Error sending verification:", error);
+      setVerificationMessage("Failed to send verification email");
+    } finally {
+      setSendingVerification(false);
     }
   };
 
@@ -114,6 +172,34 @@ export default function ProfilePage() {
       <Navbar />
 
       <main className="container mx-auto px-4 py-8 max-w-5xl">
+        {/* Email Verification Banner */}
+        {profile && !profile.email_verified && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded">
+            <div className="flex items-start">
+              <div className="flex-1">
+                <h3 className="text-yellow-800 font-semibold mb-1">
+                  Verify your email address
+                </h3>
+                <p className="text-yellow-700 text-sm mb-3">
+                  Verify your email to unlock all features and earn <strong>10 reputation points</strong>!
+                </p>
+                <button
+                  onClick={handleSendVerification}
+                  disabled={sendingVerification}
+                  className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:opacity-50 text-sm font-medium"
+                >
+                  {sendingVerification ? "Sending..." : "Send Verification Email"}
+                </button>
+                {verificationMessage && (
+                  <p className={`mt-2 text-sm ${verificationMessage.includes("sent") ? "text-green-700" : "text-red-700"}`}>
+                    {verificationMessage}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Profile Header */}
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
           <div className="flex items-start gap-6">
@@ -121,19 +207,83 @@ export default function ProfilePage() {
               {profile.display_name?.charAt(0).toUpperCase() || profile.username.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-1">{profile.display_name || profile.username}</h1>
-              <p className="text-gray-600 mb-3">@{profile.username}</p>
-              <div className="flex gap-6 text-sm">
-                <div>
-                  <span className="text-2xl font-bold text-blue-600">{profile.reputation}</span>
-                  <span className="text-gray-600 ml-2">reputation</span>
+              {isEditing ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Display Name
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.display_name}
+                      onChange={(e) => setEditForm({ ...editForm, display_name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      maxLength={100}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Bio
+                    </label>
+                    <textarea
+                      value={editForm.bio}
+                      onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      rows={4}
+                      maxLength={1000}
+                      placeholder="Tell us about yourself..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      {editForm.bio.length}/1000 characters
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveProfile}
+                      disabled={saving}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {saving ? "Saving..." : "Save Changes"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsEditing(false);
+                        setEditForm({
+                          display_name: profile.display_name || "",
+                          bio: profile.bio || "",
+                        });
+                      }}
+                      className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-gray-600">Member for </span>
-                  <span className="font-medium">{formatDistanceToNow(new Date(profile.created_at))}</span>
-                </div>
-              </div>
-              {profile.bio && <p className="mt-4 text-gray-700">{profile.bio}</p>}
+              ) : (
+                <>
+                  <div className="flex items-center gap-3 mb-1">
+                    <h1 className="text-3xl font-bold">{profile.display_name || profile.username}</h1>
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      Edit Profile
+                    </button>
+                  </div>
+                  <p className="text-gray-600 mb-3">@{profile.username}</p>
+                  <div className="flex gap-6 text-sm">
+                    <div>
+                      <span className="text-2xl font-bold text-blue-600">{profile.reputation}</span>
+                      <span className="text-gray-600 ml-2">reputation</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Member for </span>
+                      <span className="font-medium">{formatDistanceToNow(new Date(profile.created_at))}</span>
+                    </div>
+                  </div>
+                  {profile.bio && <p className="mt-4 text-gray-700">{profile.bio}</p>}
+                </>
+              )}
             </div>
           </div>
         </div>
