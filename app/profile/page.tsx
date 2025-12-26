@@ -184,15 +184,8 @@ export default function ProfilePage() {
               >
                 Bookmarks ({follows.length})
               </button>
-              <button
-                onClick={() => setActiveTab("bookmarks")}
-                className={`pb-4 px-1 border-b-2 font-medium ${
-                  activeTab === "bookmarks"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                Bookmarks ({follows.length})
+            </nav>
+          </div>
               </button>
             </nav>
           </div>
