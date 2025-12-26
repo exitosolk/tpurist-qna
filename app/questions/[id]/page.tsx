@@ -9,6 +9,7 @@ import { extractIdFromSlug } from "@/lib/slug";
 import Navbar from "@/components/Navbar";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import MarkdownEditor from "@/components/MarkdownEditor";
+import Tooltip from "@/components/Tooltip";
 import { Share2, Edit, Bookmark, Check } from "lucide-react";
 
 interface User {
@@ -422,21 +423,25 @@ export default function QuestionDetailPage() {
               {/* Vote buttons - hide for own content */}
               {currentUserId !== question.user_id && (
                 <div className="flex flex-col items-center gap-2">
-                  <button
-                    onClick={() => handleVote("question", question.id, 1)}
-                    className="p-2 hover:bg-gray-100 rounded"
-                    disabled={!session}
-                  >
-                    ▲
-                  </button>
+                  <Tooltip content="This question shows research effort; it is useful and clear">
+                    <button
+                      onClick={() => handleVote("question", question.id, 1)}
+                      className="p-2 hover:bg-gray-100 rounded"
+                      disabled={!session}
+                    >
+                      ▲
+                    </button>
+                  </Tooltip>
                   <span className="text-2xl font-semibold">{question.score}</span>
-                  <button
-                    onClick={() => handleVote("question", question.id, -1)}
-                    className="p-2 hover:bg-gray-100 rounded"
-                    disabled={!session}
-                  >
-                    ▼
-                  </button>
+                  <Tooltip content="This question does not show any research effort; it is unclear or not useful">
+                    <button
+                      onClick={() => handleVote("question", question.id, -1)}
+                      className="p-2 hover:bg-gray-100 rounded"
+                      disabled={!session}
+                    >
+                      ▼
+                    </button>
+                  </Tooltip>
                 </div>
               )}
               {currentUserId === question.user_id && (
@@ -464,26 +469,30 @@ export default function QuestionDetailPage() {
 
                 {/* Question Action Buttons */}
                 <div className="flex flex-wrap gap-4 mb-6 text-sm text-gray-600">
-                  <button
-                    onClick={handleShareQuestion}
-                    className="flex items-center gap-1 hover:text-blue-600"
-                  >
-                    {copiedQuestion ? (
-                      <><Check className="w-4 h-4" /> Link copied!</>
-                    ) : (
-                      <><Share2 className="w-4 h-4" /> Share</>
-                    )}
-                  </button>
+                  <Tooltip content="Share a link to this question">
+                    <button
+                      onClick={handleShareQuestion}
+                      className="flex items-center gap-1 hover:text-blue-600"
+                    >
+                      {copiedQuestion ? (
+                        <><Check className="w-4 h-4" /> Link copied!</>
+                      ) : (
+                        <><Share2 className="w-4 h-4" /> Share</>
+                      )}
+                    </button>
+                  </Tooltip>
 
-                  <button
-                    onClick={handleFollowQuestion}
-                    className={`flex items-center gap-1 ${
-                      followedQuestion ? "text-blue-600" : "hover:text-blue-600"
-                    }`}
-                  >
-                    <Bookmark className={`w-4 h-4 ${followedQuestion ? "fill-current" : ""}`} />
-                    {followedQuestion ? "Bookmarked" : "Bookmark"}
-                  </button>
+                  <Tooltip content={followedQuestion ? "Remove this question from your bookmarks" : "Bookmark this question"}>
+                    <button
+                      onClick={handleFollowQuestion}
+                      className={`flex items-center gap-1 ${
+                        followedQuestion ? "text-blue-600" : "hover:text-blue-600"
+                      }`}
+                    >
+                      <Bookmark className={`w-4 h-4 ${followedQuestion ? "fill-current" : ""}`} />
+                      {followedQuestion ? "Bookmarked" : "Bookmark"}
+                    </button>
+                  </Tooltip>
                 </div>
 
                 <div className="flex justify-end">
@@ -522,23 +531,29 @@ export default function QuestionDetailPage() {
                   {/* Vote buttons - hide for own content */}
                   {currentUserId !== answer.user_id && (
                     <div className="flex flex-col items-center gap-2">
-                      <button
-                        onClick={() => handleVote("answer", answer.id, 1)}
-                        className="p-2 hover:bg-gray-100 rounded"
-                        disabled={!session}
-                      >
-                        ▲
-                      </button>
+                      <Tooltip content="This answer is useful">
+                        <button
+                          onClick={() => handleVote("answer", answer.id, 1)}
+                          className="p-2 hover:bg-gray-100 rounded"
+                          disabled={!session}
+                        >
+                          ▲
+                        </button>
+                      </Tooltip>
                       <span className="text-2xl font-semibold">{answer.score}</span>
-                      <button
-                        onClick={() => handleVote("answer", answer.id, -1)}
-                        className="p-2 hover:bg-gray-100 rounded"
-                        disabled={!session}
-                      >
-                        ▼
-                      </button>
+                      <Tooltip content="This answer is not useful">
+                        <button
+                          onClick={() => handleVote("answer", answer.id, -1)}
+                          className="p-2 hover:bg-gray-100 rounded"
+                          disabled={!session}
+                        >
+                          ▼
+                        </button>
+                      </Tooltip>
                       {answer.is_accepted && (
-                        <div className="text-green-600 text-2xl">✓</div>
+                        <Tooltip content="The question owner accepted this as the best answer">
+                          <div className="text-green-600 text-2xl">✓</div>
+                        </Tooltip>
                       )}
                     </div>
                   )}
@@ -548,7 +563,9 @@ export default function QuestionDetailPage() {
                       <span className="text-2xl font-semibold">{answer.score}</span>
                       <div className="p-2 text-gray-400">▼</div>
                       {answer.is_accepted && (
-                        <div className="text-green-600 text-2xl">✓</div>
+                        <Tooltip content="The question owner accepted this as the best answer">
+                          <div className="text-green-600 text-2xl">✓</div>
+                        </Tooltip>
                       )}
                     </div>
                   )}
@@ -582,53 +599,63 @@ export default function QuestionDetailPage() {
 
                     {/* Action buttons */}
                     <div className="flex flex-wrap gap-4 my-4 text-sm text-gray-600">
-                      <button
-                        onClick={() => handleShareAnswer(answer.id)}
-                        className="flex items-center gap-1 hover:text-blue-600"
-                      >
-                        {copiedAnswerId === answer.id ? (
-                          <><Check className="w-4 h-4" /> Link copied!</>
-                        ) : (
-                          <><Share2 className="w-4 h-4" /> Share</>
-                        )}
-                      </button>
-
-                      {currentUserId === answer.user_id && editingAnswerId !== answer.id && (
+                      <Tooltip content="Share a link to this answer">
                         <button
-                          onClick={() => handleEditAnswer(answer.id, answer.body)}
+                          onClick={() => handleShareAnswer(answer.id)}
                           className="flex items-center gap-1 hover:text-blue-600"
                         >
-                          <Edit className="w-4 h-4" /> Edit
+                          {copiedAnswerId === answer.id ? (
+                            <><Check className="w-4 h-4" /> Link copied!</>
+                          ) : (
+                            <><Share2 className="w-4 h-4" /> Share</>
+                          )}
                         </button>
+                      </Tooltip>
+
+                      {currentUserId === answer.user_id && editingAnswerId !== answer.id && (
+                        <Tooltip content="Edit this answer">
+                          <button
+                            onClick={() => handleEditAnswer(answer.id, answer.body)}
+                            className="flex items-center gap-1 hover:text-blue-600"
+                          >
+                            <Edit className="w-4 h-4" /> Edit
+                          </button>
+                        </Tooltip>
                       )}
 
-                      <button
-                        onClick={() => handleFollowAnswer(answer.id)}
-                        className={`flex items-center gap-1 ${
-                          followedAnswers[answer.id] ? "text-blue-600" : "hover:text-blue-600"
-                        }`}
-                      >
-                        <Bookmark className={`w-4 h-4 ${followedAnswers[answer.id] ? "fill-current" : ""}`} />
-                        {followedAnswers[answer.id] ? "Following" : "Follow"}
-                      </button>
+                      <Tooltip content={followedAnswers[answer.id] ? "Remove this answer from your bookmarks" : "Bookmark this answer to save it for later"}>
+                        <button
+                          onClick={() => handleFollowAnswer(answer.id)}
+                          className={`flex items-center gap-1 ${
+                            followedAnswers[answer.id] ? "text-blue-600" : "hover:text-blue-600"
+                          }`}
+                        >
+                          <Bookmark className={`w-4 h-4 ${followedAnswers[answer.id] ? "fill-current" : ""}`} />
+                          {followedAnswers[answer.id] ? "Following" : "Follow"}
+                        </button>
+                      </Tooltip>
 
                       {question && currentUserId === question.user_id && !answer.is_accepted && (
-                        <button
-                          onClick={() => handleAcceptAnswer(answer.id)}
-                          className="flex items-center gap-1 text-green-600 hover:text-green-700 font-medium"
-                        >
-                          ✓ Accept Answer
-                        </button>
+                        <Tooltip content="Mark this answer as the accepted solution">
+                          <button
+                            onClick={() => handleAcceptAnswer(answer.id)}
+                            className="flex items-center gap-1 text-green-600 hover:text-green-700 font-medium"
+                          >
+                            ✓ Accept Answer
+                          </button>
+                        </Tooltip>
                       )}
                       
                       <span className="text-gray-300">|</span>
                       
-                      <button
-                        onClick={() => setShowCommentForm({ ...showCommentForm, [answer.id]: !showCommentForm[answer.id] })}
-                        className="hover:text-blue-600"
-                      >
-                        Add a comment
-                      </button>
+                      <Tooltip content="Add a comment to this answer">
+                        <button
+                          onClick={() => setShowCommentForm({ ...showCommentForm, [answer.id]: !showCommentForm[answer.id] })}
+                          className="hover:text-blue-600"
+                        >
+                          Add a comment
+                        </button>
+                      </Tooltip>
                     </div>
 
                     {/* Comments */}
