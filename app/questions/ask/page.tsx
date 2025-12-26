@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
 
 const POPULAR_TAGS = [
   "colombo", "kandy", "galle", "ella", "sigiriya", "beaches", "wildlife",
@@ -81,7 +82,8 @@ export default function AskQuestionPage() {
         throw new Error(data.error || "Something went wrong");
       }
 
-      router.push(`/questions/${data.question.id}`);
+      // Redirect to the newly created question using slug
+      router.push(`/questions/${data.slug || data.questionId}`);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -91,13 +93,7 @@ export default function AskQuestionPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-blue-600">OneCeylon</h1>
-          </Link>
-        </div>
-      </header>
+      <Navbar />
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <h2 className="text-3xl font-bold mb-2">Ask a Travel Question</h2>

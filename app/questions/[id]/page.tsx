@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { useParams } from "next/navigation";
+import { extractIdFromSlug } from "@/lib/slug";
 
 interface User {
   username: string;
@@ -47,7 +48,9 @@ export default function QuestionDetailPage() {
 
   const fetchQuestion = async () => {
     try {
-      const response = await fetch(`/api/questions/${params.id}`);
+      // Extract ID from slug if needed (e.g., "best-beaches-galle-123" -> 123)
+      const questionId = extractIdFromSlug(params.id as string) || params.id;
+      const response = await fetch(`/api/questions/${questionId}`);
       const data = await response.json();
       setQuestion(data.question);
       setAnswers(data.answers);
@@ -93,7 +96,8 @@ export default function QuestionDetailPage() {
     setSubmitting(true);
 
     try {
-      const response = await fetch(`/api/questions/${params.id}/answers`, {
+      const questionId = extractIdFromSlug(params.id as string) || params.id;
+      const response = await fetch(`/api/questions/${questionId}/answers`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

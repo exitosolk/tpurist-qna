@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
+import { generateSlug } from "@/lib/slug";
 
 // GET /api/questions - List all questions
 export async function GET(req: Request) {
@@ -128,6 +129,13 @@ export async function POST(req: Request) {
 
     const questionId = questionResult.insertId;
 
+    // Generate and update slug
+    const slug = generateSlug(title, questionId);
+    await query(
+      "UPDATE questions SET slug = ? WHERE id = ?",
+      [slug, questionId]
+    );
+
     // Add tags
     if (tags && tags.length > 0) {
       for (const tagName of tags) {
@@ -163,7 +171,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(
-      { questionId, message: "Question created successfully" },
+      { questionId, slug, message: "Question created successfully" },
       { status: 201 }
     );
   } catch (error) {

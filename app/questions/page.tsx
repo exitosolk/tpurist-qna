@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
+import Navbar from "@/components/Navbar";
 
 interface Question {
   id: number;
+  slug?: string;
   title: string;
   body: string;
   score: number;
@@ -43,26 +45,7 @@ export default function QuestionsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-blue-600">OneCeylon</h1>
-          </Link>
-          <nav className="flex gap-4 items-center">
-            <Link href="/questions" className="text-gray-700 hover:text-blue-600 font-medium">
-              Questions
-            </Link>
-            <Link href="/tags" className="text-gray-700 hover:text-blue-600">Tags</Link>
-            <Link href="/users" className="text-gray-700 hover:text-blue-600">Users</Link>
-            <Link
-              href="/questions/ask"
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Ask Question
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Navbar />
 
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
@@ -118,7 +101,7 @@ export default function QuestionsPage() {
                   </div>
 
                   <div className="flex-1">
-                    <Link href={`/questions/${question.id}`}>
+                    <Link href={`/questions/${question.slug || question.id}`}>
                       <h3 className="text-xl font-semibold text-blue-600 hover:text-blue-800 mb-2">
                         {question.title}
                       </h3>
