@@ -61,6 +61,29 @@ export async function POST(
       );
     }
 
+    // Get the answer owner to give reputation points
+    const answerOwnerResult = await query(
+      "SELECT user_id FROM answers WHERE id = ?",
+      [answerId]
+    );
+
+    const answerOwnerId = answerOwnerResult.rows[0]?.user_id;
+
+    // Check if there was a previously accepted answer
+    const previousAcceptedResult = await query(
+      "SELECT id, user_id FROM answers WHERE question_id = ? AND is_accepted = 1",
+      [answer.question_id]
+    );
+
+    // Remove reputation from previous answer owner if exists
+    if (previousAcceptedResult.rows.length > 0) {
+      const previousOwnerId = previousAcceptedResult.rows[0].user_id;
+      await query(
+        "UPDATE users SET reputation = GREATEST(0, reputation - 15) WHERE id = ?",
+        [previousOwnerId]
+      );
+    }
+
     // Unmark any previously accepted answer for this question
     await query(
       "UPDATE answers SET is_accepted = 0 WHERE question_id = ?",
@@ -72,6 +95,14 @@ export async function POST(
       "UPDATE answers SET is_accepted = 1 WHERE id = ?",
       [answerId]
     );
+
+    // Give reputation points to answer owner (+15 for accepted answer)
+    if (answerOwnerId) {
+      await query(
+        "UPDATE users SET reputation = reputation + 15 WHERE id = ?",
+        [answerOwnerId]
+      );
+    }
 
     return NextResponse.json({ message: "Answer accepted successfully" });
   } catch (error) {

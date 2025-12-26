@@ -152,7 +152,7 @@ export default function QuestionDetailPage() {
     }
 
     try {
-      await fetch("/api/votes", {
+      const response = await fetch("/api/votes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -163,6 +163,13 @@ export default function QuestionDetailPage() {
           voteType,
         }),
       });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        alert(data.error || "Failed to vote");
+        return;
+      }
 
       fetchQuestion();
     } catch (error) {

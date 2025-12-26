@@ -31,9 +31,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // Get user ID
+    // Get user ID and reputation
     const userResult = await query(
-      "SELECT id FROM users WHERE email = $1",
+      "SELECT id, reputation FROM users WHERE email = $1",
       [session.user.email]
     );
 
@@ -45,6 +45,7 @@ export async function POST(req: Request) {
     }
 
     const userId = userResult.rows[0].id;
+    const voterReputation = userResult.rows[0].reputation || 0;
 
     // Check if user is trying to vote on their own content
     const ownerCheckQuery = votableType === "question" 
@@ -56,6 +57,16 @@ export async function POST(req: Request) {
     if (ownerResult.rows.length > 0 && ownerResult.rows[0].user_id === userId) {
       return NextResponse.json(
         { error: "You cannot vote on your own content" },
+        { status: 403 }
+      );
+    }
+
+    const contentOwnerId = ownerResult.rows.length > 0 ? ownerResult.rows[0].user_id : null;
+
+    // Check if user has enough reputation to downvote
+    if (voteType === -1 && voterReputation < 10) {
+      return NextResponse.json(
+        { error: "You need at least 10 reputation points to downvote" },
         { status: 403 }
       );
     }
@@ -84,6 +95,18 @@ export async function POST(req: Request) {
           [voteType, votableId]
         );
 
+        // Reverse reputation change for content owner
+        if (contentOwnerId) {
+          const repChange = votableType === "question" 
+            ? (voteType === 1 ? -5 : 2)  // Question: +5 for upvote, -2 for downvote
+            : (voteType === 1 ? -10 : 2); // Answer: +10 for upvote, -2 for downvote
+          
+          await query(
+            "UPDATE users SET reputation = GREATEST(0, reputation + ?) WHERE id = ?",
+            [repChange, contentOwnerId]
+          );
+        }
+
         return NextResponse.json({ message: "Vote removed" });
       } else {
         // Update vote
@@ -98,6 +121,22 @@ export async function POST(req: Request) {
           `UPDATE ${votableType}s SET score = score + $1 WHERE id = $2`,
           [voteType * 2, votableId]
         );
+
+        // Update reputation for content owner (reversing old vote and applying new vote)
+        if (contentOwnerId) {
+          const oldRepChange = votableType === "question" 
+            ? (currentVote.vote_type === 1 ? -5 : 2)  // Reverse old vote
+            : (currentVote.vote_type === 1 ? -10 : 2);
+          
+          const newRepChange = votableType === "question" 
+            ? (voteType === 1 ? 5 : -2)  // Apply new vote
+            : (voteType === 1 ? 10 : -2);
+          
+          await query(
+            "UPDATE users SET reputation = GREATEST(0, reputation + ?) WHERE id = ?",
+            [oldRepChange + newRepChange, contentOwnerId]
+          );
+        }
 
         return NextResponse.json({ message: "Vote updated" });
       }
@@ -114,6 +153,18 @@ export async function POST(req: Request) {
         `UPDATE ${votableType}s SET score = score + $1 WHERE id = $2`,
         [voteType, votableId]
       );
+
+      // Update reputation for content owner
+      if (contentOwnerId) {
+        const repChange = votableType === "question" 
+          ? (voteType === 1 ? 5 : -2)  // Question: +5 for upvote, -2 for downvote
+          : (voteType === 1 ? 10 : -2); // Answer: +10 for upvote, -2 for downvote
+        
+        await query(
+          "UPDATE users SET reputation = GREATEST(0, reputation + ?) WHERE id = ?",
+          [repChange, contentOwnerId]
+        );
+      }
 
       return NextResponse.json({ message: "Vote recorded" }, { status: 201 });
     }
