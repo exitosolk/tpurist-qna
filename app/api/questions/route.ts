@@ -129,12 +129,21 @@ export async function POST(req: Request) {
 
     const questionId = questionResult.insertId;
 
-    // Generate and update slug
+    // Generate slug (will be used in response)
     const slug = generateSlug(title, questionId);
-    await query(
-      "UPDATE questions SET slug = ? WHERE id = ?",
-      [slug, questionId]
-    );
+    
+    // Try to update slug column if it exists
+    try {
+      await query(
+        "UPDATE questions SET slug = ? WHERE id = ?",
+        [slug, questionId]
+      );
+    } catch (error: any) {
+      // Ignore if slug column doesn't exist yet
+      if (error.code !== 'ER_BAD_FIELD_ERROR') {
+        throw error;
+      }
+    }
 
     // Add tags
     if (tags && tags.length > 0) {
