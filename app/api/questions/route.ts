@@ -10,8 +10,9 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const tag = searchParams.get("tag");
     const sort = searchParams.get("sort") || "newest";
+    const filter = searchParams.get("filter");
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = 20;
+    const limit = parseInt(searchParams.get("limit") || "20");
     const offset = (page - 1) * limit;
 
     let queryText = `
@@ -44,6 +45,11 @@ export async function GET(req: Request) {
       params.push(tag);
     }
 
+    // Filter for unanswered questions
+    if (filter === "unanswered") {
+      queryText += tag ? " AND q.answer_count = 0" : " WHERE q.answer_count = 0";
+    }
+
     queryText += ` ORDER BY `;
 
     switch (sort) {
@@ -55,10 +61,6 @@ export async function GET(req: Request) {
         break;
       case "active":
         queryText += `q.last_activity_at DESC`;
-        break;
-      case "unanswered":
-        queryText = queryText.replace(' ORDER BY ', ' WHERE q.answer_count = 0 ORDER BY ');
-        queryText += `q.created_at DESC`;
         break;
       default:
         queryText += `q.created_at DESC`;

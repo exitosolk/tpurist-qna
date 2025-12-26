@@ -10,6 +10,7 @@ import Navbar from "@/components/Navbar";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import MarkdownEditor from "@/components/MarkdownEditor";
 import Tooltip from "@/components/Tooltip";
+import Sidebar from "@/components/Sidebar";
 import { Share2, Edit, Bookmark, Check } from "lucide-react";
 
 interface User {
@@ -409,9 +410,12 @@ export default function QuestionDetailPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <main className="container mx-auto px-4 py-8 max-w-5xl">
-        {/* Question */}
-        <div className="mb-8">
+      <main className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="flex gap-8">
+          {/* Main Content */}
+          <div className="flex-1 min-w-0">
+            {/* Question */}
+            <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4">{question.title}</h1>
           <div className="flex gap-4 text-sm text-gray-600 mb-6">
             <span>Asked {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}</span>
@@ -761,6 +765,15 @@ export default function QuestionDetailPage() {
               </Link>
             </div>
           )}
+        </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="hidden lg:block w-80 flex-shrink-0">
+            <div className="sticky top-8">
+              <Sidebar />
+            </div>
+          </div>
         </div>
       </main>
     </div>

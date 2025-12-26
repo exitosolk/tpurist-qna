@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import Navbar from "@/components/Navbar";
+import Sidebar from "@/components/Sidebar";
 
 interface Question {
   id: number;
@@ -47,7 +48,10 @@ export default function QuestionsPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="flex gap-8">
+          {/* Main Content */}
+          <div className="flex-1 min-w-0">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold">All Questions</h2>
         </div>
@@ -132,6 +136,15 @@ export default function QuestionsPage() {
             ))}
           </div>
         )}
+          </div>
+
+          {/* Sidebar */}
+          <div className="hidden lg:block w-80 flex-shrink-0">
+            <div className="sticky top-8">
+              <Sidebar />
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );
