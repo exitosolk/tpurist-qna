@@ -411,9 +411,9 @@ export default function QuestionDetailPage() {
       <Navbar />
 
       <main className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="flex gap-8">
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 lg:order-1">
             {/* Question */}
             <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4">{question.title}</h1>
@@ -769,8 +769,8 @@ export default function QuestionDetailPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="hidden lg:block w-80 flex-shrink-0">
-            <div className="sticky top-8">
+          <div className="w-full lg:w-80 flex-shrink-0 lg:order-2">
+            <div className="lg:sticky lg:top-8">
               <Sidebar />
             </div>
           </div>

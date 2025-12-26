@@ -49,9 +49,9 @@ export default function QuestionsPage() {
       <Navbar />
 
       <main className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="flex gap-8">
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 lg:order-1">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold">All Questions</h2>
         </div>
@@ -139,8 +139,8 @@ export default function QuestionsPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="hidden lg:block w-80 flex-shrink-0">
-            <div className="sticky top-8">
+          <div className="w-full lg:w-80 flex-shrink-0 lg:order-2">
+            <div className="lg:sticky lg:top-8">
               <Sidebar />
             </div>
           </div>
