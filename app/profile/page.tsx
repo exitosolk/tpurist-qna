@@ -37,14 +37,24 @@ interface Answer {
   created_at: string;
 }
 
+interface Follow {
+  followable_type: string;
+  followable_id: number;
+  question_title: string;
+  question_slug?: string;
+  question_id: number;
+  followed_at: string;
+}
+
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
+  const [follows, setFollows] = useState<Follow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"questions" | "answers">("questions");
+  const [activeTab, setActiveTab] = useState<"questions" | "answers" | "bookmarks">("questions");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -66,6 +76,13 @@ export default function ProfilePage() {
         setProfile(data.profile);
         setQuestions(data.questions || []);
         setAnswers(data.answers || []);
+      }
+
+      // Fetch follows
+      const followsResponse = await fetch("/api/follows");
+      const followsData = await followsResponse.json();
+      if (followsResponse.ok) {
+        setFollows(followsData.follows || []);
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -157,6 +174,26 @@ export default function ProfilePage() {
               >
                 Answers ({answers.length})
               </button>
+              <button
+                onClick={() => setActiveTab("bookmarks")}
+                className={`pb-4 px-1 border-b-2 font-medium ${
+                  activeTab === "bookmarks"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Bookmarks ({follows.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("bookmarks")}
+                className={`pb-4 px-1 border-b-2 font-medium ${
+                  activeTab === "bookmarks"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Bookmarks ({follows.length})
+              </button>
             </nav>
           </div>
         </div>
@@ -190,6 +227,41 @@ export default function ProfilePage() {
                   </div>
                 </div>
               ))
+            )}
+          </div>
+        ) : activeTab === "bookmarks" ? (
+          <div className="space-y-4">
+            {follows.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+                <p className="text-gray-600 mb-4">You haven't bookmarked any answers yet.</p>
+                <Link
+                  href="/questions"
+                  className="inline-block px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Browse Questions
+                </Link>
+              </div>
+            ) : (
+              follows.map((follow, idx) => {
+                const url = follow.followable_type === "answer" 
+                  ? `/questions/${follow.question_slug || follow.question_id}#answer-${follow.followable_id}`
+                  : `/questions/${follow.question_slug || follow.followable_id}`;
+                
+                return (
+                  <div key={idx} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+                    <Link href={url}>
+                      <h3 className="text-lg font-medium text-blue-600 hover:text-blue-800 mb-2">
+                        {follow.followable_type === "answer" ? "Answer to: " : ""}
+                        {follow.question_title}
+                      </h3>
+                    </Link>
+                    <div className="flex gap-6 text-sm text-gray-600">
+                      <span className="capitalize">{follow.followable_type}</span>
+                      <span>bookmarked {formatDistanceToNow(new Date(follow.followed_at), { addSuffix: true })}</span>
+                    </div>
+                  </div>
+                );
+              })
             )}
           </div>
         ) : (

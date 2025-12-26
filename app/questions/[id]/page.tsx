@@ -85,6 +85,29 @@ export default function QuestionDetailPage() {
     }
   }, [answers]);
 
+  // Fetch followed answers when answers load
+  useEffect(() => {
+    if (answers.length > 0 && session) {
+      fetchFollowedAnswers();
+    }
+  }, [answers.length, session]);
+
+  const fetchFollowedAnswers = async () => {
+    try {
+      const answerIds = answers.map(a => a.id).join(",");
+      const response = await fetch(`/api/follows?type=answer&ids=${answerIds}`);
+      const data = await response.json();
+      
+      const followedState: Record<number, boolean> = {};
+      data.followedIds?.forEach((id: number) => {
+        followedState[id] = true;
+      });
+      setFollowedAnswers(followedState);
+    } catch (error) {
+      console.error("Error fetching followed answers:", error);
+    }
+  };
+
   const fetchCurrentUser = async () => {
     try {
       const response = await fetch("/api/profile");
@@ -213,8 +236,35 @@ export default function QuestionDetailPage() {
     setEditAnswerBody("");
   };
 
-  const handleFollowAnswer = (answerId: number) => {
-    setFollowedAnswers({ ...followedAnswers, [answerId]: !followedAnswers[answerId] });
+  const handleFollowAnswer = async (answerId: number) => {
+    if (!session) {
+      alert("Please log in to follow answers");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/follows", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          followableType: "answer",
+          followableId: answerId,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setFollowedAnswers({ ...followedAnswers, [answerId]: data.isFollowing });
+      } else {
+        alert(data.error || "Failed to follow answer");
+      }
+    } catch (error) {
+      console.error("Error following answer:", error);
+      alert("Failed to follow answer");
+    }
   };
 
   const handleVote = async (votableType: string, votableId: number, voteType: number) => {
