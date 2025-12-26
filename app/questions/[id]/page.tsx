@@ -9,6 +9,8 @@ import { extractIdFromSlug } from "@/lib/slug";
 import Navbar from "@/components/Navbar";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import MarkdownEditor from "@/components/MarkdownEditor";
+import { Share2, Edit, Bookmark, Check } from "lucide-react";
+import { Share2, Edit, Bookmark, Check } from "lucide-react";
 
 interface User {
   username: string;
@@ -60,6 +62,10 @@ export default function QuestionDetailPage() {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [commentTexts, setCommentTexts] = useState<{ [key: number]: string }>({});
   const [showCommentForm, setShowCommentForm] = useState<{ [key: number]: boolean }>({});
+  const [editingAnswerId, setEditingAnswerId] = useState<number | null>(null);
+  const [editAnswerBody, setEditAnswerBody] = useState("");
+  const [copiedAnswerId, setCopiedAnswerId] = useState<number | null>(null);
+  const [followedAnswers, setFollowedAnswers] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     fetchQuestion();
@@ -143,6 +149,61 @@ export default function QuestionDetailPage() {
     } catch (error) {
       console.error("Error adding comment:", error);
     }
+  };
+
+  const handleShareAnswer = async (answerId: number) => {
+    const url = `${window.location.origin}${window.location.pathname}#answer-${answerId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedAnswerId(answerId);
+      setTimeout(() => setCopiedAnswerId(null), 2000);
+    } catch (error) {
+      console.error("Error copying link:", error);
+      alert("Failed to copy link");
+    }
+  };
+
+  const handleEditAnswer = (answerId: number, body: string) => {
+    setEditingAnswerId(answerId);
+    setEditAnswerBody(body);
+  };
+
+  const handleSaveAnswer = async (answerId: number) => {
+    if (!editAnswerBody.trim()) {
+      alert("Answer body cannot be empty");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/answers/${answerId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ body: editAnswerBody }),
+      });
+
+      if (response.ok) {
+        setEditingAnswerId(null);
+        setEditAnswerBody("");
+        fetchQuestion();
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to update answer");
+      }
+    } catch (error) {
+      console.error("Error updating answer:", error);
+      alert("Failed to update answer");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingAnswerId(null);
+    setEditAnswerBody("");
+  };
+
+  const handleFollowAnswer = (answerId: number) => {
+    setFollowedAnswers({ ...followedAnswers, [answerId]: !followedAnswers[answerId] });
   };
 
   const handleVote = async (votableType: string, votableId: number, voteType: number) => {
@@ -306,7 +367,7 @@ export default function QuestionDetailPage() {
 
           <div className="space-y-6">
             {answers.map((answer) => (
-              <div key={answer.id} className="bg-white rounded-lg shadow-sm border p-6">
+              <div key={answer.id} id={`answer-${answer.id}`} className="bg-white rounded-lg shadow-sm border p-6 scroll-mt-20">
                 <div className="flex gap-4">
                   {/* Vote buttons - hide for own content */}
                   {currentUserId !== answer.user_id && (
@@ -343,23 +404,80 @@ export default function QuestionDetailPage() {
                   )}
 
                   <div className="flex-1">
-                    <MarkdownRenderer content={answer.body} />
+                    {editingAnswerId === answer.id ? (
+                      <div className="mb-4">
+                        <MarkdownEditor
+                          value={editAnswerBody}
+                          onChange={setEditAnswerBody}
+                          placeholder="Edit your answer..."
+                        />
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() => handleSaveAnswer(answer.id)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                          >
+                            Save Changes
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <MarkdownRenderer content={answer.body} />
+                    )}
 
                     {/* Action buttons */}
-                    <div className="flex gap-4 my-4 text-sm">
+                    <div className="flex flex-wrap gap-4 my-4 text-sm text-gray-600">
+                      <button
+                        onClick={() => handleShareAnswer(answer.id)}
+                        className="flex items-center gap-1 hover:text-blue-600"
+                      >
+                        {copiedAnswerId === answer.id ? (
+                          <><Check className="w-4 h-4" /> Link copied!</>
+                        ) : (
+                          <><Share2 className="w-4 h-4" /> Share</>
+                        )}
+                      </button>
+
+                      {currentUserId === answer.user_id && editingAnswerId !== answer.id && (
+                        <button
+                          onClick={() => handleEditAnswer(answer.id, answer.body)}
+                          className="flex items-center gap-1 hover:text-blue-600"
+                        >
+                          <Edit className="w-4 h-4" /> Edit
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => handleFollowAnswer(answer.id)}
+                        className={`flex items-center gap-1 ${
+                          followedAnswers[answer.id] ? "text-blue-600" : "hover:text-blue-600"
+                        }`}
+                      >
+                        <Bookmark className={`w-4 h-4 ${followedAnswers[answer.id] ? "fill-current" : ""}`} />
+                        {followedAnswers[answer.id] ? "Following" : "Follow"}
+                      </button>
+
                       {question && currentUserId === question.user_id && !answer.is_accepted && (
                         <button
                           onClick={() => handleAcceptAnswer(answer.id)}
-                          className="text-green-600 hover:text-green-700 font-medium"
+                          className="flex items-center gap-1 text-green-600 hover:text-green-700 font-medium"
                         >
                           ✓ Accept Answer
                         </button>
                       )}
+                      
+                      <span className="text-gray-300">|</span>
+                      
                       <button
                         onClick={() => setShowCommentForm({ ...showCommentForm, [answer.id]: !showCommentForm[answer.id] })}
-                        className="text-gray-600 hover:text-gray-700"
+                        className="hover:text-blue-600"
                       >
-                        Add Comment
+                        Add a comment
                       </button>
                     </div>
 
