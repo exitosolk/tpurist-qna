@@ -6,10 +6,11 @@ import { query } from "@/lib/db";
 // GET comments for an answer
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const answerId = params.id;
+    const { id } = await params;
+    const answerId = id;
 
     const result = await query(
       `SELECT c.*, u.username, u.display_name, u.reputation
@@ -33,7 +34,7 @@ export async function GET(
 // POST new comment
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -45,7 +46,8 @@ export async function POST(
       );
     }
 
-    const answerId = params.id;
+    const { id } = await params;
+    const answerId = id;
     const body = await req.json();
     const { text } = body;
 

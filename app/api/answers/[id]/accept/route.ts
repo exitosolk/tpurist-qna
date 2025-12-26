@@ -5,7 +5,7 @@ import { query } from "@/lib/db";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,7 +17,8 @@ export async function POST(
       );
     }
 
-    const answerId = params.id;
+    const { id } = await params;
+    const answerId = id;
 
     // Get user ID
     const userResult = await query(
