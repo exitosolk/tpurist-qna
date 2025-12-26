@@ -1,0 +1,89 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { query } from "@/lib/db";
+
+// GET comments for an answer
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const answerId = params.id;
+
+    const result = await query(
+      `SELECT c.*, u.username, u.display_name, u.reputation
+       FROM comments c
+       JOIN users u ON c.user_id = u.id
+       WHERE c.commentable_type = 'answer' AND c.commentable_id = ?
+       ORDER BY c.created_at ASC`,
+      [answerId]
+    );
+
+    return NextResponse.json({ comments: result.rows });
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST new comment
+export async function POST(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const answerId = params.id;
+    const body = await req.json();
+    const { text } = body;
+
+    if (!text || text.trim().length < 3) {
+      return NextResponse.json(
+        { error: "Comment must be at least 3 characters" },
+        { status: 400 }
+      );
+    }
+
+    // Get user ID
+    const userResult = await query(
+      "SELECT id FROM users WHERE email = ?",
+      [session.user.email]
+    );
+
+    if (userResult.rows.length === 0) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    const userId = userResult.rows[0].id;
+
+    // Insert comment
+    await query(
+      `INSERT INTO comments (commentable_type, commentable_id, user_id, text)
+       VALUES (?, ?, ?, ?)`,
+      ["answer", answerId, userId, text]
+    );
+
+    return NextResponse.json({ message: "Comment added successfully" }, { status: 201 });
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

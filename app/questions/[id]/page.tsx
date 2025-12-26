@@ -9,6 +9,8 @@ import { extractIdFromSlug } from "@/lib/slug";
 import Navbar from "@/components/Navbar";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import MarkdownEditor from "@/components/MarkdownEditor";
+import MarkdownRenderer from "@/components/MarkdownRenderer";
+import MarkdownEditor from "@/components/MarkdownEditor";
 
 interface User {
   username: string;
@@ -36,6 +38,17 @@ interface Answer extends User {
   score: number;
   is_accepted: boolean;
   created_at: string;
+  comments?: Comment[];
+}
+
+interface Comment {
+  id: number;
+  user_id: number;
+  username: string;
+  display_name: string;
+  reputation: number;
+  text: string;
+  created_at: string;
 }
 
 export default function QuestionDetailPage() {
@@ -47,6 +60,8 @@ export default function QuestionDetailPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [commentTexts, setCommentTexts] = useState<{ [key: number]: string }>({});
+  const [showCommentForm, setShowCommentForm] = useState<{ [key: number]: boolean }>({});
 
   useEffect(() => {
     fetchQuestion();
@@ -74,7 +89,63 @@ export default function QuestionDetailPage() {
       const response = await fetch(`/api/questions/${questionId}`);
       const data = await response.json();
       setQuestion(data.question);
-      setAnswers(data.answers);
+      
+      // Fetch comments for each answer
+      const answersWithComments = await Promise.all(
+        data.answers.map(async (answer: Answer) => {
+          const commentsRes = await fetch(`/api/answers/${answer.id}/comments`);
+          const commentsData = await commentsRes.json();
+          return { ...answer, comments: commentsData.comments || [] };
+        })
+      );
+      
+      setAnswers(answersWithComments);
+    } catch (error) {
+      console.error("Error fetching question:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAcceptAnswer = async (answerId: number) => {
+    try {
+      const response = await fetch(`/api/answers/${answerId}/accept`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        fetchQuestion(); // Refresh to show accepted status
+      }
+    } catch (error) {
+      console.error("Error accepting answer:", error);
+    }
+  };
+
+  const handleAddComment = async (answerId: number) => {
+    const text = commentTexts[answerId]?.trim();
+    if (!text || text.length < 3) {
+      alert("Comment must be at least 3 characters");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/answers/${answerId}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text }),
+      });
+
+      if (response.ok) {
+        setCommentTexts({ ...commentTexts, [answerId]: "" });
+        setShowCommentForm({ ...showCommentForm, [answerId]: false });
+        fetchQuestion(); // Refresh comments
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    }
+  };
     } catch (error) {
       console.error("Error fetching question:", error);
     } finally {
@@ -275,7 +346,73 @@ export default function QuestionDetailPage() {
                   <div className="flex-1">
                     <MarkdownRenderer content={answer.body} />
 
-                    <div className="flex justify-end">
+                    {/* Action buttons */}
+                    <div className="flex gap-4 my-4 text-sm">
+                      {question && currentUserId === question.user_id && !answer.is_accepted && (
+                        <button
+                          onClick={() => handleAcceptAnswer(answer.id)}
+                          className="text-green-600 hover:text-green-700 font-medium"
+                        >
+                          ✓ Accept Answer
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setShowCommentForm({ ...showCommentForm, [answer.id]: !showCommentForm[answer.id] })}
+                        className="text-gray-600 hover:text-gray-700"
+                      >
+                        Add Comment
+                      </button>
+                    </div>
+
+                    {/* Comments */}
+                    {answer.comments && answer.comments.length > 0 && (
+                      <div className="border-t pt-4 space-y-3">
+                        {answer.comments.map((comment) => (
+                          <div key={comment.id} className="text-sm border-l-2 border-gray-200 pl-4 py-2">
+                            <p className="text-gray-700 mb-1">{comment.text}</p>
+                            <span className="text-gray-500">
+                              – <span className="text-blue-600">{comment.display_name || comment.username}</span>
+                              {' '}({comment.reputation}) {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Comment Form */}
+                    {showCommentForm[answer.id] && session && (
+                      <div className="mt-4 border-t pt-4">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={commentTexts[answer.id] || ""}
+                            onChange={(e) => setCommentTexts({ ...commentTexts, [answer.id]: e.target.value })}
+                            placeholder="Add a comment..."
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onKeyPress={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleAddComment(answer.id);
+                              }
+                            }}
+                          />
+                          <button
+                            onClick={() => handleAddComment(answer.id)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                          >
+                            Add
+                          </button>
+                          <button
+                            onClick={() => setShowCommentForm({ ...showCommentForm, [answer.id]: false })}
+                            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 text-sm"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end mt-4">
                       <div className={`rounded p-4 ${answer.is_accepted ? 'bg-green-50' : 'bg-gray-50'}`}>
                         <div className="text-sm text-gray-600 mb-1">
                           answered {formatDistanceToNow(new Date(answer.created_at), { addSuffix: true })}
