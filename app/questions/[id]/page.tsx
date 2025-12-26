@@ -146,12 +146,6 @@ export default function QuestionDetailPage() {
       console.error("Error adding comment:", error);
     }
   };
-    } catch (error) {
-      console.error("Error fetching question:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleVote = async (votableType: string, votableId: number, voteType: number) => {
     if (!session) {
