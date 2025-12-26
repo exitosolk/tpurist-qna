@@ -9,8 +9,6 @@ import { extractIdFromSlug } from "@/lib/slug";
 import Navbar from "@/components/Navbar";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import MarkdownEditor from "@/components/MarkdownEditor";
-import MarkdownRenderer from "@/components/MarkdownRenderer";
-import MarkdownEditor from "@/components/MarkdownEditor";
 
 interface User {
   username: string;
