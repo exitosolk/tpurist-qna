@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import Navbar from "@/components/Navbar";
@@ -22,18 +23,24 @@ interface Question {
 }
 
 export default function QuestionsPage() {
+  const searchParams = useSearchParams();
+  const tagFilter = searchParams.get("tag");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState("newest");
 
   useEffect(() => {
     fetchQuestions();
-  }, [sort]);
+  }, [sort, tagFilter]);
 
   const fetchQuestions = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/questions?sort=${sort}`);
+      const params = new URLSearchParams({ sort });
+      if (tagFilter) {
+        params.append("tag", tagFilter);
+      }
+      const response = await fetch(`/api/questions?${params.toString()}`);
       const data = await response.json();
       setQuestions(data.questions || []);
     } catch (error) {
@@ -53,7 +60,19 @@ export default function QuestionsPage() {
           {/* Main Content */}
           <div className="flex-1 min-w-0 lg:order-1">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold">All Questions</h2>
+          <div>
+            <h2 className="text-3xl font-bold">
+              {tagFilter ? `Questions tagged [${tagFilter}]` : "All Questions"}
+            </h2>
+            {tagFilter && (
+              <Link
+                href="/questions"
+                className="text-sm text-blue-600 hover:text-blue-800 mt-1 inline-block"
+              >
+                ← View all questions
+              </Link>
+            )}
+          </div>
         </div>
 
         <div className="mb-6 flex gap-2">
