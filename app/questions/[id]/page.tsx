@@ -65,6 +65,8 @@ export default function QuestionDetailPage() {
   const [editAnswerBody, setEditAnswerBody] = useState("");
   const [copiedAnswerId, setCopiedAnswerId] = useState<number | null>(null);
   const [followedAnswers, setFollowedAnswers] = useState<Record<number, boolean>>({});
+  const [followedQuestion, setFollowedQuestion] = useState(false);
+  const [copiedQuestion, setCopiedQuestion] = useState(false);
 
   useEffect(() => {
     fetchQuestion();
@@ -92,6 +94,13 @@ export default function QuestionDetailPage() {
     }
   }, [answers.length, session]);
 
+  // Fetch followed question state
+  useEffect(() => {
+    if (question && session) {
+      fetchFollowedQuestion();
+    }
+  }, [question?.id, session]);
+
   const fetchFollowedAnswers = async () => {
     try {
       const answerIds = answers.map(a => a.id).join(",");
@@ -105,6 +114,17 @@ export default function QuestionDetailPage() {
       setFollowedAnswers(followedState);
     } catch (error) {
       console.error("Error fetching followed answers:", error);
+    }
+  };
+
+  const fetchFollowedQuestion = async () => {
+    if (!question) return;
+    try {
+      const response = await fetch(`/api/follows?type=question&ids=${question.id}`);
+      const data = await response.json();
+      setFollowedQuestion(data.followedIds?.includes(question.id) || false);
+    } catch (error) {
+      console.error("Error fetching followed question:", error);
     }
   };
 
@@ -267,6 +287,51 @@ export default function QuestionDetailPage() {
     }
   };
 
+  const handleFollowQuestion = async () => {
+    if (!session) {
+      alert("Please log in to bookmark questions");
+      return;
+    }
+
+    if (!question) return;
+
+    try {
+      const response = await fetch("/api/follows", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          followableType: "question",
+          followableId: question.id,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setFollowedQuestion(data.isFollowing);
+      } else {
+        alert(data.error || "Failed to bookmark question");
+      }
+    } catch (error) {
+      console.error("Error bookmarking question:", error);
+      alert("Failed to bookmark question");
+    }
+  };
+
+  const handleShareQuestion = async () => {
+    const url = `${window.location.origin}${window.location.pathname}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedQuestion(true);
+      setTimeout(() => setCopiedQuestion(false), 2000);
+    } catch (error) {
+      console.error("Error copying link:", error);
+      alert("Failed to copy link");
+    }
+  };
+
   const handleVote = async (votableType: string, votableId: number, voteType: number) => {
     if (!session) {
       alert("Please log in to vote");
@@ -395,6 +460,30 @@ export default function QuestionDetailPage() {
                       {tag.name}
                     </Link>
                   ))}
+                </div>
+
+                {/* Question Action Buttons */}
+                <div className="flex flex-wrap gap-4 mb-6 text-sm text-gray-600">
+                  <button
+                    onClick={handleShareQuestion}
+                    className="flex items-center gap-1 hover:text-blue-600"
+                  >
+                    {copiedQuestion ? (
+                      <><Check className="w-4 h-4" /> Link copied!</>
+                    ) : (
+                      <><Share2 className="w-4 h-4" /> Share</>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={handleFollowQuestion}
+                    className={`flex items-center gap-1 ${
+                      followedQuestion ? "text-blue-600" : "hover:text-blue-600"
+                    }`}
+                  >
+                    <Bookmark className={`w-4 h-4 ${followedQuestion ? "fill-current" : ""}`} />
+                    {followedQuestion ? "Bookmarked" : "Bookmark"}
+                  </button>
                 </div>
 
                 <div className="flex justify-end">
