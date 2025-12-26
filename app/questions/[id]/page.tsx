@@ -73,6 +73,18 @@ export default function QuestionDetailPage() {
     }
   }, [params.id, session]);
 
+  // Scroll to answer if hash is present in URL
+  useEffect(() => {
+    if (answers.length > 0 && window.location.hash) {
+      setTimeout(() => {
+        const element = document.querySelector(window.location.hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+  }, [answers]);
+
   const fetchCurrentUser = async () => {
     try {
       const response = await fetch("/api/profile");
