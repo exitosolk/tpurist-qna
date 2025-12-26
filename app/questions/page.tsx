@@ -127,7 +127,9 @@ export default function QuestionsPage() {
                       </div>
                       <div className="text-sm text-gray-500">
                         asked {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })} by{" "}
-                        <span className="text-blue-600 font-medium">{question.display_name || question.username}</span>
+                        <Link href={`/users/${question.username}`} className="text-blue-600 font-medium hover:text-blue-800">
+                          {question.display_name || question.username}
+                        </Link>
                       </div>
                     </div>
                   </div>

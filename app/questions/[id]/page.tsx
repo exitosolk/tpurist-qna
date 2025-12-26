@@ -509,9 +509,9 @@ export default function QuestionDetailPage() {
                         {(question.display_name || question.username).charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-semibold text-blue-600">
+                        <Link href={`/users/${question.username}`} className="font-semibold text-blue-600 hover:text-blue-800">
                           {question.display_name || question.username}
-                        </div>
+                        </Link>
                         <div className="text-sm text-gray-600">{question.reputation} reputation</div>
                       </div>
                     </div>
@@ -669,7 +669,9 @@ export default function QuestionDetailPage() {
                           <div key={comment.id} className="text-sm border-l-2 border-gray-200 pl-4 py-2">
                             <p className="text-gray-700 mb-1">{comment.text}</p>
                             <span className="text-gray-500">
-                              – <span className="text-blue-600">{comment.display_name || comment.username}</span>
+                              – <Link href={`/users/${comment.username}`} className="text-blue-600 hover:text-blue-800">
+                                {comment.display_name || comment.username}
+                              </Link>
                               {' '}({comment.reputation}) {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                             </span>
                           </div>
@@ -720,9 +722,9 @@ export default function QuestionDetailPage() {
                             {(answer.display_name || answer.username).charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <div className="font-semibold text-blue-600">
+                            <Link href={`/users/${answer.username}`} className="font-semibold text-blue-600 hover:text-blue-800">
                               {answer.display_name || answer.username}
-                            </div>
+                            </Link>
                             <div className="text-sm text-gray-600">{answer.reputation} reputation</div>
                           </div>
                         </div>
