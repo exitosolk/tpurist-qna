@@ -7,6 +7,8 @@ import { formatDistanceToNow } from "date-fns";
 import { useParams } from "next/navigation";
 import { extractIdFromSlug } from "@/lib/slug";
 import Navbar from "@/components/Navbar";
+import MarkdownRenderer from "@/components/MarkdownRenderer";
+import MarkdownEditor from "@/components/MarkdownEditor";
 
 interface User {
   username: string;
@@ -17,6 +19,7 @@ interface User {
 
 interface Question extends User {
   id: number;
+  user_id: number;
   title: string;
   body: string;
   score: number;
@@ -28,6 +31,7 @@ interface Question extends User {
 
 interface Answer extends User {
   id: number;
+  user_id: number;
   body: string;
   score: number;
   is_accepted: boolean;
@@ -42,10 +46,26 @@ export default function QuestionDetailPage() {
   const [answerBody, setAnswerBody] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchQuestion();
-  }, [params.id]);
+    if (session?.user?.email) {
+      fetchCurrentUser();
+    }
+  }, [params.id, session]);
+
+  const fetchCurrentUser = async () => {
+    try {
+      const response = await fetch("/api/profile");
+      const data = await response.json();
+      if (data.profile) {
+        setCurrentUserId(data.profile.id);
+      }
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+    }
+  };
 
   const fetchQuestion = async () => {
     try {
@@ -142,26 +162,36 @@ export default function QuestionDetailPage() {
 
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex gap-4">
-              <div className="flex flex-col items-center gap-2">
-                <button
-                  onClick={() => handleVote("question", question.id, 1)}
-                  className="p-2 hover:bg-gray-100 rounded"
-                >
-                  ▲
-                </button>
-                <span className="text-2xl font-semibold">{question.score}</span>
-                <button
-                  onClick={() => handleVote("question", question.id, -1)}
-                  className="p-2 hover:bg-gray-100 rounded"
-                >
-                  ▼
-                </button>
-              </div>
+              {/* Vote buttons - hide for own content */}
+              {currentUserId !== question.user_id && (
+                <div className="flex flex-col items-center gap-2">
+                  <button
+                    onClick={() => handleVote("question", question.id, 1)}
+                    className="p-2 hover:bg-gray-100 rounded"
+                    disabled={!session}
+                  >
+                    ▲
+                  </button>
+                  <span className="text-2xl font-semibold">{question.score}</span>
+                  <button
+                    onClick={() => handleVote("question", question.id, -1)}
+                    className="p-2 hover:bg-gray-100 rounded"
+                    disabled={!session}
+                  >
+                    ▼
+                  </button>
+                </div>
+              )}
+              {currentUserId === question.user_id && (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="p-2 text-gray-400">▲</div>
+                  <span className="text-2xl font-semibold">{question.score}</span>
+                  <div className="p-2 text-gray-400">▼</div>
+                </div>
+              )}
 
               <div className="flex-1">
-                <div className="prose max-w-none mb-6">
-                  <p className="whitespace-pre-wrap">{question.body}</p>
-                </div>
+                <MarkdownRenderer content={question.body} />
 
                 <div className="flex gap-2 mb-6 flex-wrap">
                   {question.tags?.map((tag) => (
@@ -208,29 +238,42 @@ export default function QuestionDetailPage() {
             {answers.map((answer) => (
               <div key={answer.id} className="bg-white rounded-lg shadow-sm border p-6">
                 <div className="flex gap-4">
-                  <div className="flex flex-col items-center gap-2">
-                    <button
-                      onClick={() => handleVote("answer", answer.id, 1)}
-                      className="p-2 hover:bg-gray-100 rounded"
-                    >
-                      ▲
-                    </button>
-                    <span className="text-2xl font-semibold">{answer.score}</span>
-                    <button
-                      onClick={() => handleVote("answer", answer.id, -1)}
-                      className="p-2 hover:bg-gray-100 rounded"
-                    >
-                      ▼
-                    </button>
-                    {answer.is_accepted && (
-                      <div className="text-green-600 text-2xl">✓</div>
-                    )}
-                  </div>
+                  {/* Vote buttons - hide for own content */}
+                  {currentUserId !== answer.user_id && (
+                    <div className="flex flex-col items-center gap-2">
+                      <button
+                        onClick={() => handleVote("answer", answer.id, 1)}
+                        className="p-2 hover:bg-gray-100 rounded"
+                        disabled={!session}
+                      >
+                        ▲
+                      </button>
+                      <span className="text-2xl font-semibold">{answer.score}</span>
+                      <button
+                        onClick={() => handleVote("answer", answer.id, -1)}
+                        className="p-2 hover:bg-gray-100 rounded"
+                        disabled={!session}
+                      >
+                        ▼
+                      </button>
+                      {answer.is_accepted && (
+                        <div className="text-green-600 text-2xl">✓</div>
+                      )}
+                    </div>
+                  )}
+                  {currentUserId === answer.user_id && (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="p-2 text-gray-400">▲</div>
+                      <span className="text-2xl font-semibold">{answer.score}</span>
+                      <div className="p-2 text-gray-400">▼</div>
+                      {answer.is_accepted && (
+                        <div className="text-green-600 text-2xl">✓</div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="flex-1">
-                    <div className="prose max-w-none mb-6">
-                      <p className="whitespace-pre-wrap">{answer.body}</p>
-                    </div>
+                    <MarkdownRenderer content={answer.body} />
 
                     <div className="flex justify-end">
                       <div className={`rounded p-4 ${answer.is_accepted ? 'bg-green-50' : 'bg-gray-50'}`}>
@@ -262,18 +305,16 @@ export default function QuestionDetailPage() {
           <h3 className="text-xl font-bold mb-4">Your Answer</h3>
           {session ? (
             <form onSubmit={handleSubmitAnswer}>
-              <textarea
+              <MarkdownEditor
                 value={answerBody}
-                onChange={(e) => setAnswerBody(e.target.value)}
-                placeholder="Share your knowledge and help other travelers..."
-                rows={8}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-                required
+                onChange={setAnswerBody}
+                placeholder="Share your knowledge and help other travelers. You can add images to illustrate your answer."
+                minLength={30}
               />
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
                 {submitting ? "Posting..." : "Post Your Answer"}
               </button>

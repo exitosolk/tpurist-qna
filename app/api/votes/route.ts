@@ -46,6 +46,20 @@ export async function POST(req: Request) {
 
     const userId = userResult.rows[0].id;
 
+    // Check if user is trying to vote on their own content
+    const ownerCheckQuery = votableType === "question" 
+      ? "SELECT user_id FROM questions WHERE id = ?"
+      : "SELECT user_id FROM answers WHERE id = ?";
+    
+    const ownerResult = await query(ownerCheckQuery, [votableId]);
+    
+    if (ownerResult.rows.length > 0 && ownerResult.rows[0].user_id === userId) {
+      return NextResponse.json(
+        { error: "You cannot vote on your own content" },
+        { status: 403 }
+      );
+    }
+
     // Check if user already voted
     const existingVote = await query(
       `SELECT * FROM votes 

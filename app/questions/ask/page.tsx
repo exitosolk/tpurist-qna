@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import MarkdownEditor from "@/components/MarkdownEditor";
 
 const POPULAR_TAGS = [
   "colombo", "kandy", "galle", "ella", "sigiriya", "beaches", "wildlife",
@@ -131,17 +132,14 @@ export default function AskQuestionPage() {
               What are the details?
             </label>
             <p className="text-sm text-gray-500 mb-3">
-              Include all the information someone would need to answer your question
+              Include all the information someone would need to answer your question. You can add images to help illustrate your question.
             </p>
-            <textarea
+            <MarkdownEditor
               value={body}
-              onChange={(e) => setBody(e.target.value)}
+              onChange={setBody}
               placeholder="Provide more context about your question..."
-              rows={10}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
+              minLength={30}
             />
-            <p className="text-sm text-gray-500 mt-2">{body.length} characters (minimum 30)</p>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border p-6">
