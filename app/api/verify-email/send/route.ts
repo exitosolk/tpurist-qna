@@ -25,16 +25,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user
-    const users = await query(
+    const userResult = await query(
       "SELECT id, email, email_verified, display_name, username FROM users WHERE email = ?",
       [session.user.email]
     );
 
-    if (!users || users.length === 0) {
+    if (!userResult.rows || userResult.rows.length === 0) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const user = users[0];
+    const user = userResult.rows[0];
 
     // Check if already verified
     if (user.email_verified) {

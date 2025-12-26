@@ -14,19 +14,19 @@ export async function GET(req: NextRequest) {
     }
 
     // Find user with this token
-    const users = await query(
+    const userResult = await query(
       "SELECT id, email, email_verified, verification_token_expires, reputation FROM users WHERE verification_token = ?",
       [token]
     );
 
-    if (!users || users.length === 0) {
+    if (!userResult.rows || userResult.rows.length === 0) {
       return NextResponse.json(
         { error: "Invalid verification token" },
         { status: 400 }
       );
     }
 
-    const user = users[0];
+    const user = userResult.rows[0];
 
     // Check if already verified
     if (user.email_verified) {

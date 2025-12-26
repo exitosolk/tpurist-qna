@@ -37,16 +37,16 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Get user ID
-    const users = await query(
+    const userResult = await query(
       "SELECT id FROM users WHERE email = ?",
       [session.user.email]
     );
 
-    if (!users || users.length === 0) {
+    if (!userResult.rows || userResult.rows.length === 0) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const userId = users[0].id;
+    const userId = userResult.rows[0].id;
 
     // Build update query dynamically based on provided fields
     const updates: string[] = [];
@@ -77,14 +77,14 @@ export async function PATCH(req: NextRequest) {
     );
 
     // Fetch updated user
-    const updatedUser = await query(
+    const updatedUserResult = await query(
       "SELECT id, username, email, display_name, bio, reputation, email_verified, created_at FROM users WHERE id = ?",
       [userId]
     );
 
     return NextResponse.json({
       message: "Profile updated successfully",
-      user: updatedUser[0],
+      user: updatedUserResult.rows[0],
     });
   } catch (error) {
     console.error("Error updating profile:", error);
