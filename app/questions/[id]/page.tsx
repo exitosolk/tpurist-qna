@@ -10,7 +10,6 @@ import Navbar from "@/components/Navbar";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import MarkdownEditor from "@/components/MarkdownEditor";
 import { Share2, Edit, Bookmark, Check } from "lucide-react";
-import { Share2, Edit, Bookmark, Check } from "lucide-react";
 
 interface User {
   username: string;
