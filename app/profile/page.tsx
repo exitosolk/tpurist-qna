@@ -186,9 +186,6 @@ export default function ProfilePage() {
               </button>
             </nav>
           </div>
-              </button>
-            </nav>
-          </div>
         </div>
 
         {/* Content */}
