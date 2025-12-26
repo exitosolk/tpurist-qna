@@ -1,25 +1,11 @@
+"use client";
+
+import Navbar from "@/components/Navbar";
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <header className="border-b bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-blue-600">OneCeylon</h1>
-            <span className="text-sm text-gray-500">Travel Community</span>
-          </div>
-          <nav className="flex gap-4">
-            <a href="/questions" className="text-gray-700 hover:text-blue-600">Questions</a>
-            <a href="/tags" className="text-gray-700 hover:text-blue-600">Tags</a>
-            <a href="/users" className="text-gray-700 hover:text-blue-600">Users</a>
-            <a href="/login" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-              Log In
-            </a>
-            <a href="/signup" className="px-4 py-2 border border-blue-600 text-blue-600 rounded hover:bg-blue-50">
-              Sign Up
-            </a>
-          </nav>
-        </div>
-      </header>
+      <Navbar />
 
       <main className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">

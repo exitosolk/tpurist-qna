@@ -6,6 +6,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { useParams } from "next/navigation";
 import { extractIdFromSlug } from "@/lib/slug";
+import Navbar from "@/components/Navbar";
 
 interface User {
   username: string;
@@ -128,21 +129,7 @@ export default function QuestionDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-blue-600">OneCeylon</h1>
-          </Link>
-          <nav className="flex gap-4">
-            <Link href="/questions" className="text-gray-700 hover:text-blue-600">
-              Questions
-            </Link>
-            <Link href="/questions/ask" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-              Ask Question
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Navbar />
 
       <main className="container mx-auto px-4 py-8 max-w-5xl">
         {/* Question */}
