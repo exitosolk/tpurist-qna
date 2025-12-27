@@ -189,7 +189,8 @@ export default function QuestionDetailPage() {
   const handleAddComment = async (answerId: number) => {
     const text = commentTexts[answerId]?.trim();
     if (!text || text.length < 3) {
-      alert("Comment must be at least 3 characters");
+      setGeneralError("Comment must be at least 3 characters");
+      setTimeout(() => setGeneralError(""), 5000);
       return;
     }
 
@@ -202,13 +203,23 @@ export default function QuestionDetailPage() {
         body: JSON.stringify({ text }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         setCommentTexts({ ...commentTexts, [answerId]: "" });
         setShowCommentForm({ ...showCommentForm, [answerId]: false });
         fetchQuestion(); // Refresh comments
+      } else if (data.verification_required) {
+        setGeneralError("Please verify your email address before posting comments. Check your inbox for the verification link, or request a new one from your profile settings.");
+        setTimeout(() => setGeneralError(""), 5000);
+      } else {
+        setGeneralError(data.error || "Failed to add comment");
+        setTimeout(() => setGeneralError(""), 5000);
       }
     } catch (error) {
       console.error("Error adding comment:", error);
+      setGeneralError("An error occurred while adding your comment");
+      setTimeout(() => setGeneralError(""), 5000);
     }
   };
 

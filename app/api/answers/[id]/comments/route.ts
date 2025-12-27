@@ -60,7 +60,7 @@ export async function POST(
 
     // Get user ID
     const userResult = await query(
-      "SELECT id FROM users WHERE email = ?",
+      "SELECT id, email_verified FROM users WHERE email = ?",
       [session.user.email]
     );
 
@@ -68,6 +68,17 @@ export async function POST(
       return NextResponse.json(
         { error: "User not found" },
         { status: 404 }
+      );
+    }
+
+    // Check email verification
+    if (!userResult.rows[0].email_verified) {
+      return NextResponse.json(
+        { 
+          error: "Please verify your email address before posting comments",
+          verification_required: true 
+        },
+        { status: 403 }
       );
     }
 
