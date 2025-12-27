@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(
   req: Request,
@@ -102,6 +103,24 @@ export async function POST(
         "UPDATE users SET reputation = reputation + 15 WHERE id = ?",
         [answerOwnerId]
       );
+
+      // Get question title for notification
+      const questionResult = await query(
+        "SELECT title FROM questions WHERE id = ?",
+        [answer.question_id]
+      );
+
+      const questionTitle = questionResult.rows[0]?.title;
+
+      // Create notification for answer owner
+      await createNotification({
+        userId: answerOwnerId,
+        type: 'accepted_answer',
+        actorId: userId,
+        message: `accepted your answer on "${questionTitle}"`,
+        questionId: answer.question_id,
+        answerId: parseInt(answerId),
+      });
     }
 
     return NextResponse.json({ message: "Answer accepted successfully" });
