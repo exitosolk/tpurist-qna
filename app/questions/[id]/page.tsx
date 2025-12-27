@@ -71,6 +71,8 @@ export default function QuestionDetailPage() {
   const [followedAnswers, setFollowedAnswers] = useState<Record<number, boolean>>({});
   const [followedQuestion, setFollowedQuestion] = useState(false);
   const [copiedQuestion, setCopiedQuestion] = useState(false);
+  const [answerError, setAnswerError] = useState("");
+  const [voteError, setVoteError] = useState("");
 
   useEffect(() => {
     fetchQuestion();
@@ -338,9 +340,12 @@ export default function QuestionDetailPage() {
 
   const handleVote = async (votableType: string, votableId: number, voteType: number) => {
     if (!session) {
-      alert("Please log in to vote");
+      setVoteError("Please log in to vote");
+      setTimeout(() => setVoteError(""), 5000);
       return;
     }
+
+    setVoteError("");
 
     try {
       const response = await fetch("/api/votes", {
@@ -359,26 +364,30 @@ export default function QuestionDetailPage() {
       
       if (!response.ok) {
         if (data.verification_required) {
-          alert("Please verify your email address before voting. Check your inbox for the verification link, or request a new one from your profile settings.");
+          setVoteError("Please verify your email address before voting. Check your inbox for the verification link, or request a new one from your profile settings.");
         } else {
-          alert(data.error || "Failed to vote");
+          setVoteError(data.error || "Failed to vote");
         }
+        setTimeout(() => setVoteError(""), 5000);
         return;
       }
 
       fetchQuestion();
     } catch (error) {
       console.error("Error voting:", error);
+      setVoteError("An error occurred while voting");
+      setTimeout(() => setVoteError(""), 5000);
     }
   };
 
   const handleSubmitAnswer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session) {
-      alert("Please log in to answer");
+      setAnswerError("Please log in to answer");
       return;
     }
 
+    setAnswerError("");
     setSubmitting(true);
 
     try {
@@ -399,15 +408,16 @@ export default function QuestionDetailPage() {
       if (response.ok) {
         setAnswerBody("");
         setExperienceDate("");
+        setAnswerError("");
         fetchQuestion();
       } else if (data.verification_required) {
-        alert("Please verify your email address before posting answers. Check your inbox for the verification link, or request a new one from your profile settings.");
+        setAnswerError("Please verify your email address before posting answers. Check your inbox for the verification link, or request a new one from your profile settings.");
       } else {
-        alert(data.error || "Failed to post answer");
+        setAnswerError(data.error || "Failed to post answer");
       }
     } catch (error) {
       console.error("Error submitting answer:", error);
-      alert("An error occurred while submitting your answer");
+      setAnswerError("An error occurred while submitting your answer");
     } finally {
       setSubmitting(false);
     }
@@ -429,6 +439,23 @@ export default function QuestionDetailPage() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
           <div className="flex-1 min-w-0 lg:order-1">
+            {/* Vote Error Banner */}
+            {voteError && (
+              <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded">
+                <div className="flex items-start">
+                  <div className="flex-1">
+                    <p className="text-red-700 text-sm">{voteError}</p>
+                  </div>
+                  <button
+                    onClick={() => setVoteError("")}
+                    className="text-red-700 hover:text-red-900 ml-4"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Question */}
             <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4">{question.title}</h1>
@@ -792,6 +819,24 @@ export default function QuestionDetailPage() {
         {/* Answer Form */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-xl font-bold mb-4">Your Answer</h3>
+          
+          {/* Answer Error Banner */}
+          {answerError && (
+            <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4 rounded">
+              <div className="flex items-start">
+                <div className="flex-1">
+                  <p className="text-red-700 text-sm">{answerError}</p>
+                </div>
+                <button
+                  onClick={() => setAnswerError("")}
+                  className="text-red-700 hover:text-red-900 ml-4"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+
           {session ? (
             <form onSubmit={handleSubmitAnswer}>
               <MarkdownEditor
