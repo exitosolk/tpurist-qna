@@ -626,49 +626,49 @@ export default function QuestionDetailPage() {
                   )}
 
                   <div className="flex gap-4">
-                  {/* Vote buttons - hide for own content */}
-                  {currentUserId !== answer.user_id && (
-                    <div className="flex flex-col items-center gap-2">
-                      <Tooltip content="This answer is useful">
-                        <button
-                          onClick={() => handleVote("answer", answer.id, 1)}
-                          className="p-2 hover:bg-gray-100 rounded"
-                          disabled={!session}
-                        >
-                          ▲
-                        </button>
-                      </Tooltip>
-                      <span className="text-2xl font-semibold">{answer.score}</span>
-                      <Tooltip content="This answer is not useful">
-                        <button
-                          onClick={() => handleVote("answer", answer.id, -1)}
-                          className="p-2 hover:bg-gray-100 rounded"
-                          disabled={!session}
-                        >
-                          ▼
-                        </button>
-                      </Tooltip>
-                      {Boolean(answer.is_accepted) && (
-                        <Tooltip content="The question owner accepted this as the best answer">
-                          <div className="text-green-600 text-2xl">✓</div>
+                    {/* Vote buttons - hide for own content */}
+                    {currentUserId !== answer.user_id && (
+                      <div className="flex flex-col items-center gap-2">
+                        <Tooltip content="This answer is useful">
+                          <button
+                            onClick={() => handleVote("answer", answer.id, 1)}
+                            className="p-2 hover:bg-gray-100 rounded"
+                            disabled={!session}
+                          >
+                            ▲
+                          </button>
                         </Tooltip>
-                      )}
-                    </div>
-                  )}
-                  {currentUserId === answer.user_id && (
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="p-2 text-gray-400">▲</div>
-                      <span className="text-2xl font-semibold">{answer.score}</span>
-                      <div className="p-2 text-gray-400">▼</div>
-                      {Boolean(answer.is_accepted) && (
-                        <Tooltip content="The question owner accepted this as the best answer">
-                          <div className="text-green-600 text-2xl">✓</div>
+                        <span className="text-2xl font-semibold">{answer.score}</span>
+                          <Tooltip content="This answer is not useful">
+                          <button
+                            onClick={() => handleVote("answer", answer.id, -1)}
+                            className="p-2 hover:bg-gray-100 rounded"
+                            disabled={!session}
+                          >
+                            ▼
+                          </button>
                         </Tooltip>
-                      )}
-                    </div>
-                  )}
+                        {Boolean(answer.is_accepted) && (
+                          <Tooltip content="The question owner accepted this as the best answer">
+                            <div className="text-green-600 text-2xl">✓</div>
+                          </Tooltip>
+                        )}
+                      </div>
+                    )}
+                      {currentUserId === answer.user_id && (
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="p-2 text-gray-400">▲</div>
+                        <span className="text-2xl font-semibold">{answer.score}</span>
+                        <div className="p-2 text-gray-400">▼</div>
+                        {Boolean(answer.is_accepted) && (
+                          <Tooltip content="The question owner accepted this as the best answer">
+                            <div className="text-green-600 text-2xl">✓</div>
+                          </Tooltip>
+                        )}
+                      </div>
+                    )}
 
-                  <div className="flex-1">
+                    <div className="flex-1">
                     {editingAnswerId === answer.id ? (
                       <div className="mb-4">
                         <MarkdownEditor
