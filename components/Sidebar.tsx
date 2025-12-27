@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { Car } from "lucide-react";
+import { Car, AlertTriangle } from "lucide-react";
 
 interface Tag {
   name: string;
@@ -28,18 +28,37 @@ interface TukTukRoute {
   report_count: number;
 }
 
-export default function Sidebar() {
+interface ScamReport {
+  id: number;
+  tag: string;
+  title: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high';
+  upvotes: number;
+  verified: boolean;
+  reported_by_username: string;
+}
+
+interface SidebarProps {
+  currentTags?: string[];
+}
+
+export default function Sidebar({ currentTags = [] }: SidebarProps) {
   const [popularTags, setPopularTags] = useState<Tag[]>([]);
   const [unansweredQuestions, setUnansweredQuestions] = useState<Question[]>([]);
   const [relatedQuestions, setRelatedQuestions] = useState<Question[]>([]);
   const [tukTukRoutes, setTukTukRoutes] = useState<TukTukRoute[]>([]);
+  const [scamReports, setScamReports] = useState<ScamReport[]>([]);
 
   useEffect(() => {
     fetchPopularTags();
     fetchUnansweredQuestions();
     fetchRelatedQuestions();
     fetchTukTukRoutes();
-  }, []);
+    if (currentTags.length > 0) {
+      fetchScamReports();
+    }
+  }, [currentTags]);
 
   const fetchPopularTags = async () => {
     try {
@@ -90,6 +109,20 @@ export default function Sidebar() {
       setTukTukRoutes(data.popular_routes || []);
     } catch (error) {
       console.error("Error fetching tuktuk routes:", error);
+    }
+  };
+
+  const fetchScamReports = async () => {
+    try {
+      // Fetch scam reports for the first/most relevant tag
+      const tag = currentTags[0];
+      if (!tag) return;
+      
+      const response = await fetch(`/api/scam-reports?tag=${encodeURIComponent(tag)}&limit=3`);
+      const data = await response.json();
+      setScamReports(data.scams || []);
+    } catch (error) {
+      console.error("Error fetching scam reports:", error);
     }
   };
 
@@ -219,6 +252,54 @@ export default function Sidebar() {
           </div>
         )}
       </div>
+
+      {/* Scam Watch */}
+      {scamReports.length > 0 && (
+        <div className="bg-red-50 rounded-lg shadow-sm border border-red-200 p-4">
+          <h3 className="font-semibold mb-3 flex items-center gap-2 text-red-800">
+            <AlertTriangle className="w-5 h-5" /> Scam Watch: {currentTags[0]}
+          </h3>
+          <div className="space-y-3">
+            {scamReports.map((scam) => (
+              <div key={scam.id} className="text-sm">
+                <div className="flex items-start gap-2 mb-1">
+                  <div
+                    className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                      scam.severity === 'high'
+                        ? 'bg-red-600'
+                        : scam.severity === 'medium'
+                        ? 'bg-orange-500'
+                        : 'bg-yellow-500'
+                    }`}
+                  />
+                  <div className="flex-1">
+                    <div className="font-semibold text-red-900 flex items-center gap-2">
+                      {scam.title}
+                      {scam.verified && (
+                        <span className="text-xs bg-red-600 text-white px-1.5 py-0.5 rounded">Verified</span>
+                      )}
+                    </div>
+                    <p className="text-red-800 text-xs mt-1 leading-relaxed">
+                      {scam.description}
+                    </p>
+                    <div className="text-xs text-red-600 mt-1 flex items-center gap-2">
+                      <span>👍 {scam.upvotes}</span>
+                      <span>•</span>
+                      <span>by {scam.reported_by_username}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Link 
+            href="/scams" 
+            className="text-sm text-red-700 hover:underline mt-3 block text-center border-t border-red-200 pt-3 font-medium"
+          >
+            Report a scam →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

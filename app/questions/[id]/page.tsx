@@ -849,7 +849,7 @@ export default function QuestionDetailPage() {
           {/* Sidebar */}
           <div className="w-full lg:w-80 flex-shrink-0 lg:order-2">
             <div className="lg:sticky lg:top-8">
-              <Sidebar />
+              <Sidebar currentTags={question?.tags.map(t => t.name) || []} />
             </div>
           </div>
         </div>
