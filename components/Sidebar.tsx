@@ -55,10 +55,13 @@ export default function Sidebar({ currentTags = [] }: SidebarProps) {
     fetchUnansweredQuestions();
     fetchRelatedQuestions();
     fetchTukTukRoutes();
+  }, []);
+
+  useEffect(() => {
     if (currentTags.length > 0) {
       fetchScamReports();
     }
-  }, [currentTags]);
+  }, [currentTags.join(',')]);  // Use join to prevent array reference changes
 
   const fetchPopularTags = async () => {
     try {
