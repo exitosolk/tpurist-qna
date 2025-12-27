@@ -50,7 +50,7 @@ export default function SettingsPage() {
       
       if (response.ok) {
         setUserSettings(data.user);
-        setNewEmail(data.user.email);
+        setNewEmail(data.user.email || "");
       }
     } catch (error) {
       console.error("Error fetching settings:", error);
