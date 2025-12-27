@@ -85,6 +85,12 @@ export default function Navbar() {
                     >
                       Profile
                     </Link>
+                    <Link
+                      href="/settings"
+                      className="block px-4 py-2 hover:bg-gray-100"
+                    >
+                      Settings
+                    </Link>
                     <button
                       onClick={() => signOut()}
                       className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-b-lg flex items-center gap-2"
@@ -197,6 +203,13 @@ export default function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Profile ({session.user?.name || session.user?.email})
+                </Link>
+                <Link
+                  href="/settings"
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Settings
                 </Link>
                 <button
                   onClick={() => {
