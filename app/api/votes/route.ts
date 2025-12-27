@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(req: Request) {
   try {
@@ -164,6 +165,27 @@ export async function POST(req: Request) {
           "UPDATE users SET reputation = GREATEST(0, reputation + ?) WHERE id = ?",
           [repChange, contentOwnerId]
         );
+
+        // Create notification for upvotes only (not downvotes to avoid negativity)
+        if (voteType === 1) {
+          // Get content title/body for message
+          let contentTitle = "your content";
+          if (votableType === "question") {
+            const qResult = await query("SELECT title FROM questions WHERE id = ?", [votableId]);
+            if (qResult.rows && qResult.rows.length > 0) {
+              contentTitle = `"${qResult.rows[0].title}"`;
+            }
+          }
+
+          await createNotification({
+            userId: contentOwnerId,
+            type: votableType === "question" ? 'question_upvote' : 'answer_upvote',
+            actorId: userId,
+            message: `upvoted your ${votableType} ${votableType === "question" ? contentTitle : ""}`,
+            questionId: votableType === "question" ? votableId : undefined,
+            answerId: votableType === "answer" ? votableId : undefined,
+          });
+        }
       }
 
       return NextResponse.json({ message: "Vote recorded" }, { status: 201 });

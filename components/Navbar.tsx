@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Menu, X, User, LogOut, Search } from "lucide-react";
+import NotificationDropdown from "@/components/NotificationDropdown";
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -73,6 +74,7 @@ export default function Navbar() {
                 >
                   Ask Question
                 </Link>
+                <NotificationDropdown />
                 <div className="relative group">
                   <button className="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
                     <User className="w-5 h-5" />

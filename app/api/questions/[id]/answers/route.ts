@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(
   req: Request,
@@ -63,6 +64,27 @@ export async function POST(
        WHERE id = ?`,
       [questionId]
     );
+
+    // Get question owner to send notification
+    const questionResult = await query(
+      "SELECT user_id, title FROM questions WHERE id = ?",
+      [questionId]
+    );
+
+    if (questionResult.rows && questionResult.rows.length > 0) {
+      const questionOwnerId = questionResult.rows[0].user_id;
+      const questionTitle = questionResult.rows[0].title;
+
+      // Create notification for question owner
+      await createNotification({
+        userId: questionOwnerId,
+        type: 'answer',
+        actorId: userId,
+        message: `answered your question "${questionTitle}"`,
+        questionId: parseInt(questionId),
+        answerId: answerId,
+      });
+    }
 
     return NextResponse.json(
       { answerId, message: "Answer posted successfully" },
