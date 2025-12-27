@@ -222,7 +222,7 @@ export default function SettingsPage() {
             Email Address
           </h2>
 
-          {!userSettings?.email_verified && (
+          {userSettings && !userSettings.email_verified && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
@@ -239,7 +239,7 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {userSettings?.email_verified && (
+          {userSettings && userSettings.email_verified && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4 flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-green-600" />
               <span className="text-sm text-green-700">Email verified</span>
