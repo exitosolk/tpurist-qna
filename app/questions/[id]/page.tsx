@@ -358,7 +358,11 @@ export default function QuestionDetailPage() {
       const data = await response.json();
       
       if (!response.ok) {
-        alert(data.error || "Failed to vote");
+        if (data.verification_required) {
+          alert("Please verify your email address before voting. Check your inbox for the verification link, or request a new one from your profile settings.");
+        } else {
+          alert(data.error || "Failed to vote");
+        }
         return;
       }
 
@@ -390,13 +394,20 @@ export default function QuestionDetailPage() {
         }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         setAnswerBody("");
         setExperienceDate("");
         fetchQuestion();
+      } else if (data.verification_required) {
+        alert("Please verify your email address before posting answers. Check your inbox for the verification link, or request a new one from your profile settings.");
+      } else {
+        alert(data.error || "Failed to post answer");
       }
     } catch (error) {
       console.error("Error submitting answer:", error);
+      alert("An error occurred while submitting your answer");
     } finally {
       setSubmitting(false);
     }

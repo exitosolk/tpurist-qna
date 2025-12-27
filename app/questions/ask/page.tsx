@@ -30,9 +30,11 @@ export default function AskQuestionPage() {
   const [selectedCollectives, setSelectedCollectives] = useState<number[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [userEmailVerified, setUserEmailVerified] = useState(true);
 
   useEffect(() => {
     fetchCollectives();
+    checkEmailVerification();
   }, []);
 
   const fetchCollectives = async () => {
@@ -42,6 +44,18 @@ export default function AskQuestionPage() {
       setCollectives(data.collectives || []);
     } catch (error) {
       console.error("Error fetching collectives:", error);
+    }
+  };
+
+  const checkEmailVerification = async () => {
+    try {
+      const response = await fetch("/api/profile");
+      const data = await response.json();
+      if (data.user && data.user.email_verified !== undefined) {
+        setUserEmailVerified(data.user.email_verified);
+      }
+    } catch (error) {
+      console.error("Error checking email verification:", error);
     }
   };
 
@@ -112,7 +126,12 @@ export default function AskQuestionPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Something went wrong");
+        if (data.verification_required) {
+          setError("Please verify your email address before posting questions. Check your inbox for the verification link, or request a new one from your profile settings.");
+        } else {
+          setError(data.error || "Something went wrong");
+        }
+        return;
       }
 
       // Redirect to the newly created question using slug
@@ -133,6 +152,23 @@ export default function AskQuestionPage() {
         <p className="text-gray-600 mb-8">
           Share your travel question with the OneCeylon community
         </p>
+
+        {/* Email Verification Banner */}
+        {!userEmailVerified && (
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 rounded">
+            <div className="flex items-start">
+              <div className="flex-1">
+                <h3 className="text-blue-800 font-semibold mb-1">
+                  📧 Verify your email to post questions
+                </h3>
+                <p className="text-blue-700 text-sm">
+                  Please verify your email address to unlock full posting privileges and earn <strong>10 reputation points</strong>! Check your inbox or visit your{" "}
+                  <Link href="/profile" className="underline font-medium">profile</Link> to resend the verification email.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
