@@ -20,6 +20,7 @@ interface Question {
   display_name: string;
   reputation: number;
   tags: Array<{ id: number; name: string }>;
+  collectives?: Array<{ id: number; name: string; slug: string }>;
 }
 
 export default function QuestionsPage() {
@@ -132,6 +133,23 @@ export default function QuestionsPage() {
                     <p className="text-gray-600 mb-3 line-clamp-2">
                       {question.body.substring(0, 200)}...
                     </p>
+                    
+                    {/* Collective badges */}
+                    {question.collectives && question.collectives.length > 0 && (
+                      <div className="flex gap-2 mb-3">
+                        {question.collectives.map((collective) => (
+                          <Link
+                            key={collective.id}
+                            href={`/collectives/${collective.slug}`}
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded text-xs font-medium hover:from-blue-700 hover:to-blue-800"
+                          >
+                            <span>🏛️</span>
+                            {collective.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                    
                     <div className="flex justify-between items-center">
                       <div className="flex gap-2 flex-wrap">
                         {question.tags?.map((tag) => (

@@ -30,7 +30,16 @@ export async function GET(req: Request) {
           JOIN tags t ON qt2.tag_id = t.id
           WHERE qt2.question_id = q.id),
           JSON_ARRAY()
-        ) as tags
+        ) as tags,
+        COALESCE(
+          (SELECT JSON_ARRAYAGG(
+            JSON_OBJECT('id', c.id, 'name', c.name, 'slug', c.slug)
+          )
+          FROM collective_questions cq2
+          JOIN collectives c ON cq2.collective_id = c.id
+          WHERE cq2.question_id = q.id),
+          JSON_ARRAY()
+        ) as collectives
       FROM questions q
       JOIN users u ON q.user_id = u.id
     `;
@@ -98,7 +107,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { title, body: questionBody, tags } = body;
+    const { title, body: questionBody, tags, collectives } = body;
 
     if (!title || !questionBody) {
       return NextResponse.json(
@@ -177,6 +186,23 @@ export async function POST(req: Request) {
         await query(
           "UPDATE tags SET question_count = question_count + 1 WHERE id = ?",
           [tagId]
+        );
+      }
+    }
+
+    // Add to collectives
+    if (collectives && Array.isArray(collectives) && collectives.length > 0) {
+      for (const collectiveId of collectives) {
+        // Add question to collective
+        await query(
+          "INSERT INTO collective_questions (collective_id, question_id) VALUES (?, ?)",
+          [collectiveId, questionId]
+        );
+
+        // Update collective question count
+        await query(
+          "UPDATE collectives SET question_count = question_count + 1 WHERE id = ?",
+          [collectiveId]
         );
       }
     }

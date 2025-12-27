@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
@@ -12,6 +12,13 @@ const POPULAR_TAGS = [
   "food", "culture", "hiking", "tea-country", "budget-travel", "transportation"
 ];
 
+interface Collective {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+}
+
 export default function AskQuestionPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -19,8 +26,24 @@ export default function AskQuestionPage() {
   const [body, setBody] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [collectives, setCollectives] = useState<Collective[]>([]);
+  const [selectedCollectives, setSelectedCollectives] = useState<number[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchCollectives();
+  }, []);
+
+  const fetchCollectives = async () => {
+    try {
+      const response = await fetch("/api/collectives");
+      const data = await response.json();
+      setCollectives(data.collectives || []);
+    } catch (error) {
+      console.error("Error fetching collectives:", error);
+    }
+  };
 
   if (status === "loading") {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -41,6 +64,14 @@ export default function AskQuestionPage() {
 
   const handleRemoveTag = (tag: string) => {
     setTags(tags.filter((t) => t !== tag));
+  };
+
+  const handleToggleCollective = (collectiveId: number) => {
+    setSelectedCollectives(prev =>
+      prev.includes(collectiveId)
+        ? prev.filter(id => id !== collectiveId)
+        : [...prev, collectiveId]
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,6 +105,7 @@ export default function AskQuestionPage() {
           title,
           body,
           tags,
+          collectives: selectedCollectives,
         }),
       });
 
@@ -207,6 +239,46 @@ export default function AskQuestionPage() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Collectives Section */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Collectives (Optional)
+            </label>
+            <p className="text-sm text-gray-500 mb-3">
+              Add your question to relevant travel collectives to reach the right audience
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {collectives.map((collective) => (
+                <label
+                  key={collective.id}
+                  className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition ${
+                    selectedCollectives.includes(collective.id)
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedCollectives.includes(collective.id)}
+                    onChange={() => handleToggleCollective(collective.id)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">{collective.name}</div>
+                    <div className="text-sm text-gray-600 line-clamp-2">{collective.description}</div>
+                  </div>
+                </label>
+              ))}
+            </div>
+
+            {selectedCollectives.length > 0 && (
+              <p className="text-sm text-green-600 mt-3">
+                ✓ {selectedCollectives.length} collective{selectedCollectives.length > 1 ? 's' : ''} selected
+              </p>
+            )}
           </div>
 
           <div className="flex gap-4">
