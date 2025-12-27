@@ -52,6 +52,9 @@ export default function Navbar() {
             <Link href="/collectives" className="text-gray-700 hover:text-blue-600">
               Collectives
             </Link>
+            <Link href="/tuktuk-prices" className="text-gray-700 hover:text-blue-600">
+              TukTuk Prices
+            </Link>
             <Link href="/tags" className="text-gray-700 hover:text-blue-600">
               Tags
             </Link>
@@ -141,18 +144,25 @@ export default function Navbar() {
               Questions
             </Link>
             <Link
-              href="/tags"
-              className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Tags
-            </Link>
-            <Link
               href="/collectives"
               className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
               onClick={() => setMobileMenuOpen(false)}
             >
               Collectives
+            </Link>
+            <Link
+              href="/tuktuk-prices"
+              className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              TukTuk Prices
+            </Link>
+            <Link
+              href="/tags"
+              className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Tags
             </Link>
             <Link
               href="/users"
