@@ -20,15 +20,24 @@ interface Question {
   username: string;
 }
 
+interface TukTukRoute {
+  start_location: string;
+  end_location: string;
+  avg_price: number;
+  report_count: number;
+}
+
 export default function Sidebar() {
   const [popularTags, setPopularTags] = useState<Tag[]>([]);
   const [unansweredQuestions, setUnansweredQuestions] = useState<Question[]>([]);
   const [relatedQuestions, setRelatedQuestions] = useState<Question[]>([]);
+  const [tukTukRoutes, setTukTukRoutes] = useState<TukTukRoute[]>([]);
 
   useEffect(() => {
     fetchPopularTags();
     fetchUnansweredQuestions();
     fetchRelatedQuestions();
+    fetchTukTukRoutes();
   }, []);
 
   const fetchPopularTags = async () => {
@@ -70,6 +79,16 @@ export default function Sidebar() {
       setRelatedQuestions(data.questions || []);
     } catch (error) {
       console.error("Error fetching related questions:", error);
+    }
+  };
+
+  const fetchTukTukRoutes = async () => {
+    try {
+      const response = await fetch("/api/tuktuk-prices?limit=5");
+      const data = await response.json();
+      setTukTukRoutes(data.popular_routes || []);
+    } catch (error) {
+      console.error("Error fetching tuktuk routes:", error);
     }
   };
 
@@ -151,6 +170,40 @@ export default function Sidebar() {
           ))}
         </div>
       </div>
+
+      {/* TukTuk Fair Prices */}
+      {tukTukRoutes.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border p-4">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <Car className="w-4 h-4" /> Fair TukTuk Prices
+          </h3>
+          <div className="space-y-3">
+            {tukTukRoutes.map((route, idx) => (
+              <div key={idx} className="text-sm border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+                <div className="font-medium text-gray-700 mb-1 flex items-center gap-1">
+                  <span className="truncate">{route.start_location}</span>
+                  <span className="text-gray-400">→</span>
+                  <span className="truncate">{route.end_location}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="text-blue-600 font-semibold text-base">
+                    LKR {Math.round(route.avg_price)}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {route.report_count} {route.report_count === 1 ? 'report' : 'reports'}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Link 
+            href="/tuktuk-prices" 
+            className="text-sm text-blue-600 hover:underline mt-3 block text-center border-t pt-3"
+          >
+            Report a price →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
