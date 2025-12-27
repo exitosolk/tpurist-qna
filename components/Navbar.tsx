@@ -55,6 +55,9 @@ export default function Navbar() {
             <Link href="/tuktuk-prices" className="text-gray-700 hover:text-blue-600">
               TukTuk Prices
             </Link>
+            <Link href="/scams" className="text-red-600 hover:text-red-700">
+              Scams
+            </Link>
             <Link href="/tags" className="text-gray-700 hover:text-blue-600">
               Tags
             </Link>
@@ -156,6 +159,13 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
             >
               TukTuk Prices
+            </Link>
+            <Link
+              href="/scams"
+              className="px-4 py-2 text-red-600 hover:bg-red-50 rounded"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Scams
             </Link>
             <Link
               href="/tags"
