@@ -669,14 +669,14 @@ export default function QuestionDetailPage() {
                     )}
 
                     <div className="flex-1">
-                    {editingAnswerId === answer.id ? (
-                      <div className="mb-4">
-                        <MarkdownEditor
-                          value={editAnswerBody}
-                          onChange={setEditAnswerBody}
-                          placeholder="Edit your answer..."
-                        />
-                        <div className="flex gap-2 mt-2">
+                      {editingAnswerId === answer.id ? (
+                        <div className="mb-4">
+                          <MarkdownEditor
+                            value={editAnswerBody}
+                            onChange={setEditAnswerBody}
+                            placeholder="Edit your answer..."
+                          />
+                          <div className="flex gap-2 mt-2">
                           <button
                             onClick={() => handleSaveAnswer(answer.id)}
                             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -691,154 +691,154 @@ export default function QuestionDetailPage() {
                           </button>
                         </div>
                       </div>
-                    ) : (
-                      <MarkdownRenderer content={answer.body} />
-                    )}
+                      ) : (
+                        <MarkdownRenderer content={answer.body} />
+                      )}
 
-                    {/* Action buttons */}
-                    <div className="flex flex-wrap gap-4 my-4 text-sm text-gray-600">
-                      <Tooltip content="Share a link to this answer">
-                        <button
-                          onClick={() => handleShareAnswer(answer.id)}
-                          className="flex items-center gap-1 hover:text-blue-600"
-                        >
-                          {copiedAnswerId === answer.id ? (
-                            <><Check className="w-4 h-4" /> Link copied!</>
-                          ) : (
-                            <><Share2 className="w-4 h-4" /> Share</>
-                          )}
-                        </button>
-                      </Tooltip>
-
-                      {currentUserId === answer.user_id && editingAnswerId !== answer.id && (
-                        <Tooltip content="Edit this answer">
+                      {/* Action buttons */}
+                      <div className="flex flex-wrap gap-4 my-4 text-sm text-gray-600">
+                        <Tooltip content="Share a link to this answer">
                           <button
-                            onClick={() => handleEditAnswer(answer.id, answer.body)}
+                            onClick={() => handleShareAnswer(answer.id)}
                             className="flex items-center gap-1 hover:text-blue-600"
                           >
-                            <Edit className="w-4 h-4" /> Edit
+                            {copiedAnswerId === answer.id ? (
+                              <><Check className="w-4 h-4" /> Link copied!</>
+                            ) : (
+                              <><Share2 className="w-4 h-4" /> Share</>
+                            )}
                           </button>
                         </Tooltip>
-                      )}
 
-                      <Tooltip content={followedAnswers[answer.id] ? "Remove this answer from your bookmarks" : "Bookmark this answer to save it for later"}>
-                        <button
-                          onClick={() => handleFollowAnswer(answer.id)}
-                          className={`flex items-center gap-1 ${
-                            followedAnswers[answer.id] ? "text-blue-600" : "hover:text-blue-600"
-                          }`}
-                        >
-                          <Bookmark className={`w-4 h-4 ${followedAnswers[answer.id] ? "fill-current" : ""}`} />
-                          {followedAnswers[answer.id] ? "Following" : "Follow"}
-                        </button>
-                      </Tooltip>
-
-                      {question && currentUserId === question.user_id && !answer.is_accepted && (
-                        <Tooltip content="Mark this answer as the accepted solution">
-                          <button
-                            onClick={() => handleAcceptAnswer(answer.id)}
-                            className="flex items-center gap-1 text-green-600 hover:text-green-700 font-medium"
-                          >
-                            ✓ Accept Answer
-                          </button>
-                        </Tooltip>
-                      )}
-                      
-                      <span className="text-gray-300">|</span>
-                      
-                      <Tooltip content="Add a comment to this answer">
-                        <button
-                          onClick={() => setShowCommentForm({ ...showCommentForm, [answer.id]: !showCommentForm[answer.id] })}
-                          className="hover:text-blue-600"
-                        >
-                          Add a comment
-                        </button>
-                      </Tooltip>
-                    </div>
-
-                    {/* Comments */}
-                    {answer.comments && answer.comments.length > 0 && (
-                      <div className="border-t pt-4 space-y-3">
-                        {answer.comments.map((comment) => (
-                          <div key={comment.id} className="text-sm border-l-2 border-gray-200 pl-4 py-2">
-                            <p className="text-gray-700 mb-1">{comment.text}</p>
-                            <span className="text-gray-500">
-                              – <Link href={`/users/${comment.username}`} className="text-blue-600 hover:text-blue-800">
-                                {comment.display_name || comment.username}
-                              </Link>
-                              {' '}({comment.reputation}) {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Comment Form */}
-                    {showCommentForm[answer.id] && session && (
-                      <div className="mt-4 border-t pt-4">
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={commentTexts[answer.id] || ""}
-                            onChange={(e) => setCommentTexts({ ...commentTexts, [answer.id]: e.target.value })}
-                            placeholder="Add a comment..."
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            onKeyPress={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                handleAddComment(answer.id);
-                              }
-                            }}
-                          />
-                          <button
-                            onClick={() => handleAddComment(answer.id)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                          >
-                            Add
-                          </button>
-                          <button
-                            onClick={() => setShowCommentForm({ ...showCommentForm, [answer.id]: false })}
-                            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 text-sm"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex justify-end mt-4">
-                      <div className={`rounded p-4 ${answer.is_accepted ? 'bg-green-50' : 'bg-gray-50'}`}>
-                        <div className="text-sm text-gray-600 mb-1">
-                          answered {formatDistanceToNow(new Date(answer.created_at), { addSuffix: true })}
-                        </div>
-                        {answer.experience_date && (
-                          <div className="text-sm text-blue-600 mb-2 flex items-center gap-1">
-                            <span>💰</span>
-                            <span>
-                              Price info from: {new Date(answer.experience_date).toLocaleDateString('en-US', { 
-                                year: 'numeric', 
-                                month: 'long' 
-                              })}
-                            </span>
-                          </div>
+                        {currentUserId === answer.user_id && editingAnswerId !== answer.id && (
+                          <Tooltip content="Edit this answer">
+                            <button
+                              onClick={() => handleEditAnswer(answer.id, answer.body)}
+                              className="flex items-center gap-1 hover:text-blue-600"
+                            >
+                              <Edit className="w-4 h-4" /> Edit
+                            </button>
+                          </Tooltip>
                         )}
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                            {(answer.display_name || answer.username).charAt(0).toUpperCase()}
+
+                        <Tooltip content={followedAnswers[answer.id] ? "Remove this answer from your bookmarks" : "Bookmark this answer to save it for later"}>
+                          <button
+                            onClick={() => handleFollowAnswer(answer.id)}
+                            className={`flex items-center gap-1 ${
+                              followedAnswers[answer.id] ? "text-blue-600" : "hover:text-blue-600"
+                            }`}
+                          >
+                            <Bookmark className={`w-4 h-4 ${followedAnswers[answer.id] ? "fill-current" : ""}`} />
+                            {followedAnswers[answer.id] ? "Following" : "Follow"}
+                          </button>
+                        </Tooltip>
+
+                        {question && currentUserId === question.user_id && !answer.is_accepted && (
+                          <Tooltip content="Mark this answer as the accepted solution">
+                            <button
+                              onClick={() => handleAcceptAnswer(answer.id)}
+                              className="flex items-center gap-1 text-green-600 hover:text-green-700 font-medium"
+                            >
+                              ✓ Accept Answer
+                            </button>
+                          </Tooltip>
+                        )}
+                        
+                        <span className="text-gray-300">|</span>
+                        
+                        <Tooltip content="Add a comment to this answer">
+                          <button
+                            onClick={() => setShowCommentForm({ ...showCommentForm, [answer.id]: !showCommentForm[answer.id] })}
+                            className="hover:text-blue-600"
+                          >
+                            Add a comment
+                          </button>
+                        </Tooltip>
+                      </div>
+
+                      {/* Comments */}
+                      {answer.comments && answer.comments.length > 0 && (
+                        <div className="border-t pt-4 space-y-3">
+                          {answer.comments.map((comment) => (
+                            <div key={comment.id} className="text-sm border-l-2 border-gray-200 pl-4 py-2">
+                              <p className="text-gray-700 mb-1">{comment.text}</p>
+                              <span className="text-gray-500">
+                                – <Link href={`/users/${comment.username}`} className="text-blue-600 hover:text-blue-800">
+                                  {comment.display_name || comment.username}
+                                </Link>
+                                {' '}({comment.reputation}) {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Comment Form */}
+                      {showCommentForm[answer.id] && session && (
+                        <div className="mt-4 border-t pt-4">
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={commentTexts[answer.id] || ""}
+                              onChange={(e) => setCommentTexts({ ...commentTexts, [answer.id]: e.target.value })}
+                              placeholder="Add a comment..."
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              onKeyPress={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  handleAddComment(answer.id);
+                                }
+                              }}
+                            />
+                            <button
+                              onClick={() => handleAddComment(answer.id)}
+                              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                            >
+                              Add
+                            </button>
+                            <button
+                              onClick={() => setShowCommentForm({ ...showCommentForm, [answer.id]: false })}
+                              className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 text-sm"
+                            >
+                              Cancel
+                            </button>
                           </div>
-                          <div>
-                            <Link href={`/users/${answer.username}`} className="font-semibold text-blue-600 hover:text-blue-800">
-                              {answer.display_name || answer.username}
-                            </Link>
-                            <div className="text-sm text-gray-600">{answer.reputation} reputation</div>
+                        </div>
+                      )}
+
+                      <div className="flex justify-end mt-4">
+                        <div className={`rounded p-4 ${answer.is_accepted ? 'bg-green-50' : 'bg-gray-50'}`}>
+                          <div className="text-sm text-gray-600 mb-1">
+                            answered {formatDistanceToNow(new Date(answer.created_at), { addSuffix: true })}
+                          </div>
+                          {answer.experience_date && (
+                            <div className="text-sm text-blue-600 mb-2 flex items-center gap-1">
+                              <span>💰</span>
+                              <span>
+                                Price info from: {new Date(answer.experience_date).toLocaleDateString('en-US', { 
+                                  year: 'numeric', 
+                                  month: 'long' 
+                                })}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                              {(answer.display_name || answer.username).charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <Link href={`/users/${answer.username}`} className="font-semibold text-blue-600 hover:text-blue-800">
+                                {answer.display_name || answer.username}
+                              </Link>
+                              <div className="text-sm text-gray-600">{answer.reputation} reputation</div>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
+              );
             })}
           </div>
         </div>
