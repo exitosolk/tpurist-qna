@@ -111,7 +111,7 @@ export async function GET(req: NextRequest) {
         FROM tuktuk_prices 
         WHERE date_of_travel >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
         GROUP BY start_location, end_location
-        HAVING COUNT(*) >= 1
+        HAVING COUNT(*) >= 3
         ORDER BY report_count DESC, last_reported DESC
         LIMIT ?`,
         [limit]
