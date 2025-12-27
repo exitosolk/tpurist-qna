@@ -396,6 +396,37 @@ export default function ProfilePage() {
               ))
             )}
           </div>
+        ) : activeTab === "answers" ? (
+          <div className="space-y-4">
+            {answers.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+                <p className="text-gray-600 mb-4">You haven't posted any answers yet.</p>
+                <Link
+                  href="/questions"
+                  className="inline-block px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Browse Questions
+                </Link>
+              </div>
+            ) : (
+              answers.map((answer) => (
+                <div key={answer.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+                  <Link href={`/questions/${answer.question_id}`}>
+                    <h3 className="text-lg font-medium text-blue-600 hover:text-blue-800 mb-2">
+                      {answer.question_title}
+                    </h3>
+                  </Link>
+                  <div className="flex gap-6 text-sm text-gray-600">
+                    <span>{answer.score} votes</span>
+                    {answer.is_accepted && (
+                      <span className="text-green-600 font-medium">✓ Accepted</span>
+                    )}
+                    <span>answered {formatDistanceToNow(new Date(answer.created_at), { addSuffix: true })}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         ) : activeTab === "bookmarks" ? (
           <div className="space-y-4">
             {follows.length === 0 ? (
@@ -429,37 +460,6 @@ export default function ProfilePage() {
                   </div>
                 );
               })
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {answers.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
-                <p className="text-gray-600 mb-4">You haven't posted any answers yet.</p>
-                <Link
-                  href="/questions"
-                  className="inline-block px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Browse Questions
-                </Link>
-              </div>
-            ) : (
-              answers.map((answer) => (
-                <div key={answer.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
-                  <Link href={`/questions/${answer.question_id}`}>
-                    <h3 className="text-lg font-medium text-blue-600 hover:text-blue-800 mb-2">
-                      {answer.question_title}
-                    </h3>
-                  </Link>
-                  <div className="flex gap-6 text-sm text-gray-600">
-                    <span>{answer.score} votes</span>
-                    {answer.is_accepted && (
-                      <span className="text-green-600 font-medium">✓ Accepted</span>
-                    )}
-                    <span>answered {formatDistanceToNow(new Date(answer.created_at), { addSuffix: true })}</span>
-                  </div>
-                </div>
-              ))
             )}
           </div>
         ) : activeTab === "reputation" ? (
