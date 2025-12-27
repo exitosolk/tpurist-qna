@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
     // Find user with this token
     const userResult = await query(
-      "SELECT id, email, email_verified, verification_token_expires, reputation FROM users WHERE verification_token = ?",
+      "SELECT id, email, email_verified, verification_token_expires, reputation, email_verification_bonus_awarded FROM users WHERE verification_token = ?",
       [token]
     );
 
@@ -44,22 +44,30 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Mark email as verified, clear token, and add 10 reputation points
+    // Only award points if this is the first time they verify an email
     const VERIFICATION_POINTS = 10;
+    const shouldAwardPoints = !user.email_verification_bonus_awarded;
+    const pointsToAdd = shouldAwardPoints ? VERIFICATION_POINTS : 0;
+
+    // Mark email as verified, clear token, and award points only on first verification
     await query(
       `UPDATE users 
        SET email_verified = TRUE, 
            verification_token = NULL, 
            verification_token_expires = NULL,
-           reputation = reputation + ?
+           reputation = reputation + ?,
+           email_verification_bonus_awarded = TRUE
        WHERE id = ?`,
-      [VERIFICATION_POINTS, user.id]
+      [pointsToAdd, user.id]
     );
 
     return NextResponse.json({
-      message: "Email verified successfully!",
-      pointsEarned: VERIFICATION_POINTS,
-      newReputation: user.reputation + VERIFICATION_POINTS,
+      message: shouldAwardPoints 
+        ? "Email verified successfully!" 
+        : "Email verified successfully! (Bonus already claimed)",
+      pointsEarned: pointsToAdd,
+      newReputation: user.reputation + pointsToAdd,
+      firstTimeVerification: shouldAwardPoints,
     });
   } catch (error) {
     console.error("Error verifying email:", error);
