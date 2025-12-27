@@ -6,7 +6,7 @@ import { createNotification } from "@/lib/notifications";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -18,6 +18,7 @@ export async function POST(
       );
     }
 
+    const params = await context.params;
     const body = await req.json();
     const { body: answerBody, experience_date } = body;
 
