@@ -606,8 +606,8 @@ export default function QuestionDetailPage() {
               const isStale = answer.is_accepted && answerDate < sixMonthsAgo;
 
               return (
-              <div key={answer.id} id={`answer-${answer.id}`} className="bg-white rounded-lg shadow-sm border p-6 scroll-mt-20">
-                {/* Stale Data Warning Banner */}
+                <div key={answer.id} id={`answer-${answer.id}`} className="bg-white rounded-lg shadow-sm border p-6 scroll-mt-20">
+                  {/* Stale Data Warning Banner */}
                 {isStale && (
                   <div className="mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
                     <div className="flex items-start">
@@ -837,8 +837,7 @@ export default function QuestionDetailPage() {
                     </div>
                   </div>
                 </div>
-              </div>
-            );
+              );
             })}
           </div>
         </div>
