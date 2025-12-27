@@ -73,6 +73,7 @@ export default function QuestionDetailPage() {
   const [copiedQuestion, setCopiedQuestion] = useState(false);
   const [answerError, setAnswerError] = useState("");
   const [voteError, setVoteError] = useState("");
+  const [generalError, setGeneralError] = useState("");
 
   useEffect(() => {
     fetchQuestion();
@@ -230,7 +231,8 @@ export default function QuestionDetailPage() {
 
   const handleSaveAnswer = async (answerId: number) => {
     if (!editAnswerBody.trim()) {
-      alert("Answer body cannot be empty");
+      setGeneralError("Answer body cannot be empty");
+      setTimeout(() => setGeneralError(""), 5000);
       return;
     }
 
@@ -249,11 +251,13 @@ export default function QuestionDetailPage() {
         fetchQuestion();
       } else {
         const data = await response.json();
-        alert(data.error || "Failed to update answer");
+        setGeneralError(data.error || "Failed to update answer");
+        setTimeout(() => setGeneralError(""), 5000);
       }
     } catch (error) {
       console.error("Error updating answer:", error);
-      alert("Failed to update answer");
+      setGeneralError("Failed to update answer");
+      setTimeout(() => setGeneralError(""), 5000);
     }
   };
 
@@ -264,7 +268,8 @@ export default function QuestionDetailPage() {
 
   const handleFollowAnswer = async (answerId: number) => {
     if (!session) {
-      alert("Please log in to follow answers");
+      setGeneralError("Please log in to follow answers");
+      setTimeout(() => setGeneralError(""), 5000);
       return;
     }
 
@@ -285,17 +290,20 @@ export default function QuestionDetailPage() {
       if (response.ok) {
         setFollowedAnswers({ ...followedAnswers, [answerId]: data.isFollowing });
       } else {
-        alert(data.error || "Failed to follow answer");
+        setGeneralError(data.error || "Failed to follow answer");
+        setTimeout(() => setGeneralError(""), 5000);
       }
     } catch (error) {
       console.error("Error following answer:", error);
-      alert("Failed to follow answer");
+      setGeneralError("Failed to follow answer");
+      setTimeout(() => setGeneralError(""), 5000);
     }
   };
 
   const handleFollowQuestion = async () => {
     if (!session) {
-      alert("Please log in to bookmark questions");
+      setGeneralError("Please log in to bookmark questions");
+      setTimeout(() => setGeneralError(""), 5000);
       return;
     }
 
@@ -318,11 +326,13 @@ export default function QuestionDetailPage() {
       if (response.ok) {
         setFollowedQuestion(data.isFollowing);
       } else {
-        alert(data.error || "Failed to bookmark question");
+        setGeneralError(data.error || "Failed to bookmark question");
+        setTimeout(() => setGeneralError(""), 5000);
       }
     } catch (error) {
       console.error("Error bookmarking question:", error);
-      alert("Failed to bookmark question");
+      setGeneralError("Failed to bookmark question");
+      setTimeout(() => setGeneralError(""), 5000);
     }
   };
 
@@ -448,6 +458,23 @@ export default function QuestionDetailPage() {
                   </div>
                   <button
                     onClick={() => setVoteError("")}
+                    className="text-red-700 hover:text-red-900 ml-4"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* General Error Banner */}
+            {generalError && (
+              <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded">
+                <div className="flex items-start">
+                  <div className="flex-1">
+                    <p className="text-red-700 text-sm">{generalError}</p>
+                  </div>
+                  <button
+                    onClick={() => setGeneralError("")}
                     className="text-red-700 hover:text-red-900 ml-4"
                   >
                     ✕
