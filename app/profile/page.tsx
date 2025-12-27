@@ -47,6 +47,15 @@ interface Follow {
   followed_at: string;
 }
 
+interface ReputationHistory {
+  id: number;
+  change_amount: number;
+  reason: string;
+  reference_type: string;
+  reference_id: number | null;
+  created_at: string;
+}
+
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -54,8 +63,9 @@ export default function ProfilePage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [follows, setFollows] = useState<Follow[]>([]);
+  const [reputationHistory, setReputationHistory] = useState<ReputationHistory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"questions" | "answers" | "bookmarks">("questions");
+  const [activeTab, setActiveTab] = useState<"questions" | "answers" | "bookmarks" | "reputation">("questions");
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ display_name: "", bio: "" });
   const [saving, setSaving] = useState(false);
@@ -93,6 +103,13 @@ export default function ProfilePage() {
       const followsData = await followsResponse.json();
       if (followsResponse.ok) {
         setFollows(followsData.follows || []);
+      }
+
+      // Fetch reputation history
+      const reputationResponse = await fetch("/api/reputation-history");
+      const reputationData = await reputationResponse.json();
+      if (reputationResponse.ok) {
+        setReputationHistory(reputationData.history || []);
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -334,6 +351,16 @@ export default function ProfilePage() {
               >
                 Bookmarks ({follows.length})
               </button>
+              <button
+                onClick={() => setActiveTab("reputation")}
+                className={`pb-4 px-1 border-b-2 font-medium ${
+                  activeTab === "reputation"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Reputation ({profile?.reputation || 0})
+              </button>
             </nav>
           </div>
         </div>
@@ -435,7 +462,42 @@ export default function ProfilePage() {
               ))
             )}
           </div>
-        )}
+        ) : activeTab === "reputation" ? (
+          <div className="space-y-4">
+            {reputationHistory.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+                <p className="text-gray-600">No reputation history yet.</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+                <div className="p-6 border-b bg-gray-50">
+                  <h3 className="text-lg font-semibold">Reputation History</h3>
+                  <p className="text-sm text-gray-600 mt-1">Total reputation: {profile?.reputation || 0} points</p>
+                </div>
+                <div className="divide-y">
+                  {reputationHistory.map((entry) => (
+                    <div key={entry.id} className="p-4 hover:bg-gray-50 flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <span className={`text-lg font-semibold ${entry.change_amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {entry.change_amount > 0 ? '+' : ''}{entry.change_amount}
+                          </span>
+                          <span className="text-gray-700">{entry.reason}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
+                          <span className="capitalize bg-gray-100 px-2 py-1 rounded text-xs">
+                            {entry.reference_type.replace('_', ' ')}
+                          </span>
+                          <span>{formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : null}
       </main>
     </div>
   );
