@@ -56,7 +56,7 @@ export async function PATCH(req: NextRequest) {
 
     // Get user ID
     const userResult = await query(
-      "SELECT id, email, password FROM users WHERE email = ?",
+      "SELECT id, email, password_hash FROM users WHERE email = ?",
       [session.user.email]
     );
 
@@ -103,7 +103,7 @@ export async function PATCH(req: NextRequest) {
       }
 
       // Verify current password
-      const isValidPassword = await bcrypt.compare(current_password, user.password);
+      const isValidPassword = await bcrypt.compare(current_password, user.password_hash);
       if (!isValidPassword) {
         return NextResponse.json(
           { error: "Current password is incorrect" },
@@ -114,7 +114,7 @@ export async function PATCH(req: NextRequest) {
       // Hash and update new password
       const hashedPassword = await bcrypt.hash(new_password, 10);
       await query(
-        "UPDATE users SET password = ? WHERE id = ?",
+        "UPDATE users SET password_hash = ? WHERE id = ?",
         [hashedPassword, user.id]
       );
     }
