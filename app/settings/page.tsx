@@ -49,7 +49,12 @@ export default function SettingsPage() {
       const data = await response.json();
       
       if (response.ok) {
-        setUserSettings(data.user);
+        // Convert MySQL boolean (0/1) to JavaScript boolean
+        const user = {
+          ...data.user,
+          email_verified: Boolean(data.user.email_verified)
+        };
+        setUserSettings(user);
         setNewEmail(data.user.email || "");
       }
     } catch (error) {
