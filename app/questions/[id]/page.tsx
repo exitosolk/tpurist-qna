@@ -608,8 +608,8 @@ export default function QuestionDetailPage() {
               return (
                 <div key={answer.id} id={`answer-${answer.id}`} className="bg-white rounded-lg shadow-sm border p-6 scroll-mt-20">
                   {/* Stale Data Warning Banner */}
-                {isStale && (
-                  <div className="mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+                  {isStale && (
+                    <div className="mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
                     <div className="flex items-start">
                       <div className="flex-shrink-0">
                         <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
@@ -623,9 +623,9 @@ export default function QuestionDetailPage() {
                       </div>
                     </div>
                   </div>
-                )}
+                  )}
 
-                <div className="flex gap-4">
+                  <div className="flex gap-4">
                   {/* Vote buttons - hide for own content */}
                   {currentUserId !== answer.user_id && (
                     <div className="flex flex-col items-center gap-2">
