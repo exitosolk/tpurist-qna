@@ -72,7 +72,7 @@ export async function GET(
         u.display_name
       FROM comments c
       JOIN users u ON c.user_id = u.id
-      WHERE c.commentable_type = 'question' AND c.commentable_id = $1
+      WHERE c.commentable_type = 'question' AND c.commentable_id = ?
       ORDER BY c.created_at ASC`,
       [questionId]
     );

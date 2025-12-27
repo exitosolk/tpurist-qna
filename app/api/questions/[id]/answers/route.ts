@@ -18,7 +18,7 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { body: answerBody } = body;
+    const { body: answerBody, experience_date } = body;
 
     if (!answerBody) {
       return NextResponse.json(
@@ -45,9 +45,12 @@ export async function POST(
 
     // Create answer
     const answerResult = await query(
-      `INSERT INTO answers (question_id, user_id, body) 
-       VALUES (?, ?, ?)`,
-      [questionId, userId, answerBody]
+      experience_date
+        ? `INSERT INTO answers (question_id, user_id, body, experience_date) VALUES (?, ?, ?, ?)`
+        : `INSERT INTO answers (question_id, user_id, body) VALUES (?, ?, ?)`,
+      experience_date
+        ? [questionId, userId, answerBody, experience_date]
+        : [questionId, userId, answerBody]
     );
 
     const answerId = answerResult.insertId;

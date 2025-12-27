@@ -39,6 +39,7 @@ interface Answer extends User {
   score: number;
   is_accepted: boolean;
   created_at: string;
+  experience_date?: string;
   comments?: Comment[];
 }
 
@@ -58,6 +59,7 @@ export default function QuestionDetailPage() {
   const [question, setQuestion] = useState<Question | null>(null);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [answerBody, setAnswerBody] = useState("");
+  const [experienceDate, setExperienceDate] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
@@ -384,11 +386,13 @@ export default function QuestionDetailPage() {
         },
         body: JSON.stringify({
           body: answerBody,
+          experience_date: experienceDate || null,
         }),
       });
 
       if (response.ok) {
         setAnswerBody("");
+        setExperienceDate("");
         fetchQuestion();
       }
     } catch (error) {
@@ -742,6 +746,17 @@ export default function QuestionDetailPage() {
                         <div className="text-sm text-gray-600 mb-1">
                           answered {formatDistanceToNow(new Date(answer.created_at), { addSuffix: true })}
                         </div>
+                        {answer.experience_date && (
+                          <div className="text-sm text-blue-600 mb-2 flex items-center gap-1">
+                            <span>💰</span>
+                            <span>
+                              Price info from: {new Date(answer.experience_date).toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'long' 
+                              })}
+                            </span>
+                          </div>
+                        )}
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
                             {(answer.display_name || answer.username).charAt(0).toUpperCase()}
@@ -774,6 +789,41 @@ export default function QuestionDetailPage() {
                 placeholder="Share your knowledge and help other travelers. You can add images to illustrate your answer."
                 minLength={30}
               />
+              
+              {/* Experience Date Field */}
+              <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <label className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={!!experienceDate}
+                    onChange={(e) => {
+                      if (!e.target.checked) {
+                        setExperienceDate("");
+                      }
+                    }}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900 mb-1">
+                      💰 Include pricing/cost information date (Optional)
+                    </div>
+                    <p className="text-sm text-gray-600 mb-3">
+                      If your answer includes prices, costs, or fees, please specify when you experienced this. 
+                      This helps track pricing changes over time.
+                    </p>
+                    {experienceDate !== null && (
+                      <input
+                        type="date"
+                        value={experienceDate}
+                        onChange={(e) => setExperienceDate(e.target.value)}
+                        max={new Date().toISOString().split('T')[0]}
+                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    )}
+                  </div>
+                </label>
+              </div>
+
               <button
                 type="submit"
                 disabled={submitting}
