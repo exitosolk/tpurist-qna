@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import Navbar from "@/components/Navbar";
 import { Car, TrendingUp, Calendar, MapPin } from "lucide-react";
@@ -37,6 +37,8 @@ export default function TukTukPricesPage() {
   const [recentReports, setRecentReports] = useState<RecentReport[]>([]);
   const [popularRoutes, setPopularRoutes] = useState<RouteData[]>([]);
   const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,20 +88,30 @@ export default function TukTukPricesPage() {
     e.preventDefault();
     
     if (!searchStart || !searchEnd) {
+      setSearchError("Please enter both start and end locations");
       return;
     }
 
     setSearching(true);
+    setSearchError("");
+    setHasSearched(false);
+    
     try {
       const response = await fetch(
         `/api/tuktuk-prices?start=${encodeURIComponent(searchStart)}&end=${encodeURIComponent(searchEnd)}`
       );
       const data = await response.json();
 
-      setRouteData(data.route || null);
-      setRecentReports(data.recent_reports || []);
+      if (response.ok) {
+        setRouteData(data.route || null);
+        setRecentReports(data.recent_reports || []);
+        setHasSearched(true);
+      } else {
+        setSearchError(data.error || "Failed to search route");
+      }
     } catch (error) {
       console.error("Error searching route:", error);
+      setSearchError("Failed to search. Please try again.");
     } finally {
       setSearching(false);
     }
@@ -115,9 +127,9 @@ export default function TukTukPricesPage() {
     }
   };
 
-  useState(() => {
+  React.useEffect(() => {
     fetchPopularRoutes();
-  });
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -284,6 +296,19 @@ export default function TukTukPricesPage() {
                 {searching ? "Searching..." : "Search Route"}
               </button>
             </form>
+
+            {searchError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-red-700 text-sm">
+                {searchError}
+              </div>
+            )}
+
+            {hasSearched && !routeData && !searchError && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 text-center">
+                <p className="text-gray-700 mb-2">No pricing data found for this route yet.</p>
+                <p className="text-sm text-gray-600">Be the first to report a price for <strong>{searchStart} → {searchEnd}</strong></p>
+              </div>
+            )}
 
             {routeData && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
