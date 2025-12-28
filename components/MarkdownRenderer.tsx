@@ -30,15 +30,15 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
             ) : (
               <code className="block bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-4 font-mono text-sm" {...props} />
             ),
-          pre: ({ node, ...props }) => <div {...props} />,
-          p: ({ node, ...props }) => <p className="mb-4" {...props} />,
-          h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4 mt-6" {...props} />,
-          h2: ({ node, ...props }) => <h2 className="text-xl font-bold mb-3 mt-5" {...props} />,
-          h3: ({ node, ...props }) => <h3 className="text-lg font-bold mb-2 mt-4" {...props} />,
-          ul: ({ node, ...props }) => <ul className="list-disc pl-6 mb-4" {...props} />,
-          ol: ({ node, ...props }) => <ol className="list-decimal pl-6 mb-4" {...props} />,
-          li: ({ node, ...props }) => <li className="mb-1" {...props} />,
-          blockquote: ({ node, ...props }) => (
+          pre: ({ node, ...props }: any) => <div {...props} />,
+          p: ({ node, ...props }: any) => <p className="mb-4" {...props} />,
+          h1: ({ node, ...props }: any) => <h1 className="text-2xl font-bold mb-4 mt-6" {...props} />,
+          h2: ({ node, ...props }: any) => <h2 className="text-xl font-bold mb-3 mt-5" {...props} />,
+          h3: ({ node, ...props }: any) => <h3 className="text-lg font-bold mb-2 mt-4" {...props} />,
+          ul: ({ node, ...props }: any) => <ul className="list-disc pl-6 mb-4" {...props} />,
+          ol: ({ node, ...props }: any) => <ol className="list-decimal pl-6 mb-4" {...props} />,
+          li: ({ node, ...props }: any) => <li className="mb-1" {...props} />,
+          blockquote: ({ node, ...props }: any) => (
             <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4 text-gray-700" {...props} />
           ),
         }}
