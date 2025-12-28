@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -23,7 +23,7 @@ interface Question {
   collectives?: Array<{ id: number; name: string; slug: string }>;
 }
 
-export default function QuestionsPage() {
+function QuestionsContent() {
   const searchParams = useSearchParams();
   const tagFilter = searchParams.get("tag");
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -186,5 +186,18 @@ export default function QuestionsPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function QuestionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex items-center justify-center py-12">Loading...</div>
+      </div>
+    }>
+      <QuestionsContent />
+    </Suspense>
   );
 }
