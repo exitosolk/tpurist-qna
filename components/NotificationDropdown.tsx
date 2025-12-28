@@ -288,7 +288,8 @@ export default function NotificationDropdown() {
               </Link>
             </div>
           )}
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
