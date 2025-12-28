@@ -181,10 +181,26 @@ export async function POST(req: Request) {
         if (voteType === 1) {
           // Get content title/body for message
           let contentTitle = "your content";
+          let notificationQuestionId = undefined;
+          
           if (votableType === "question") {
             const qResult = await query("SELECT title FROM questions WHERE id = ?", [votableId]);
             if (qResult.rows && qResult.rows.length > 0) {
               contentTitle = `"${qResult.rows[0].title}"`;
+            }
+            notificationQuestionId = votableId;
+          } else if (votableType === "answer") {
+            // For answers, get the question info
+            const answerResult = await query("SELECT question_id FROM answers WHERE id = ?", [votableId]);
+            if (answerResult.rows && answerResult.rows.length > 0) {
+              const questionId = answerResult.rows[0].question_id;
+              notificationQuestionId = questionId;
+              
+              // Get question title
+              const qResult = await query("SELECT title FROM questions WHERE id = ?", [questionId]);
+              if (qResult.rows && qResult.rows.length > 0) {
+                contentTitle = `on "${qResult.rows[0].title}"`;
+              }
             }
           }
 
@@ -192,8 +208,8 @@ export async function POST(req: Request) {
             userId: contentOwnerId,
             type: votableType === "question" ? 'question_upvote' : 'answer_upvote',
             actorId: userId,
-            message: `upvoted your ${votableType} ${votableType === "question" ? contentTitle : ""}`,
-            questionId: votableType === "question" ? votableId : undefined,
+            message: `upvoted your ${votableType} ${contentTitle}`,
+            questionId: notificationQuestionId,
             answerId: votableType === "answer" ? votableId : undefined,
           });
         }
