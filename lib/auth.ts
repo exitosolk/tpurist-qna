@@ -61,13 +61,53 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "google" || account?.provider === "github") {
+        try {
+          // Check if user exists by email
+          const existingUser = await query(
+            "SELECT * FROM users WHERE email = ?",
+            [user.email]
+          );
+
+          if (existingUser.rows.length === 0) {
+            // Create new user for OAuth sign-in
+            const username = user.email?.split("@")[0] || `user_${Date.now()}`;
+            const displayName = user.name || username;
+            
+            const result = await query(
+              `INSERT INTO users (username, email, display_name, avatar_url, email_verified, created_at) 
+               VALUES (?, ?, ?, ?, 1, NOW())`,
+              [username, user.email, displayName, user.image]
+            );
+
+            user.id = result.insertId?.toString() || "";
+          } else {
+            // User exists, use existing ID
+            user.id = existingUser.rows[0].id.toString();
+            
+            // Update avatar if changed
+            if (user.image) {
+              await query(
+                "UPDATE users SET avatar_url = ? WHERE id = ?",
+                [user.image, user.id]
+              );
+            }
+          }
+        } catch (error) {
+          console.error("OAuth sign-in error:", error);
+          return false;
+        }
+      }
+      return true;
+    },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.sub as string;
       }
       return session;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.sub = user.id;
       }
