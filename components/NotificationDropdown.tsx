@@ -149,20 +149,96 @@ export default function NotificationDropdown() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-screen max-w-md md:w-96 bg-white border rounded-lg shadow-lg z-50 -mr-4 md:mr-0">
-          <div className="flex items-center justify-between p-4 border-b">
-            <h3 className="font-semibold">Notifications</h3>
-            {unreadCount > 0 && (
-              <button
-                onClick={markAllAsRead}
-                className="text-xs text-blue-600 hover:underline"
-              >
-                Mark all as read
-              </button>
+        <>
+          {/* Mobile: Full screen overlay */}
+          <div className="md:hidden fixed inset-0 bg-white z-50 overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white">
+              <h3 className="font-semibold">Notifications</h3>
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={markAllAsRead}
+                    className="text-xs text-blue-600 hover:underline"
+                  >
+                    Mark all as read
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="pb-4">
+              {loading ? (
+                <div className="p-4 text-center text-gray-500">Loading...</div>
+              ) : notifications.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  <Bell className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                  <p>No notifications yet</p>
+                </div>
+              ) : (
+                notifications.map((notification) => (
+                  <Link
+                    key={notification.id}
+                    href={getNotificationLink(notification)}
+                    onClick={() => handleNotificationClick(notification)}
+                    className={`block p-4 border-b hover:bg-gray-50 transition ${
+                      !notification.is_read ? 'bg-blue-50' : ''
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      {!notification.is_read && (
+                        <div className="w-2 h-2 bg-blue-600 rounded-full mt-1.5 flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm">
+                          <span className="font-semibold">
+                            {notification.actor_display_name || notification.actor_username}
+                          </span>{' '}
+                          {notification.message}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+
+            {notifications.length > 0 && (
+              <div className="p-3 border-t text-center sticky bottom-0 bg-white">
+                <Link
+                  href="/notifications"
+                  className="text-sm text-blue-600 hover:underline"
+                  onClick={() => setIsOpen(false)}
+                >
+                  View all notifications
+                </Link>
+              </div>
             )}
           </div>
 
-          <div className="max-h-[70vh] md:max-h-96 overflow-y-auto">
+          {/* Desktop: Dropdown */}
+          <div className="hidden md:block absolute right-0 mt-2 w-96 bg-white border rounded-lg shadow-lg z-50">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-semibold">Notifications</h3>
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="text-xs text-blue-600 hover:underline"
+                >
+                  Mark all as read
+                </button>
+              )}
+            </div>
+
+            <div className="max-h-96 overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center text-gray-500">Loading...</div>
             ) : notifications.length === 0 ? (
