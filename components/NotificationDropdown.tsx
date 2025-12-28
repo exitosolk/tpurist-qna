@@ -149,7 +149,7 @@ export default function NotificationDropdown() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white border rounded-lg shadow-lg z-50">
+        <div className="absolute right-0 mt-2 w-screen max-w-md md:w-96 bg-white border rounded-lg shadow-lg z-50 -mr-4 md:mr-0">
           <div className="flex items-center justify-between p-4 border-b">
             <h3 className="font-semibold">Notifications</h3>
             {unreadCount > 0 && (
@@ -162,7 +162,7 @@ export default function NotificationDropdown() {
             )}
           </div>
 
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-[70vh] md:max-h-96 overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center text-gray-500">Loading...</div>
             ) : notifications.length === 0 ? (
