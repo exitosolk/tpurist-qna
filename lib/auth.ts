@@ -71,14 +71,31 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (existingUser.rows.length === 0) {
-            // Create new user for OAuth sign-in
-            const username = user.email?.split("@")[0] || `user_${Date.now()}`;
+            // Generate unique username from email
+            let baseUsername = user.email?.split("@")[0] || `user_${Date.now()}`;
+            let username = baseUsername;
+            let counter = 1;
+            
+            // Check if username exists and make it unique
+            while (true) {
+              const usernameCheck = await query(
+                "SELECT id FROM users WHERE username = ?",
+                [username]
+              );
+              if (usernameCheck.rows.length === 0) break;
+              username = `${baseUsername}${counter}`;
+              counter++;
+            }
+            
             const displayName = user.name || username;
             
+            // OAuth users don't have passwords - use a placeholder
+            const placeholderPassword = await bcrypt.hash(`oauth_${Date.now()}_${Math.random()}`, 10);
+            
             const result = await query(
-              `INSERT INTO users (username, email, display_name, avatar_url, email_verified, created_at) 
-               VALUES (?, ?, ?, ?, 1, NOW())`,
-              [username, user.email, displayName, user.image]
+              `INSERT INTO users (username, email, password_hash, display_name, avatar_url, created_at) 
+               VALUES (?, ?, ?, ?, ?, NOW())`,
+              [username, user.email, placeholderPassword, displayName, user.image]
             );
 
             user.id = result.insertId?.toString() || "";
@@ -86,11 +103,11 @@ export const authOptions: NextAuthOptions = {
             // User exists, use existing ID
             user.id = existingUser.rows[0].id.toString();
             
-            // Update avatar if changed
-            if (user.image) {
+            // Update avatar and display name if changed
+            if (user.image || user.name) {
               await query(
-                "UPDATE users SET avatar_url = ? WHERE id = ?",
-                [user.image, user.id]
+                "UPDATE users SET avatar_url = ?, display_name = ? WHERE id = ?",
+                [user.image, user.name, user.id]
               );
             }
           }
