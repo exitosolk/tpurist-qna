@@ -43,71 +43,72 @@ export default function CollectivesPage() {
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-3">Travel Collectives</h1>
-          <p className="text-lg text-gray-600">
-            Join communities focused on specific aspects of traveling in Sri Lanka. 
-            Connect with like-minded travelers, share experiences, and get expert advice.
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">Travel Communities</h1>
+          <p className="text-base md:text-lg text-gray-600">
+            Connect with travelers and get expert advice in our curated communities.
           </p>
         </div>
 
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-600 mt-4">Loading collectives...</p>
+            <p className="text-gray-600 mt-4">Loading communities...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {collectives.map((collective) => (
-              <Link
-                key={collective.id}
-                href={`/collectives/${collective.slug}`}
-                className="block bg-white rounded-lg border hover:shadow-lg transition-all hover:border-blue-300"
-              >
-                <div className="p-6">
-                  <div className="flex items-start gap-4">
-                    {/* Icon */}
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-                      {collective.icon_url ? (
-                        <img 
-                          src={collective.icon_url} 
-                          alt={collective.name}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      ) : (
-                        collective.name.charAt(0)
-                      )}
-                    </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            {collectives.map((collective) => {
+              // Define default images for common collectives
+              const defaultImages: { [key: string]: string } = {
+                'colombo': 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=800&h=600&fit=crop',
+                'kandy': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop',
+                'galle': 'https://images.unsplash.com/photo-1590069261209-f8e9b8642343?w=800&h=600&fit=crop',
+                'ella': 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&h=600&fit=crop',
+              };
+              
+              const backgroundImage = collective.cover_image_url || defaultImages[collective.slug.toLowerCase()] || 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=800&h=600&fit=crop';
+              
+              return (
+                <Link
+                  key={collective.id}
+                  href={`/collectives/${collective.slug}`}
+                  className="group block relative overflow-hidden rounded-lg h-48 md:h-56 hover:shadow-2xl transition-all"
+                >
+                  {/* Background Image with Overlay */}
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-110"
+                    style={{ 
+                      backgroundImage: `url('${backgroundImage}')`,
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+                  
+                  {/* Content */}
+                  <div className="relative h-full p-5 md:p-6 flex flex-col justify-end">
+                    <h3 className="text-2xl md:text-3xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors">
+                      {collective.name}
+                    </h3>
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-xl font-bold text-gray-900">
-                          {collective.name}
-                        </h3>
-                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                    {/* Activity Stats */}
+                    <div className="flex items-center gap-4 text-sm text-white/90">
+                      <div className="flex items-center gap-1.5\">
+                        <Users className="w-4 h-4" />
+                        <span>{collective.member_count.toLocaleString()}</span>
                       </div>
-                      
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                        {collective.description}
-                      </p>
-
-                      {/* Stats */}
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          <span>{collective.member_count.toLocaleString()} members</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <MessageSquare className="w-4 h-4" />
-                          <span>{collective.question_count.toLocaleString()} questions</span>
-                        </div>
+                      <div className="flex items-center gap-1.5">
+                        <MessageSquare className="w-4 h-4" />
+                        <span>{collective.question_count.toLocaleString()} questions</span>
                       </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                  
+                  {/* Hover Arrow Indicator */}
+                  <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ChevronRight className="w-5 h-5 text-white" />
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
 
