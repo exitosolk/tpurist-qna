@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { logReputationChange } from "@/lib/reputation";
 
 export async function GET(req: NextRequest) {
   try {
@@ -60,6 +61,16 @@ export async function GET(req: NextRequest) {
        WHERE id = ?`,
       [pointsToAdd, user.id]
     );
+
+    // Log reputation gain if points were awarded
+    if (shouldAwardPoints) {
+      await logReputationChange({
+        userId: user.id,
+        changeAmount: VERIFICATION_POINTS,
+        reason: "Email verified",
+        referenceType: 'email_verification',
+      });
+    }
 
     return NextResponse.json({
       message: shouldAwardPoints 

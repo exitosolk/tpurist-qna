@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { createNotification } from "@/lib/notifications";
+import { logReputationChange } from "@/lib/reputation";
 
 export async function POST(req: Request) {
   try {
@@ -117,6 +118,15 @@ export async function POST(req: Request) {
             "UPDATE users SET reputation = GREATEST(0, reputation + ?) WHERE id = ?",
             [repChange, contentOwnerId]
           );
+
+          // Log reputation change
+          await logReputationChange({
+            userId: contentOwnerId,
+            changeAmount: repChange,
+            reason: voteType === 1 ? "Upvote removed" : "Downvote removed",
+            referenceType: votableType as 'question' | 'answer',
+            referenceId: votableId
+          });
         }
 
         return NextResponse.json({ message: "Vote removed" });
@@ -148,6 +158,15 @@ export async function POST(req: Request) {
             "UPDATE users SET reputation = GREATEST(0, reputation + ?) WHERE id = ?",
             [oldRepChange + newRepChange, contentOwnerId]
           );
+
+          // Log reputation change
+          await logReputationChange({
+            userId: contentOwnerId,
+            changeAmount: oldRepChange + newRepChange,
+            reason: voteType === 1 ? "Received upvote" : "Received downvote",
+            referenceType: votableType as 'question' | 'answer',
+            referenceId: votableId
+          });
         }
 
         return NextResponse.json({ message: "Vote updated" });
@@ -176,7 +195,14 @@ export async function POST(req: Request) {
           "UPDATE users SET reputation = GREATEST(0, reputation + ?) WHERE id = ?",
           [repChange, contentOwnerId]
         );
-
+        // Log reputation change
+        await logReputationChange({
+          userId: contentOwnerId,
+          changeAmount: repChange,
+          reason: voteType === 1 ? "Received upvote" : "Received downvote",
+          referenceType: votableType as 'question' | 'answer',
+          referenceId: votableId
+        });
         // Create notification for upvotes only (not downvotes to avoid negativity)
         if (voteType === 1) {
           // Get content title/body for message

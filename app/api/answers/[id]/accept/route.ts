@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { createNotification } from "@/lib/notifications";
+import { logReputationChange } from "@/lib/reputation";
 
 export async function POST(
   req: Request,
@@ -83,6 +84,15 @@ export async function POST(
         "UPDATE users SET reputation = GREATEST(0, reputation - 15) WHERE id = ?",
         [previousOwnerId]
       );
+
+      // Log reputation loss
+      await logReputationChange({
+        userId: previousOwnerId,
+        changeAmount: -15,
+        reason: "Answer no longer accepted",
+        referenceType: 'accepted_answer',
+        referenceId: previousAcceptedResult.rows[0].id
+      });
     }
 
     // Unmark any previously accepted answer for this question
@@ -103,6 +113,15 @@ export async function POST(
         "UPDATE users SET reputation = reputation + 15 WHERE id = ?",
         [answerOwnerId]
       );
+
+      // Log reputation gain
+      await logReputationChange({
+        userId: answerOwnerId,
+        changeAmount: 15,
+        reason: "Answer accepted",
+        referenceType: 'accepted_answer',
+        referenceId: parseInt(answerId)
+      });
 
       // Get question title for notification
       const questionResult = await query(
