@@ -1,6 +1,7 @@
 "use client";
 
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export default function HomePage() {
   return (
@@ -67,11 +68,7 @@ export default function HomePage() {
         </div>
       </main>
 
-      <footer className="border-t bg-gray-50 mt-16">
-        <div className="container mx-auto px-4 py-8 text-center text-gray-600">
-          <p>&copy; 2025 OneCeylon. A community for travelers exploring Sri Lanka.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
