@@ -5,7 +5,7 @@ interface LogReputationChangeParams {
   changeAmount: number;
   reason: string;
   referenceType: 'question' | 'answer' | 'accepted_answer' | 'email_verification' | 'vote' | 'downvote';
-  referenceId?: number;
+  referenceId?: number | null;
 }
 
 export async function logReputationChange({
