@@ -85,6 +85,11 @@ cat > .env.local << EOF
 DATABASE_URL=postgresql://oneceylon_user:your_secure_password@localhost:5432/oneceylon
 NEXTAUTH_SECRET=$(openssl rand -base64 32)
 NEXTAUTH_URL=https://oneceylon.space
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+SMTP_FROM="OneCeylon" <noreply@oneceylon.space>
 EOF
 
 # Build application
@@ -152,6 +157,14 @@ DATABASE_URL=postgresql://user:password@host:5432/database
 # Authentication
 NEXTAUTH_SECRET=your-secret-key-here
 NEXTAUTH_URL=https://oneceylon.space
+
+# Email Configuration (Required for email verification and password reset)
+# For Gmail: Enable 2FA and generate App Password at https://myaccount.google.com/apppasswords
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password-here
+SMTP_FROM="OneCeylon" <noreply@oneceylon.space>
 
 # OAuth (Optional)
 GOOGLE_CLIENT_ID=your-google-client-id

@@ -10,12 +10,21 @@ const transporter = nodemailer.createTransport({
   secure: false,
   auth: {
     user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    pass: process.env.SMTP_PASSWORD,
   },
 });
 
 export async function POST(req: NextRequest) {
   try {
+    // Check if SMTP is configured
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+      console.error("SMTP credentials not configured");
+      return NextResponse.json(
+        { error: "Email service is not configured. Please contact the administrator." },
+        { status: 500 }
+      );
+    }
+
     const { email } = await req.json();
 
     if (!email) {
