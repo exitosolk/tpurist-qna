@@ -76,20 +76,22 @@ function QuestionsContent() {
           </div>
         </div>
 
-        <div className="mb-6 flex gap-2">
-          {["newest", "active", "votes", "unanswered"].map((sortOption) => (
-            <button
-              key={sortOption}
-              onClick={() => setSort(sortOption)}
-              className={`px-4 py-2 rounded ${
-                sort === sortOption
-                  ? "bg-blue-600 text-white"
-                  : "bg-white border hover:bg-gray-50"
-              }`}
-            >
-              {sortOption.charAt(0).toUpperCase() + sortOption.slice(1)}
-            </button>
-          ))}
+        <div className="mb-6 overflow-x-auto">
+          <div className="flex gap-2 min-w-max">
+            {["newest", "active", "votes", "unanswered"].map((sortOption) => (
+              <button
+                key={sortOption}
+                onClick={() => setSort(sortOption)}
+                className={`px-4 py-2 rounded whitespace-nowrap ${
+                  sort === sortOption
+                    ? "bg-blue-600 text-white"
+                    : "bg-white border hover:bg-gray-50"
+                }`}
+              >
+                {sortOption.charAt(0).toUpperCase() + sortOption.slice(1)}
+              </button>
+            ))}
+          </div>
         </div>
 
         {loading ? (
@@ -142,48 +144,53 @@ function QuestionsContent() {
                   </div>
 
                   <div className="flex-1">
-                    <Link href={`/questions/${question.slug || question.id}`}>
-                      <h3 className="text-lg md:text-xl font-semibold text-blue-600 hover:text-blue-800 mb-2">
-                        {question.title}
-                      </h3>
-                    </Link>
-                    <p className="text-gray-600 mb-3 line-clamp-2">
-                      {question.body.substring(0, 200)}...
-                    </p>
-                    
-                    {/* Collective badges */}
+                    {/* Collective badges - subtle label above title */}
                     {question.collectives && question.collectives.length > 0 && (
-                      <div className="flex gap-2 mb-3">
+                      <div className="flex gap-2 mb-1">
                         {question.collectives.map((collective) => (
                           <Link
                             key={collective.id}
                             href={`/collectives/${collective.slug}`}
-                            className="inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded text-xs font-medium hover:from-blue-700 hover:to-blue-800"
+                            className="inline-flex items-center gap-1 text-xs text-gray-600 hover:text-blue-600"
                           >
-                            <span>🏛️</span>
-                            {collective.name}
+                            <span className="text-xs">🏛️</span>
+                            <span className="font-medium">In: {collective.name}</span>
                           </Link>
                         ))}
                       </div>
                     )}
                     
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                    <Link href={`/questions/${question.slug || question.id}`}>
+                      <h3 className="text-lg md:text-xl font-semibold text-blue-600 hover:text-blue-800 mb-2">
+                        {question.title}
+                      </h3>
+                    </Link>
+                    <p className="text-gray-600 mb-3 line-clamp-2 md:line-clamp-3">
+                      {question.body.substring(0, 250)}...
+                    </p>
+                    
+                    <div className="flex flex-col gap-3">
                       <div className="flex gap-2 flex-wrap">
                         {question.tags?.map((tag) => (
                           <Link
                             key={tag.id}
                             href={`/questions?tag=${tag.name}`}
-                            className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm hover:bg-blue-100"
+                            className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm hover:bg-blue-100 transition-colors"
                           >
                             {tag.name}
                           </Link>
                         ))}
                       </div>
-                      <div className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">
-                        asked {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })} by{" "}
-                        <Link href={`/users/${question.username}`} className="text-blue-600 font-medium hover:text-blue-800">
-                          {question.display_name || question.username}
-                        </Link>
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+                        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold flex-shrink-0">
+                          {(question.display_name || question.username).charAt(0).toUpperCase()}
+                        </div>
+                        <span>
+                          asked {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })} by{" "}
+                          <Link href={`/users/${question.username}`} className="text-blue-600 font-medium hover:text-blue-800 inline-block py-1">
+                            {question.display_name || question.username}
+                          </Link>
+                        </span>
                       </div>
                     </div>
                   </div>
