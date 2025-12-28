@@ -107,9 +107,26 @@ function QuestionsContent() {
         ) : (
           <div className="space-y-4">
             {questions.map((question) => (
-              <div key={question.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+              <div key={question.id} className="bg-white rounded-lg shadow-sm border p-4 md:p-6 hover:shadow-md transition-shadow">
+                {/* Mobile: Stats at top (horizontal) */}
+                <div className="md:hidden flex items-center gap-4 text-xs text-gray-600 mb-3 pb-3 border-b">
+                  <div className="flex items-center gap-1">
+                    <span className="font-semibold">{question.score}</span>
+                    <span>votes</span>
+                  </div>
+                  <div className={`flex items-center gap-1 ${question.answer_count > 0 ? 'text-green-600' : ''}`}>
+                    <span className="font-semibold">{question.answer_count}</span>
+                    <span>answers</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="font-semibold">{question.views}</span>
+                    <span>views</span>
+                  </div>
+                </div>
+
                 <div className="flex gap-6">
-                  <div className="flex flex-col gap-2 text-sm text-gray-600 min-w-24">
+                  {/* Desktop: Stats on left (vertical) */}
+                  <div className="hidden md:flex flex-col gap-2 text-sm text-gray-600 min-w-24">
                     <div className="text-center">
                       <div className="font-semibold text-lg">{question.score}</div>
                       <div>votes</div>
@@ -126,7 +143,7 @@ function QuestionsContent() {
 
                   <div className="flex-1">
                     <Link href={`/questions/${question.slug || question.id}`}>
-                      <h3 className="text-xl font-semibold text-blue-600 hover:text-blue-800 mb-2">
+                      <h3 className="text-lg md:text-xl font-semibold text-blue-600 hover:text-blue-800 mb-2">
                         {question.title}
                       </h3>
                     </Link>
@@ -150,7 +167,7 @@ function QuestionsContent() {
                       </div>
                     )}
                     
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                       <div className="flex gap-2 flex-wrap">
                         {question.tags?.map((tag) => (
                           <Link
@@ -162,7 +179,7 @@ function QuestionsContent() {
                           </Link>
                         ))}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">
                         asked {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })} by{" "}
                         <Link href={`/users/${question.username}`} className="text-blue-600 font-medium hover:text-blue-800">
                           {question.display_name || question.username}
