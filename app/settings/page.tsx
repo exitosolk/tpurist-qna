@@ -187,11 +187,6 @@ export default function SettingsPage() {
           <h1 className="text-2xl md:text-4xl font-bold">Account Settings</h1>
         </div>
 
-        {/* Header - Simplified */}
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-4xl font-bold">Account Settings</h1>
-        </div>
-
         {/* Email Settings */}
         <div className="bg-white rounded-lg shadow-sm border p-4 md:p-6 mb-4">
           <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2">
