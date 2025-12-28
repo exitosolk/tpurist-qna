@@ -502,11 +502,11 @@ export default function QuestionDetailPage() {
             <span>Viewed {question.views} times</span>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex gap-4">
-              {/* Vote buttons - hide for own content */}
+          <div className="bg-white rounded-lg shadow-sm border p-4 md:p-6">
+            <div className="md:flex md:gap-4">
+              {/* Desktop: Vote buttons on left (vertical) */}
               {currentUserId !== question.user_id && (
-                <div className="flex flex-col items-center gap-2">
+                <div className="hidden md:flex flex-col items-center gap-2">
                   <Tooltip content="This question shows research effort; it is useful and clear">
                     <button
                       onClick={() => handleVote("question", question.id, 1)}
@@ -529,7 +529,7 @@ export default function QuestionDetailPage() {
                 </div>
               )}
               {currentUserId === question.user_id && (
-                <div className="flex flex-col items-center gap-2">
+                <div className="hidden md:flex flex-col items-center gap-2">
                   <div className="p-2 text-gray-400">▲</div>
                   <span className="text-2xl font-semibold">{question.score}</span>
                   <div className="p-2 text-gray-400">▼</div>
@@ -538,6 +538,34 @@ export default function QuestionDetailPage() {
 
               <div className="flex-1">
                 <MarkdownRenderer content={question.body} />
+
+                {/* Mobile: Horizontal voting bar below content */}
+                {currentUserId !== question.user_id && (
+                  <div className="md:hidden flex items-center gap-4 py-3 border-t border-b my-4">
+                    <button
+                      onClick={() => handleVote("question", question.id, 1)}
+                      className="p-2 hover:bg-gray-100 rounded"
+                      disabled={!session}
+                    >
+                      ▲
+                    </button>
+                    <span className="font-semibold">{question.score}</span>
+                    <button
+                      onClick={() => handleVote("question", question.id, -1)}
+                      className="p-2 hover:bg-gray-100 rounded"
+                      disabled={!session}
+                    >
+                      ▼
+                    </button>
+                  </div>
+                )}
+                {currentUserId === question.user_id && (
+                  <div className="md:hidden flex items-center gap-4 py-3 border-t border-b my-4">
+                    <div className="p-2 text-gray-400">▲</div>
+                    <span className="font-semibold">{question.score}</span>
+                    <div className="p-2 text-gray-400">▼</div>
+                  </div>
+                )}
 
                 <div className="flex gap-2 mb-6 flex-wrap">
                   {question.tags?.map((tag) => (
@@ -579,22 +607,20 @@ export default function QuestionDetailPage() {
                   </Tooltip>
                 </div>
 
-                <div className="flex justify-end">
-                  <div className="bg-blue-50 rounded p-4">
-                    <div className="text-sm text-gray-600 mb-1">
+                <div className="flex justify-end mt-4">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold flex-shrink-0">
+                      {(question.display_name || question.username).charAt(0).toUpperCase()}
+                    </div>
+                    <span>
+                      <Link href={`/users/${question.username}`} className="text-blue-600 font-medium hover:text-blue-800">
+                        {question.display_name || question.username}
+                      </Link>
+                      <span className="text-gray-400 mx-1">•</span>
+                      <span>{question.reputation} rep</span>
+                      <span className="text-gray-400 mx-1">•</span>
                       asked {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                        {(question.display_name || question.username).charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <Link href={`/users/${question.username}`} className="font-semibold text-blue-600 hover:text-blue-800">
-                          {question.display_name || question.username}
-                        </Link>
-                        <div className="text-sm text-gray-600">{question.reputation} reputation</div>
-                      </div>
-                    </div>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -617,7 +643,15 @@ export default function QuestionDetailPage() {
               const isStale = answer.is_accepted && answerDate < sixMonthsAgo;
 
               return (
-                <div key={answer.id} id={`answer-${answer.id}`} className="bg-white rounded-lg shadow-sm border p-6 scroll-mt-20">
+                <div key={answer.id} id={`answer-${answer.id}`} className={`bg-white rounded-lg shadow-sm border p-4 md:p-6 scroll-mt-20 ${answer.is_accepted ? 'border-l-4 border-green-500' : ''}`}>
+                  {/* Accepted Answer Badge - Mobile */}
+                  {answer.is_accepted && (
+                    <div className="md:hidden mb-3 flex items-center gap-2 text-green-600 font-medium text-sm">
+                      <span className="text-lg">✓</span>
+                      <span>Accepted Answer</span>
+                    </div>
+                  )}
+                  
                   {/* Stale Data Warning Banner */}
                   {isStale && (
                     <div className="mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
@@ -636,10 +670,10 @@ export default function QuestionDetailPage() {
                   </div>
                   )}
 
-                  <div className="flex gap-4">
-                    {/* Vote buttons - hide for own content */}
+                  <div className="md:flex md:gap-4">
+                    {/* Desktop: Vote buttons on left (vertical) */}
                     {currentUserId !== answer.user_id && (
-                      <div className="flex flex-col items-center gap-2">
+                      <div className="hidden md:flex flex-col items-center gap-2">
                         <Tooltip content="This answer is useful">
                           <button
                             onClick={() => handleVote("answer", answer.id, 1)}
@@ -667,7 +701,7 @@ export default function QuestionDetailPage() {
                       </div>
                     )}
                       {currentUserId === answer.user_id && (
-                      <div className="flex flex-col items-center gap-2">
+                      <div className="hidden md:flex flex-col items-center gap-2">
                         <div className="p-2 text-gray-400">▲</div>
                         <span className="text-2xl font-semibold">{answer.score}</span>
                         <div className="p-2 text-gray-400">▼</div>
@@ -703,7 +737,37 @@ export default function QuestionDetailPage() {
                         </div>
                       </div>
                       ) : (
-                        <MarkdownRenderer content={answer.body} />
+                        <>
+                          <MarkdownRenderer content={answer.body} />
+                          
+                          {/* Mobile: Horizontal voting bar */}
+                          {currentUserId !== answer.user_id && (
+                            <div className="md:hidden flex items-center gap-4 py-3 border-t border-b my-4">
+                              <button
+                                onClick={() => handleVote("answer", answer.id, 1)}
+                                className="p-2 hover:bg-gray-100 rounded"
+                                disabled={!session}
+                              >
+                                ▲
+                              </button>
+                              <span className="font-semibold">{answer.score}</span>
+                              <button
+                                onClick={() => handleVote("answer", answer.id, -1)}
+                                className="p-2 hover:bg-gray-100 rounded"
+                                disabled={!session}
+                              >
+                                ▼
+                              </button>
+                            </div>
+                          )}
+                          {currentUserId === answer.user_id && (
+                            <div className="md:hidden flex items-center gap-4 py-3 border-t border-b my-4">
+                              <div className="p-2 text-gray-400">▲</div>
+                              <span className="font-semibold">{answer.score}</span>
+                              <div className="p-2 text-gray-400">▼</div>
+                            </div>
+                          )}
+                        </>
                       )}
 
                       {/* Action buttons */}
@@ -817,33 +881,31 @@ export default function QuestionDetailPage() {
                         </div>
                       )}
 
-                      <div className="flex justify-end mt-4">
-                        <div className={`rounded p-4 ${answer.is_accepted ? 'bg-green-50' : 'bg-gray-50'}`}>
-                          <div className="text-sm text-gray-600 mb-1">
+                      <div className="flex flex-col gap-2 mt-4">
+                        {answer.experience_date && (
+                          <div className="text-xs sm:text-sm text-blue-600 flex items-center gap-1">
+                            <span>💰</span>
+                            <span>
+                              Price info from: {new Date(answer.experience_date).toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'long' 
+                              })}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+                          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold flex-shrink-0">
+                            {(answer.display_name || answer.username).charAt(0).toUpperCase()}
+                          </div>
+                          <span>
+                            <Link href={`/users/${answer.username}`} className="text-blue-600 font-medium hover:text-blue-800">
+                              {answer.display_name || answer.username}
+                            </Link>
+                            <span className="text-gray-400 mx-1">•</span>
+                            <span>{answer.reputation} rep</span>
+                            <span className="text-gray-400 mx-1">•</span>
                             answered {formatDistanceToNow(new Date(answer.created_at), { addSuffix: true })}
-                          </div>
-                          {answer.experience_date && (
-                            <div className="text-sm text-blue-600 mb-2 flex items-center gap-1">
-                              <span>💰</span>
-                              <span>
-                                Price info from: {new Date(answer.experience_date).toLocaleDateString('en-US', { 
-                                  year: 'numeric', 
-                                  month: 'long' 
-                                })}
-                              </span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                              {(answer.display_name || answer.username).charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <Link href={`/users/${answer.username}`} className="font-semibold text-blue-600 hover:text-blue-800">
-                                {answer.display_name || answer.username}
-                              </Link>
-                              <div className="text-sm text-gray-600">{answer.reputation} reputation</div>
-                            </div>
-                          </div>
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -885,37 +947,43 @@ export default function QuestionDetailPage() {
               />
               
               {/* Experience Date Field */}
-              <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <label className="flex items-start gap-3">
+              <div className="mt-4 border border-gray-200 rounded-lg p-4">
+                <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={!!experienceDate}
                     onChange={(e) => {
                       if (!e.target.checked) {
                         setExperienceDate("");
+                      } else {
+                        setExperienceDate(new Date().toISOString().split('T')[0]);
                       }
                     }}
-                    className="mt-1"
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                   />
                   <div className="flex-1">
-                    <div className="font-medium text-gray-900 mb-1">
-                      💰 Include pricing/cost information date (Optional)
+                    <div className="font-medium text-gray-900">
+                      💰 Add pricing/cost information date
                     </div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      If your answer includes prices, costs, or fees, please specify when you experienced this. 
-                      This helps track pricing changes over time.
+                    <p className="text-sm text-gray-500 mt-1">
+                      If your answer includes prices, costs, or fees, specify when you experienced this.
                     </p>
-                    {experienceDate !== null && (
-                      <input
-                        type="date"
-                        value={experienceDate}
-                        onChange={(e) => setExperienceDate(e.target.value)}
-                        max={new Date().toISOString().split('T')[0]}
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    )}
                   </div>
                 </label>
+                {experienceDate && (
+                  <div className="mt-3 pl-7">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Experience Date
+                    </label>
+                    <input
+                      type="date"
+                      value={experienceDate}
+                      onChange={(e) => setExperienceDate(e.target.value)}
+                      max={new Date().toISOString().split('T')[0]}
+                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
+                    />
+                  </div>
+                )}
               </div>
 
               <button
