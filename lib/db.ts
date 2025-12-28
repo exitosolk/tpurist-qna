@@ -1,5 +1,11 @@
 import mysql from 'mysql2/promise';
 
+// Define the return type for query results
+export interface QueryResult {
+  rows: any[];
+  insertId?: number;
+}
+
 const pool = mysql.createPool({
   uri: process.env.DATABASE_URL,
   waitForConnections: true,
@@ -14,7 +20,7 @@ function convertQuery(text: string): string {
   return text.replace(/\$\d+/g, () => '?');
 }
 
-export const query = async (text: string, params?: any[]) => {
+export const query = async (text: string, params?: any[]): Promise<QueryResult> => {
   try {
     const convertedQuery = convertQuery(text);
     
@@ -26,7 +32,7 @@ export const query = async (text: string, params?: any[]) => {
       return { rows: result };
     } else {
       // For INSERT/UPDATE/DELETE, return result with insertId, affectedRows, etc.
-      return { rows: result, insertId: (result as any).insertId };
+      return { rows: [], insertId: (result as any).insertId };
     }
   } catch (error: any) {
     console.error('Database query error:', {
