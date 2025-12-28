@@ -92,9 +92,10 @@ export const authOptions: NextAuthOptions = {
             // OAuth users don't have passwords - use a placeholder
             const placeholderPassword = await bcrypt.hash(`oauth_${Date.now()}_${Math.random()}`, 10);
             
+            // OAuth users get verified email and reputation bonus (50 points)
             const result = await query(
-              `INSERT INTO users (username, email, password_hash, display_name, avatar_url, created_at) 
-               VALUES (?, ?, ?, ?, ?, NOW())`,
+              `INSERT INTO users (username, email, password_hash, display_name, avatar_url, email_verified, reputation, email_verification_bonus_awarded, created_at) 
+               VALUES (?, ?, ?, ?, ?, TRUE, 50, TRUE, NOW())`,
               [username, user.email, placeholderPassword, displayName, user.image]
             );
 
