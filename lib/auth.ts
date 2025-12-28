@@ -119,22 +119,61 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.sub as string;
+      if (session.user && token.sub) {
+        session.user.id = token.sub;
+        
+        // Fetch fresh user data from database
+        try {
+          const result = await query(
+            "SELECT id, email, username, display_name, avatar_url FROM users WHERE id = ?",
+            [token.sub]
+          );
+          
+          if (result.rows.length > 0) {
+            const dbUser = result.rows[0];
+            session.user.email = dbUser.email;
+            session.user.name = dbUser.display_name || dbUser.username;
+            session.user.image = dbUser.avatar_url;
+          }
+        } catch (error) {
+          console.error("Session fetch error:", error);
+        }
       }
       return session;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger }) {
+      // On sign in, set the user ID in the token
       if (user) {
         token.sub = user.id;
       }
+      
+      // On subsequent requests, verify user still exists
+      if (trigger === "update" && token.sub) {
+        try {
+          const result = await query(
+            "SELECT id FROM users WHERE id = ?",
+            [token.sub]
+          );
+          
+          if (result.rows.length === 0) {
+            // User was deleted, invalidate token
+            return {};
+          }
+        } catch (error) {
+          console.error("JWT validation error:", error);
+        }
+      }
+      
       return token;
     },
   },
   pages: {
     signIn: "/login",
+    error: "/login", // Redirect to login on error
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  debug: process.env.NODE_ENV === "development",
 };
