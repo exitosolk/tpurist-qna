@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import { Settings, Mail, Lock, Shield, User, AlertCircle, CheckCircle } from "lucide-react";
+import { Settings, Mail, Lock, Shield, User, AlertCircle, CheckCircle, ChevronRight, ChevronDown } from "lucide-react";
 import Link from "next/link";
 
 interface UserSettings {
@@ -34,6 +34,10 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
   const [passwordSubmitting, setPasswordSubmitting] = useState(false);
+  const [passwordExpanded, setPasswordExpanded] = useState(false);
+  
+  // Email change tracking
+  const [emailChanged, setEmailChanged] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -56,6 +60,7 @@ export default function SettingsPage() {
         };
         setUserSettings(user);
         setNewEmail(data.user.email || "");
+        setEmailChanged(false);
       }
     } catch (error) {
       console.error("Error fetching settings:", error);
@@ -177,62 +182,29 @@ export default function SettingsPage() {
       <Navbar />
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <Settings className="w-10 h-10 text-blue-600" />
-            <h1 className="text-4xl font-bold">Account Settings</h1>
-          </div>
-          <p className="text-lg text-gray-600">
-            Manage your email, password, and security preferences
-          </p>
+        {/* Header - Simplified */}
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold">Account Settings</h1>
         </div>
 
-        {/* Account Info */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <User className="w-5 h-5" />
-            Account Information
-          </h2>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Username:</span>
-              <span className="font-medium">{userSettings?.username}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Display Name:</span>
-              <span className="font-medium">{userSettings?.display_name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Member Since:</span>
-              <span className="font-medium">
-                {userSettings?.created_at ? new Date(userSettings.created_at).toLocaleDateString() : "N/A"}
-              </span>
-            </div>
-            <div className="border-t pt-3 mt-3">
-              <Link
-                href="/profile"
-                className="text-blue-600 hover:underline text-sm"
-              >
-                Edit profile (display name, bio) →
-              </Link>
-            </div>
-          </div>
+        {/* Header - Simplified */}
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold">Account Settings</h1>
         </div>
 
         {/* Email Settings */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+        <div className="bg-white rounded-lg shadow-sm border p-4 md:p-6 mb-4">
+          <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2">
             <Mail className="w-5 h-5" />
             Email Address
           </h2>
 
           {userSettings && !userSettings.email_verified && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 flex items-start gap-3">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 flex items-start gap-2 md:gap-3">
               <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm text-gray-700">
-                  Your email address is not verified. 
+                <p className="text-xs md:text-sm text-gray-700">
+                  Your email is not verified. 
                   <button
                     onClick={handleResendVerification}
                     className="text-blue-600 hover:underline ml-1"
@@ -244,137 +216,152 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {userSettings && userSettings.email_verified && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4 flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              <span className="text-sm text-green-700">Email verified</span>
-            </div>
-          )}
-
           <form onSubmit={handleEmailUpdate} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email Address
               </label>
-              <input
-                type="email"
-                value={newEmail || ""}
-                onChange={(e) => setNewEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
+              <div className="relative">
+                <input
+                  type="email"
+                  value={newEmail || ""}
+                  onChange={(e) => {
+                    setNewEmail(e.target.value);
+                    setEmailChanged(e.target.value !== userSettings?.email);
+                  }}
+                  className="w-full px-4 py-2 md:py-2.5 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 pr-20"
+                  required
+                />
+                {userSettings && userSettings.email_verified && !emailChanged && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-green-600 text-xs md:text-sm">
+                    <CheckCircle className="w-4 h-4" />
+                    <span className="hidden sm:inline">Verified</span>
+                  </div>
+                )}
+              </div>
               <p className="text-xs text-gray-500 mt-1">
-                Changing your email will require re-verification and you'll need to log in again
+                Changing your email will require re-verification
               </p>
             </div>
 
             {emailMessage && (
-              <div className={`p-3 rounded text-sm ${emailMessage.includes('✓') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+              <div className={`p-3 rounded text-xs md:text-sm ${emailMessage.includes('✓') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                 {emailMessage}
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={emailSubmitting || newEmail === userSettings?.email}
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              {emailSubmitting ? "Updating..." : "Update Email"}
-            </button>
-          </form>
-        </div>
-
-        {/* Password Settings */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <Lock className="w-5 h-5" />
-            Change Password
-          </h2>
-
-          <form onSubmit={handlePasswordChange} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Current Password
-              </label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                New Password
-              </label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                minLength={6}
-                required
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Must be at least 6 characters long
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm New Password
-              </label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            {passwordMessage && (
-              <div className={`p-3 rounded text-sm ${passwordMessage.includes('✓') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                {passwordMessage}
-              </div>
+            {emailChanged && (
+              <button
+                type="submit"
+                disabled={emailSubmitting}
+                className="w-full md:w-auto px-6 py-2.5 md:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-medium"
+              >
+                {emailSubmitting ? "Updating..." : "Update Email"}
+              </button>
             )}
-
-            <button
-              type="submit"
-              disabled={passwordSubmitting}
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              {passwordSubmitting ? "Changing..." : "Change Password"}
-            </button>
           </form>
         </div>
 
-        {/* Security Info */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
-            <Shield className="w-5 h-5 text-blue-600" />
-            Security Tips
-          </h3>
-          <ul className="space-y-2 text-sm text-gray-700">
-            <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">•</span>
-              <span>Use a strong, unique password for your account</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">•</span>
-              <span>Verify your email address to secure your account and earn reputation points</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">•</span>
-              <span>Never share your password with anyone</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">•</span>
-              <span>If you suspect unauthorized access, change your password immediately</span>
-            </li>
-          </ul>
+        {/* Password Settings - Collapsible */}
+        <div className="bg-white rounded-lg shadow-sm border mb-4">
+          <button
+            onClick={() => setPasswordExpanded(!passwordExpanded)}
+            className="w-full p-4 md:p-6 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Lock className="w-5 h-5 text-gray-700" />
+              <span className="text-lg md:text-xl font-bold">Change Password</span>
+            </div>
+            {passwordExpanded ? (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+
+          {passwordExpanded && (
+            <div className="px-4 md:px-6 pb-4 md:pb-6 border-t">
+              <form onSubmit={handlePasswordChange} className="space-y-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full px-4 py-2 md:py-2.5 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-4 py-2 md:py-2.5 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    minLength={6}
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Must be at least 6 characters long
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-4 py-2 md:py-2.5 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                {passwordMessage && (
+                  <div className={`p-3 rounded text-xs md:text-sm ${passwordMessage.includes('✓') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    {passwordMessage}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={passwordSubmitting}
+                  className="w-full md:w-auto px-6 py-2.5 md:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-medium"
+                >
+                  {passwordSubmitting ? "Changing..." : "Change Password"}
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
+
+        {/* Profile Link */}
+        <div className="bg-white rounded-lg shadow-sm border p-4 md:p-6">
+          <Link
+            href="/profile"
+            className="flex items-center justify-between hover:bg-gray-50 -m-4 md:-m-6 p-4 md:p-6 rounded-lg transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              {userSettings && (
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg md:text-xl">
+                  {userSettings.display_name?.[0]?.toUpperCase() || userSettings.username?.[0]?.toUpperCase()}
+                </div>
+              )}
+              <div>
+                <div className="font-bold text-base md:text-lg">{userSettings?.display_name || userSettings?.username}</div>
+                <div className="text-xs md:text-sm text-gray-500">Edit profile, bio, and display name</div>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-400" />
+          </Link>
         </div>
       </main>
     </div>
