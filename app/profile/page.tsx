@@ -218,12 +218,12 @@ export default function ProfilePage() {
         )}
 
         {/* Profile Header */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <div className="flex items-start gap-6">
-            <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-3xl font-bold text-blue-600">
+        <div className="bg-white rounded-lg shadow-sm border p-4 md:p-6 mb-6">
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 md:w-24 md:h-24 bg-blue-100 rounded-full flex items-center justify-center text-2xl md:text-3xl font-bold text-blue-600 flex-shrink-0">
               {profile.display_name?.charAt(0).toUpperCase() || profile.username.charAt(0).toUpperCase()}
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               {isEditing ? (
                 <div className="space-y-4">
                   <div>
@@ -278,35 +278,28 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center gap-3 mb-1">
-                    <h1 className="text-3xl font-bold">{profile.display_name || profile.username}</h1>
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="text-sm text-blue-600 hover:text-blue-800"
-                    >
-                      Edit Profile
-                    </button>
+                  <h1 className="text-2xl md:text-3xl font-bold mb-1">{profile.display_name || profile.username}</h1>
+                  <p className="text-sm text-gray-600 mb-2">@{profile.username}</p>
+                  <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm text-gray-600 mb-3">
+                    <span className="font-semibold text-blue-600">{profile.reputation} reputation</span>
+                    <span className="text-gray-400">•</span>
+                    <span>Joined {formatDistanceToNow(new Date(profile.created_at), { addSuffix: true })}</span>
                   </div>
-                  <p className="text-gray-600 mb-3">@{profile.username}</p>
-                  <div className="flex gap-6 text-sm">
-                    <div>
-                      <span className="text-2xl font-bold text-blue-600">{profile.reputation}</span>
-                      <span className="text-gray-600 ml-2">reputation</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Member for </span>
-                      <span className="font-medium">{formatDistanceToNow(new Date(profile.created_at))}</span>
-                    </div>
-                  </div>
-                  {profile.bio && <p className="mt-4 text-gray-700">{profile.bio}</p>}
+                  {profile.bio && <p className="text-sm md:text-base text-gray-700 mb-3">{profile.bio}</p>}
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 font-medium text-sm"
+                  >
+                    Edit Profile
+                  </button>
                 </>
               )}
             </div>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        {/* Stats - Desktop Only */}
+        <div className="hidden md:grid grid-cols-2 gap-4 mb-6">
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="text-3xl font-bold text-blue-600">{questions.length}</div>
             <div className="text-gray-600">Questions Asked</div>
@@ -318,12 +311,12 @@ export default function ProfilePage() {
         </div>
 
         {/* Tabs */}
-        <div className="mb-6">
-          <div className="border-b">
-            <nav className="flex gap-8">
+        <div className="mb-6 sticky top-0 bg-gray-50 z-10 -mx-4 px-4 md:mx-0 md:px-0">
+          <div className="border-b bg-white md:bg-transparent">
+            <nav className="flex gap-4 md:gap-8 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => setActiveTab("questions")}
-                className={`pb-4 px-1 border-b-2 font-medium ${
+                className={`pb-4 px-1 border-b-2 font-medium whitespace-nowrap text-sm md:text-base ${
                   activeTab === "questions"
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-gray-600 hover:text-gray-900"
@@ -333,7 +326,7 @@ export default function ProfilePage() {
               </button>
               <button
                 onClick={() => setActiveTab("answers")}
-                className={`pb-4 px-1 border-b-2 font-medium ${
+                className={`pb-4 px-1 border-b-2 font-medium whitespace-nowrap text-sm md:text-base ${
                   activeTab === "answers"
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-gray-600 hover:text-gray-900"
@@ -343,7 +336,7 @@ export default function ProfilePage() {
               </button>
               <button
                 onClick={() => setActiveTab("bookmarks")}
-                className={`pb-4 px-1 border-b-2 font-medium ${
+                className={`pb-4 px-1 border-b-2 font-medium whitespace-nowrap text-sm md:text-base ${
                   activeTab === "bookmarks"
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-gray-600 hover:text-gray-900"
@@ -353,13 +346,14 @@ export default function ProfilePage() {
               </button>
               <button
                 onClick={() => setActiveTab("reputation")}
-                className={`pb-4 px-1 border-b-2 font-medium ${
+                className={`pb-4 px-1 border-b-2 font-medium whitespace-nowrap text-sm md:text-base ${
                   activeTab === "reputation"
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-gray-600 hover:text-gray-900"
                 }`}
               >
-                Reputation ({profile?.reputation || 0})
+                <span className="md:hidden">Activity ({profile?.reputation || 0})</span>
+                <span className="hidden md:inline">Reputation ({profile?.reputation || 0})</span>
               </button>
             </nav>
           </div>
@@ -369,7 +363,8 @@ export default function ProfilePage() {
         {activeTab === "questions" ? (
           <div className="space-y-4">
             {questions.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+              <div className="bg-white rounded-lg shadow-sm border p-8 md:p-12 text-center">
+                <div className="text-6xl mb-4">❓</div>
                 <p className="text-gray-600 mb-4">You haven't asked any questions yet.</p>
                 <Link
                   href="/questions/ask"
@@ -380,13 +375,13 @@ export default function ProfilePage() {
               </div>
             ) : (
               questions.map((question) => (
-                <div key={question.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+                <div key={question.id} className="bg-white rounded-lg shadow-sm border p-4 md:p-6 hover:shadow-md transition-shadow">
                   <Link href={`/questions/${question.slug || question.id}`}>
-                    <h3 className="text-xl font-semibold text-blue-600 hover:text-blue-800 mb-2">
+                    <h3 className="text-lg md:text-xl font-semibold text-blue-600 hover:text-blue-800 mb-2">
                       {question.title}
                     </h3>
                   </Link>
-                  <div className="flex gap-6 text-sm text-gray-600">
+                  <div className="flex flex-wrap gap-3 md:gap-6 text-xs md:text-sm text-gray-600">
                     <span>{question.score} votes</span>
                     <span>{question.answer_count} answers</span>
                     <span>{question.views} views</span>
@@ -399,7 +394,8 @@ export default function ProfilePage() {
         ) : activeTab === "answers" ? (
           <div className="space-y-4">
             {answers.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+              <div className="bg-white rounded-lg shadow-sm border p-8 md:p-12 text-center">
+                <div className="text-6xl mb-4">💬</div>
                 <p className="text-gray-600 mb-4">You haven't posted any answers yet.</p>
                 <Link
                   href="/questions"
@@ -410,13 +406,13 @@ export default function ProfilePage() {
               </div>
             ) : (
               answers.map((answer) => (
-                <div key={answer.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+                <div key={answer.id} className="bg-white rounded-lg shadow-sm border p-4 md:p-6 hover:shadow-md transition-shadow">
                   <Link href={`/questions/${answer.question_id}`}>
-                    <h3 className="text-lg font-medium text-blue-600 hover:text-blue-800 mb-2">
+                    <h3 className="text-base md:text-lg font-medium text-blue-600 hover:text-blue-800 mb-2">
                       {answer.question_title}
                     </h3>
                   </Link>
-                  <div className="flex gap-6 text-sm text-gray-600">
+                  <div className="flex flex-wrap gap-3 md:gap-6 text-xs md:text-sm text-gray-600">
                     <span>{answer.score} votes</span>
                     {answer.is_accepted && (
                       <span className="text-green-600 font-medium">✓ Accepted</span>
@@ -430,8 +426,9 @@ export default function ProfilePage() {
         ) : activeTab === "bookmarks" ? (
           <div className="space-y-4">
             {follows.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
-                <p className="text-gray-600 mb-4">You haven't bookmarked any answers yet.</p>
+              <div className="bg-white rounded-lg shadow-sm border p-8 md:p-12 text-center">
+                <div className="text-6xl mb-4">🔖</div>
+                <p className="text-gray-600 mb-4">You haven't bookmarked anything yet.</p>
                 <Link
                   href="/questions"
                   className="inline-block px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -446,14 +443,14 @@ export default function ProfilePage() {
                   : `/questions/${follow.question_slug || follow.followable_id}`;
                 
                 return (
-                  <div key={idx} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+                  <div key={idx} className="bg-white rounded-lg shadow-sm border p-4 md:p-6 hover:shadow-md transition-shadow">
                     <Link href={url}>
-                      <h3 className="text-lg font-medium text-blue-600 hover:text-blue-800 mb-2">
-                        {follow.followable_type === "answer" ? "Answer to: " : ""}
+                      <h3 className="text-base md:text-lg font-medium text-blue-600 hover:text-blue-800 mb-2">
+                        {follow.followable_type === "answer" ? "Answer to:" : ""}
                         {follow.question_title}
                       </h3>
                     </Link>
-                    <div className="flex gap-6 text-sm text-gray-600">
+                    <div className="flex flex-wrap gap-3 md:gap-6 text-xs md:text-sm text-gray-600">
                       <span className="capitalize">{follow.followable_type}</span>
                       <span>bookmarked {formatDistanceToNow(new Date(follow.followed_at), { addSuffix: true })}</span>
                     </div>
