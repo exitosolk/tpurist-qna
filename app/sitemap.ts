@@ -75,13 +75,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Fetch tags
   const tagsResult = await query(
-    `SELECT DISTINCT t.name, MAX(q.created_at) as last_used
+    `SELECT t.name, MAX(q.created_at) as last_used, COUNT(qt.question_id) as question_count
      FROM tags t
      LEFT JOIN question_tags qt ON t.id = qt.tag_id
      LEFT JOIN questions q ON qt.question_id = q.id
      GROUP BY t.id, t.name
-     HAVING COUNT(qt.question_id) > 0
-     ORDER BY COUNT(qt.question_id) DESC
+     HAVING question_count > 0
+     ORDER BY question_count DESC
      LIMIT 100`
   )
 
