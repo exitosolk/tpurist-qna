@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import { User, MapPin, Globe, Award, MessageSquare, HelpCircle, CheckCircle, Search } from "lucide-react";
+import { User, MapPin, Globe, Award, MessageSquare, HelpCircle, CheckCircle, Search, X } from "lucide-react";
 
 interface UserData {
   id: number;
@@ -57,6 +57,12 @@ export default function UsersPage() {
     setPage(1);
   };
 
+  const clearSearch = () => {
+    setSearchInput("");
+    setSearchQuery("");
+    setPage(1);
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -79,9 +85,18 @@ export default function UsersPage() {
 
         {/* Search Bar */}
         <form onSubmit={handleSearch} className="mb-6">
-          <div className="relative max-w-md">
-            <input
-              type="text"
+          <div className="relative max-w-md">pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            {(searchInput || searchQuery) && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
               placeholder="Search users by name or username..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
