@@ -26,6 +26,8 @@ export default function AskQuestionPage() {
   const [body, setBody] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [tagSuggestions, setTagSuggestions] = useState<Array<{name: string, count: number}>>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [collectives, setCollectives] = useState<Collective[]>([]);
   const [selectedCollectives, setSelectedCollectives] = useState<number[]>([]);
   const [error, setError] = useState("");
@@ -51,6 +53,30 @@ export default function AskQuestionPage() {
 
     return () => clearTimeout(timer);
   }, [title, body, tags, session]);
+
+  // Fetch tag suggestions as user types
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (tagInput.length < 1) {
+        setTagSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/tags?search=${encodeURIComponent(tagInput)}&limit=8`);
+        const data = await response.json();
+        const filtered = data.tags.filter((tag: any) => !tags.includes(tag.name));
+        setTagSuggestions(filtered);
+        setShowSuggestions(filtered.length > 0);
+      } catch (error) {
+        console.error("Error fetching tag suggestions:", error);
+      }
+    };
+
+    const debounce = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(debounce);
+  }, [tagInput, tags]);
 
   const loadDraft = async () => {
     try {
@@ -149,6 +175,7 @@ export default function AskQuestionPage() {
     if (normalizedTag && !tags.includes(normalizedTag) && tags.length < 5) {
       setTags([...tags, normalizedTag]);
       setTagInput("");
+      setShowSuggestions(false);
     }
   };
 
@@ -323,29 +350,51 @@ export default function AskQuestionPage() {
               ))}
             </div>
 
-            <div className="flex gap-2 mb-3">
-              <input
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddTag(tagInput);
-                  }
-                }}
-                placeholder="Type a tag and press Enter"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={tags.length >= 5}
-              />
-              <button
-                type="button"
-                onClick={() => handleAddTag(tagInput)}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                disabled={tags.length >= 5}
-              >
-                Add
-              </button>
+            <div className="relative">
+              <div className="flex gap-2 mb-3">
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddTag(tagInput);
+                    } else if (e.key === "Escape") {
+                      setShowSuggestions(false);
+                    }
+                  }}
+                  onFocus={() => tagInput.length > 0 && tagSuggestions.length > 0 && setShowSuggestions(true)}
+                  placeholder="Type a tag and press Enter"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={tags.length >= 5}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleAddTag(tagInput)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                  disabled={tags.length >= 5}
+                >
+                  Add
+                </button>
+              </div>
+
+              {/* Tag Suggestions Dropdown */}
+              {showSuggestions && tagSuggestions.length > 0 && (
+                <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {tagSuggestions.map((suggestion) => (
+                    <button
+                      key={suggestion.name}
+                      type="button"
+                      onClick={() => handleAddTag(suggestion.name)}
+                      className="w-full text-left px-4 py-2 hover:bg-blue-50 flex items-center justify-between group"
+                    >
+                      <span className="text-gray-900 group-hover:text-blue-600">{suggestion.name}</span>
+                      <span className="text-xs text-gray-500">{suggestion.count} questions</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex gap-2 flex-wrap">
