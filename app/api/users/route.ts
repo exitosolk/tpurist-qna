@@ -42,7 +42,8 @@ export async function GET(request: Request) {
     
     params.push(limit, offset);
     
-    const users = await query(sql, params);
+    const usersResult = await query(sql, params);
+    const users = usersResult.rows;
     
     // Get total count for pagination
     let countSql = `SELECT COUNT(*) as total FROM users`;
@@ -53,7 +54,8 @@ export async function GET(request: Request) {
       countParams.push(`%${search}%`, `%${search}%`);
     }
     
-    const [{ total }] = await query(countSql, countParams);
+    const countResult = await query(countSql, countParams);
+    const total = countResult.rows[0]?.total || 0;
     
     return NextResponse.json({
       users,
