@@ -93,22 +93,6 @@ export default function MarkdownEditor({ value, onChange, placeholder, minLength
         >
           🔗
         </button>
-        <button
-          type="button"
-          onClick={() => insertMarkdown("```\n", "\n```")}
-          className="px-2 py-1 text-sm hover:bg-gray-200 rounded font-mono"
-          title="Code block"
-        >
-          {"</>"}
-        </button>
-        <button
-          type="button"
-          onClick={() => insertMarkdown("`", "`")}
-          className="px-2 py-1 text-sm hover:bg-gray-200 rounded font-mono"
-          title="Inline code"
-        >
-          {"`"}
-        </button>
         <div className="border-l mx-1"></div>
         <button
           type="button"
