@@ -9,9 +9,11 @@ import { extractIdFromSlug } from "@/lib/slug";
 import Navbar from "@/components/Navbar";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import MarkdownEditor from "@/components/MarkdownEditor";
+import EditQuestionModal from "@/components/EditQuestionModal";
+import EditAnswerModal from "@/components/EditAnswerModal";
 import Tooltip from "@/components/Tooltip";
 import Sidebar from "@/components/Sidebar";
-import { Share2, Edit, Bookmark, Check } from "lucide-react";
+import { Share2, Edit, Bookmark, Check, Clock } from "lucide-react";
 
 interface User {
   username: string;
@@ -29,6 +31,8 @@ interface Question extends User {
   views: number;
   answer_count: number;
   created_at: string;
+  edited_at?: string;
+  edit_count: number;
   tags: Array<{ id: number; name: string }>;
 }
 
@@ -39,6 +43,8 @@ interface Answer extends User {
   score: number;
   is_accepted: boolean;
   created_at: string;
+  edited_at?: string;
+  edit_count: number;
   experience_date?: string;
   comments?: Comment[];
 }
@@ -74,6 +80,9 @@ export default function QuestionDetailPage() {
   const [answerError, setAnswerError] = useState("");
   const [voteError, setVoteError] = useState("");
   const [generalError, setGeneralError] = useState("");
+  const [editingQuestion, setEditingQuestion] = useState(false);
+  const [editingAnswerModal, setEditingAnswerModal] = useState<number | null>(null);
+  const [userReputation, setUserReputation] = useState(0);
 
   useEffect(() => {
     fetchQuestion();
@@ -141,6 +150,7 @@ export default function QuestionDetailPage() {
       const data = await response.json();
       if (data.profile) {
         setCurrentUserId(data.profile.id);
+        setUserReputation(data.profile.reputation || 0);
       }
     } catch (error) {
       console.error("Error fetching current user:", error);
@@ -236,8 +246,7 @@ export default function QuestionDetailPage() {
   };
 
   const handleEditAnswer = (answerId: number, body: string) => {
-    setEditingAnswerId(answerId);
-    setEditAnswerBody(body);
+    setEditingAnswerModal(answerId);
   };
 
   const handleSaveAnswer = async (answerId: number) => {
@@ -605,6 +614,18 @@ export default function QuestionDetailPage() {
                       {followedQuestion ? "Bookmarked" : "Bookmark"}
                     </button>
                   </Tooltip>
+
+                  {/* Edit button for authors and high-rep users */}
+                  {session && (currentUserId === question.user_id || userReputation >= 500) && (
+                    <Tooltip content={currentUserId === question.user_id ? "Edit your question" : "Suggest edits to improve this question"}>
+                      <button
+                        onClick={() => setEditingQuestion(true)}
+                        className="flex items-center gap-1 hover:text-blue-600"
+                      >
+                        <Edit className="w-4 h-4" /> Edit
+                      </button>
+                    </Tooltip>
+                  )}
                 </div>
 
                 <div className="flex justify-end mt-4">
@@ -620,6 +641,17 @@ export default function QuestionDetailPage() {
                       <span>{question.reputation} rep</span>
                       <span className="text-gray-400 mx-1">•</span>
                       asked {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}
+                      {question.edit_count > 0 && (
+                        <>
+                          <span className="text-gray-400 mx-1">•</span>
+                          <Tooltip content="This question has been edited">
+                            <span className="inline-flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              edited
+                            </span>
+                          </Tooltip>
+                        </>
+                      )}
                     </span>
                   </div>
                 </div>
@@ -1016,6 +1048,35 @@ export default function QuestionDetailPage() {
           </div>
         </div>
       </main>
+
+      {/* Edit Modals */}
+      {editingQuestion && question && (
+        <EditQuestionModal
+          questionId={question.id}
+          initialTitle={question.title}
+          initialBody={question.body}
+          initialTags={question.tags.map(t => t.name)}
+          createdAt={question.created_at}
+          onClose={() => setEditingQuestion(false)}
+          onSuccess={() => {
+            fetchQuestion();
+            setEditingQuestion(false);
+          }}
+        />
+      )}
+
+      {editingAnswerModal !== null && (
+        <EditAnswerModal
+          answerId={editingAnswerModal}
+          initialBody={answers.find(a => a.id === editingAnswerModal)?.body || ""}
+          createdAt={answers.find(a => a.id === editingAnswerModal)?.created_at || ""}
+          onClose={() => setEditingAnswerModal(null)}
+          onSuccess={() => {
+            fetchQuestion();
+            setEditingAnswerModal(null);
+          }}
+        />
+      )}
     </div>
   );
 }
