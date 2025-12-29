@@ -116,18 +116,17 @@ export default function UsersPage() {
             {/* Users Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
               {users.map((user) => (
-                <Link
+                <div
                   key={user.id}
-                  href={`/users/${user.username}`}
-                  className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow p-5"
+                  className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow p-4 md:p-5 relative"
                 >
-                  {/* User Avatar */}
-                  <div className="flex items-start gap-3 mb-3">
+                  {/* User Avatar & Info */}
+                  <div className="flex items-start gap-3 mb-2">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0">
                       {user.display_name?.[0]?.toUpperCase() || user.username?.[0]?.toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 mb-0.5">
                         <h3 className="font-semibold text-gray-900 truncate">
                           {user.display_name || user.username}
                         </h3>
@@ -135,57 +134,71 @@ export default function UsersPage() {
                           <CheckCircle className="w-4 h-4 text-blue-600 shrink-0" />
                         )}
                       </div>
-                      <p className="text-sm text-gray-500">@{user.username}</p>
+                      <p className="text-sm text-gray-400">@{user.username}</p>
+                      <p className="text-xs text-gray-400 md:hidden mt-0.5">
+                        {formatDate(user.created_at)}
+                      </p>
+                    </div>
+                    {/* Member Since - Desktop Only, Top Right */}
+                    <div className="hidden md:block text-xs text-gray-400 shrink-0">
+                      {formatDate(user.created_at)}
                     </div>
                   </div>
 
-                  {/* Bio */}
+                  {/* Bio - Only show if exists, with reduced margin */}
                   {user.bio && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                    <p className="text-sm text-gray-700 mb-2 line-clamp-2">
                       {user.bio}
                     </p>
                   )}
 
-                  {/* Location & Website */}
-                  <div className="flex flex-wrap gap-3 text-xs text-gray-500 mb-3">
-                    {user.location && (
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        <span className="truncate">{user.location}</span>
-                      </div>
-                    )}
-                    {user.website && (
-                      <div className="flex items-center gap-1">
-                        <Globe className="w-3 h-3" />
-                        <span className="truncate">Website</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Stats */}
-                  <div className="flex items-center justify-between pt-3 border-t">
-                    <div className="flex items-center gap-1 text-sm">
-                      <Award className="w-4 h-4 text-yellow-500" />
-                      <span className="font-semibold">{user.reputation}</span>
-                      <span className="text-gray-500 text-xs">rep</span>
+                  {/* Location & Website - Compact */}
+                  {(user.location || user.website) && (
+                    <div className="flex flex-wrap gap-2 md:gap-3 text-xs text-gray-500 mb-2">
+                      {user.location && (
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          <span className="truncate">{user.location}</span>
+                        </div>
+                      )}
+                      {user.website && (
+                        <div className="flex items-center gap-1">
+                          <Globe className="w-3 h-3" />
+                          <span className="truncate">Website</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-gray-600">
+                  )}
+
+                  {/* Stats - Improved Layout with Labels */}
+                  <div className="flex items-center justify-between pt-2 border-t mt-2">
+                    <div className="flex items-center gap-3 text-xs md:text-sm flex-wrap">
                       <div className="flex items-center gap-1">
-                        <HelpCircle className="w-3.5 h-3.5" />
-                        <span>{user.question_count}</span>
+                        <Award className="w-4 h-4 text-yellow-500" />
+                        <span className="font-semibold text-gray-900">{user.reputation}</span>
+                        <span className="text-gray-500 hidden sm:inline">rep</span>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 text-gray-600">
                         <MessageSquare className="w-3.5 h-3.5" />
+                        <span>{user.question_count}</span>
+                        <span className="text-gray-500 hidden sm:inline">asked</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-gray-600">
+                        <MessageSquare className="w-3.5 h-3.5 transform scale-x-[-1]" />
                         <span>{user.answer_count}</span>
+                        <span className="text-gray-500 hidden sm:inline">answered</span>
                       </div>
                     </div>
+                    {/* View Profile Button - CTA */}
+                    <Link
+                      href={`/users/${user.username}`}
+                      className="px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg border border-blue-200 transition-colors shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      View
+                    </Link>
                   </div>
-
-                  {/* Member Since */}
-                  <div className="mt-2 text-xs text-gray-400">
-                    Member since {formatDate(user.created_at)}
-                  </div>
-                </Link>
+                </div>
               ))}
             </div>
 
