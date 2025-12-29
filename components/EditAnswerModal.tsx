@@ -107,7 +107,6 @@ export default function EditAnswerModal({
               value={body}
               onChange={setBody}
               placeholder="Edit your answer..."
-              disabled={submitting}
             />
           </div>
 

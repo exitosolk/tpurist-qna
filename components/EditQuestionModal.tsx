@@ -133,7 +133,6 @@ export default function EditQuestionModal({
               value={body}
               onChange={setBody}
               placeholder="Edit your question details..."
-              disabled={submitting}
             />
           </div>
 
