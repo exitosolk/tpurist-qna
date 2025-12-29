@@ -146,9 +146,6 @@ export async function PUT(
           [questionId, tagId]
         );
       }
-
-      updateSql += ", tags = ?";
-      updateParams.push(finalTags.join(","));
     }
 
     // Update edited_at and edit_count if outside grace period
