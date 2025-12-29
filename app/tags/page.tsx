@@ -43,27 +43,12 @@ const getTagMetadata = (tagName: string) => {
   if (['photography', 'tour', 'guide', 'itinerary', 'day trip'].includes(tag)) {
     return { category: 'Photography & Tours', icon: Camera, color: 'from-pink-500 to-pink-600', bgColor: 'bg-pink-50 group-hover:bg-pink-100' };
   }
-   and hide 0-count tags
-  const filteredTags = (searchQuery
-    ? tags.filter((tag) =>
-        tag.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : tags
-  ).filter((tag) => tag.count > 0); // Hide tags with 0 questions
+  
+  // Default
+  return { category: 'Other', icon: Hash, color: 'from-gray-500 to-gray-600', bgColor: 'bg-gray-50 group-hover:bg-gray-100' };
+};
 
-  // Group tags by category
-  const groupedTags = filteredTags.reduce((acc, tag) => {
-    const { category } = getTagMetadata(tag.name);
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(tag);
-    return acc;
-  }, {} as Record<string, TagData[]>);
-
-  // Sort categories
-  const categoryOrder = ['Destinations', 'Nature & Wildlife', 'Beach & Water', 'Food & Culture', 'Travel Essentials', 'Photography & Tours', 'Other'];
-  const sortedCategories = categoryOrder.filter(cat => groupedTags[cat]?.length > 0)ault function TagsPage() {
+export default function TagsPage() {
   const [tags, setTags] = useState<TagData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -96,12 +81,27 @@ const getTagMetadata = (tagName: string) => {
     setSearchQuery("");
   };
 
-  // Filter tags based on search query
-  const filteredTags = searchQuery
+  // Filter tags based on search query and hide 0-count tags
+  const filteredTags = (searchQuery
     ? tags.filter((tag) =>
         tag.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : tags;
+    : tags
+  ).filter((tag) => tag.count > 0); // Hide tags with 0 questions
+
+  // Group tags by category
+  const groupedTags = filteredTags.reduce((acc, tag) => {
+    const { category } = getTagMetadata(tag.name);
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(tag);
+    return acc;
+  }, {} as Record<string, TagData[]>);
+
+  // Sort categories
+  const categoryOrder = ['Destinations', 'Nature & Wildlife', 'Beach & Water', 'Food & Culture', 'Travel Essentials', 'Photography & Tours', 'Other'];
+  const sortedCategories = categoryOrder.filter(cat => groupedTags[cat]?.length > 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
