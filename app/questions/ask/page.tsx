@@ -31,6 +31,7 @@ export default function AskQuestionPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [userEmailVerified, setUserEmailVerified] = useState(true);
+  const [userReputation, setUserReputation] = useState(0);
 
   useEffect(() => {
     fetchCollectives();
@@ -51,8 +52,9 @@ export default function AskQuestionPage() {
     try {
       const response = await fetch("/api/profile");
       const data = await response.json();
-      if (data.user && data.user.email_verified !== undefined) {
-        setUserEmailVerified(data.user.email_verified);
+      if (data.profile) {
+        setUserEmailVerified(data.profile.email_verified || false);
+        setUserReputation(data.profile.reputation || 0);
       }
     } catch (error) {
       console.error("Error checking email verification:", error);
@@ -207,6 +209,7 @@ export default function AskQuestionPage() {
               onChange={setBody}
               placeholder="Provide more context about your question..."
               minLength={30}
+              userReputation={userReputation}
             />
           </div>
 

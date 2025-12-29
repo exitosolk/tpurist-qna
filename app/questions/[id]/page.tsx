@@ -976,6 +976,7 @@ export default function QuestionDetailPage() {
                 onChange={setAnswerBody}
                 placeholder="Share your knowledge and help other travelers. You can add images to illustrate your answer."
                 minLength={30}
+                userReputation={userReputation}
               />
               
               {/* Experience Date Field */}
@@ -1057,6 +1058,7 @@ export default function QuestionDetailPage() {
           initialBody={question.body}
           initialTags={question.tags.map(t => t.name)}
           createdAt={question.created_at}
+          userReputation={userReputation}
           onClose={() => setEditingQuestion(false)}
           onSuccess={() => {
             fetchQuestion();
@@ -1070,6 +1072,7 @@ export default function QuestionDetailPage() {
           answerId={editingAnswerModal}
           initialBody={answers.find(a => a.id === editingAnswerModal)?.body || ""}
           createdAt={answers.find(a => a.id === editingAnswerModal)?.created_at || ""}
+          userReputation={userReputation}
           onClose={() => setEditingAnswerModal(null)}
           onSuccess={() => {
             fetchQuestion();

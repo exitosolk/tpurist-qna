@@ -8,9 +8,10 @@ interface MarkdownEditorProps {
   onChange: (value: string) => void;
   placeholder?: string;
   minLength?: number;
+  userReputation?: number;
 }
 
-export default function MarkdownEditor({ value, onChange, placeholder, minLength }: MarkdownEditorProps) {
+export default function MarkdownEditor({ value, onChange, placeholder, minLength, userReputation = 0 }: MarkdownEditorProps) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -112,9 +113,17 @@ export default function MarkdownEditor({ value, onChange, placeholder, minLength
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="px-2 py-1 text-sm hover:bg-gray-200 rounded flex items-center gap-1 disabled:opacity-50"
-          title="Upload image"
+          disabled={uploading || userReputation < 10}
+          className={`px-2 py-1 text-sm rounded flex items-center gap-1 ${
+            userReputation < 10
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:bg-gray-200"
+          }`}
+          title={
+            userReputation < 10
+              ? "You need 10+ reputation to upload images"
+              : "Upload image"
+          }
         >
           <Image className="w-4 h-4" />
           {uploading ? "Uploading..." : "Image"}

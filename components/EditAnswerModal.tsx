@@ -8,6 +8,7 @@ interface EditAnswerModalProps {
   answerId: number;
   initialBody: string;
   createdAt: string;
+  userReputation: number;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -16,6 +17,7 @@ export default function EditAnswerModal({
   answerId,
   initialBody,
   createdAt,
+  userReputation,
   onClose,
   onSuccess,
 }: EditAnswerModalProps) {
@@ -107,6 +109,7 @@ export default function EditAnswerModal({
               value={body}
               onChange={setBody}
               placeholder="Edit your answer..."
+              userReputation={userReputation}
             />
           </div>
 

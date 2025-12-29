@@ -10,6 +10,7 @@ interface EditQuestionModalProps {
   initialBody: string;
   initialTags: string[];
   createdAt: string;
+  userReputation: number;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -20,6 +21,7 @@ export default function EditQuestionModal({
   initialBody,
   initialTags,
   createdAt,
+  userReputation,
   onClose,
   onSuccess,
 }: EditQuestionModalProps) {
@@ -133,6 +135,7 @@ export default function EditQuestionModal({
               value={body}
               onChange={setBody}
               placeholder="Edit your question details..."
+              userReputation={userReputation}
             />
           </div>
 

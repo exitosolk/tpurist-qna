@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { query } from "@/lib/db";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
@@ -13,6 +14,20 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
+      );
+    }
+
+    // Check user reputation
+    const userResult = await query(
+      "SELECT reputation FROM users WHERE email = ?",
+      [session.user.email]
+    );
+
+    const user = userResult.rows[0];
+    if (!user || user.reputation < 10) {
+      return NextResponse.json(
+        { error: "You need at least 10 reputation to upload images. Earn reputation by asking good questions and providing helpful answers." },
+        { status: 403 }
       );
     }
 
