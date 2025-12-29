@@ -117,7 +117,7 @@ export default function UsersPage() {
                           {user.display_name || user.username}
                         </h3>
                         {user.email_verified && (
-                          <CheckCircle className="w-4 h-4 text-blue-600 shrink-0" title="Verified" />
+                          <CheckCircle className="w-4 h-4 text-blue-600 shrink-0" />
                         )}
                       </div>
                       <p className="text-sm text-gray-500">@{user.username}</p>
