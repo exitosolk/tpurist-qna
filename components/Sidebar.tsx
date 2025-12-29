@@ -140,7 +140,7 @@ export default function Sidebar({ currentTags = [] }: SidebarProps) {
           {popularTags.map((tag) => (
             <Link
               key={tag.name}
-              href={`/questions?tag=${tag.name}`}
+              href={`/questions/tagged/${encodeURIComponent(tag.name)}`}
               className="px-3 py-1 bg-blue-50 text-blue-700 rounded text-sm hover:bg-blue-100 transition"
             >
               {tag.name}
