@@ -242,7 +242,7 @@ function SearchContent() {
                           {tags.slice(0, 5).map((tag, idx) => (
                             <Link
                               key={idx}
-                              href={`/tags/${tag}`}
+                              href={`/questions/tagged/${encodeURIComponent(tag)}`}
                               className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs md:text-sm hover:bg-blue-200"
                             >
                               {tag}

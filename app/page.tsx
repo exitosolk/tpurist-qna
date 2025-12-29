@@ -58,7 +58,7 @@ export default function HomePage() {
             {["Colombo", "Kandy", "Galle", "Ella", "Sigiriya", "Beaches", "Wildlife", "Food", "Culture", "Hiking", "Tea Country", "Budget Travel"].map((tag) => (
               <a
                 key={tag}
-                href={`/questions/tagged/${tag.toLowerCase().replace(" ", "-")}`}
+                href={`/questions/tagged/${encodeURIComponent(tag)}`}
                 className="px-4 py-2 bg-blue-50 text-blue-700 rounded-full hover:bg-blue-100"
               >
                 {tag}

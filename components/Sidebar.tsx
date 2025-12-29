@@ -165,9 +165,9 @@ export default function Sidebar({ currentTags = [] }: SidebarProps) {
               </Link>
               <div className="flex flex-wrap gap-2 text-xs">
                 {question.tags?.split(",").map((tag, idx) => (
-                  <span key={idx} className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded">
+                  <Link key={idx} href={`/questions/tagged/${encodeURIComponent(tag.trim())}`} className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
                     {tag.trim()}
-                  </span>
+                  </Link>
                 ))}
               </div>
               <div className="flex items-center gap-2 text-xs text-gray-500">

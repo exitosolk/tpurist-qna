@@ -729,7 +729,7 @@ export default function QuestionDetailPage() {
                   {question.tags?.map((tag) => (
                     <Link
                       key={tag.id}
-                      href={`/questions?tag=${tag.name}`}
+                      href={`/questions/tagged/${encodeURIComponent(tag.name)}`}
                       className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm hover:bg-blue-100"
                     >
                       {tag.name}
