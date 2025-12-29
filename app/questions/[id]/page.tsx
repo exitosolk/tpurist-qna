@@ -901,20 +901,20 @@ export default function QuestionDetailPage() {
               const answerDate = new Date(answer.created_at);
               const sixMonthsAgo = new Date();
               sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-              const isStale = answer.is_accepted && answerDate < sixMonthsAgo;
+              const isStale = Boolean(answer.is_accepted) && answerDate < sixMonthsAgo;
 
               return (
                 <div key={answer.id} id={`answer-${answer.id}`} className={`bg-white rounded-lg shadow-sm border p-4 md:p-6 scroll-mt-20 ${answer.is_accepted ? 'border-l-4 border-green-500' : ''}`}>
                   {/* Accepted Answer Badge - Mobile */}
-                  {answer.is_accepted && (
+                  {answer.is_accepted ? (
                     <div className="md:hidden mb-3 flex items-center gap-2 text-green-600 font-medium text-sm">
                       <span className="text-lg">✓</span>
                       <span>Accepted Answer</span>
                     </div>
-                  )}
+                  ) : null}
                   
                   {/* Stale Data Warning Banner */}
-                  {isStale && (
+                  {isStale ? (
                     <div className="mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
                     <div className="flex items-start">
                       <div className="flex-shrink-0">
@@ -929,7 +929,7 @@ export default function QuestionDetailPage() {
                       </div>
                     </div>
                   </div>
-                  )}
+                  ) : null}
 
                   <div className="md:flex md:gap-4">
                     {/* Desktop: Vote buttons on left (vertical) */}
