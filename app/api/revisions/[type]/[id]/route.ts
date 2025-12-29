@@ -3,10 +3,10 @@ import { query } from "@/lib/db";
 
 export async function GET(
   request: Request,
-  { params }: { params: { type: string; id: string } }
+  { params }: { params: Promise<{ type: string; id: string }> }
 ) {
   try {
-    const { type, id } = params;
+    const { type, id } = await params;
     
     if (!['question', 'answer'].includes(type)) {
       return NextResponse.json({ error: "Invalid content type" }, { status: 400 });
