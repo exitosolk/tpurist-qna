@@ -5,7 +5,7 @@ import { query } from "@/lib/db";
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,7 +14,8 @@ export async function PUT(
     }
 
     const { title, body, tags, editReason } = await request.json();
-    const questionId = parseInt(params.id);
+    const { id } = await params;
+    const questionId = parseInt(id);
 
     // Get current user
     const userResult = await query(
