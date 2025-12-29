@@ -954,7 +954,7 @@ export default function QuestionDetailPage() {
                             ▼
                           </button>
                         </Tooltip>
-                        {Boolean(answer.is_accepted) && (
+                        {answer.is_accepted === 1 && (
                           <Tooltip content="The question owner accepted this as the best answer">
                             <div className="text-green-600 text-2xl">✓</div>
                           </Tooltip>
@@ -966,7 +966,7 @@ export default function QuestionDetailPage() {
                         <div className="p-2 text-gray-400">▲</div>
                         <span className="text-2xl font-semibold">{answer.score}</span>
                         <div className="p-2 text-gray-400">▼</div>
-                        {Boolean(answer.is_accepted) && (
+                        {answer.is_accepted === 1 && (
                           <Tooltip content="The question owner accepted this as the best answer">
                             <div className="text-green-600 text-2xl">✓</div>
                           </Tooltip>
