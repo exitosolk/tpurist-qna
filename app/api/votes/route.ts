@@ -77,9 +77,9 @@ export async function POST(req: Request) {
     const contentOwnerId = ownerResult.rows.length > 0 ? ownerResult.rows[0].user_id : null;
 
     // Check if user has enough reputation to downvote
-    if (voteType === -1 && voterReputation < 10) {
+    if (voteType === -1 && voterReputation < 125) {
       return NextResponse.json(
-        { error: "You need at least 10 reputation points to downvote" },
+        { error: "You need at least 125 reputation points to downvote" },
         { status: 403 }
       );
     }
