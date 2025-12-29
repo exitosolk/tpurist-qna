@@ -47,6 +47,16 @@ interface Follow {
   followed_at: string;
 }
 
+interface Draft {
+  id: number;
+  draft_type: string;
+  title?: string;
+  body: string;
+  tags?: string;
+  question_id?: number;
+  updated_at: string;
+}
+
 interface ReputationHistory {
   id: number;
   change_amount: number;
@@ -63,9 +73,10 @@ export default function ProfilePage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [follows, setFollows] = useState<Follow[]>([]);
+  const [drafts, setDrafts] = useState<Draft[]>([]);
   const [reputationHistory, setReputationHistory] = useState<ReputationHistory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"questions" | "answers" | "bookmarks" | "reputation">("questions");
+  const [activeTab, setActiveTab] = useState<"questions" | "answers" | "bookmarks" | "drafts" | "reputation">("questions");
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ display_name: "", bio: "" });
   const [saving, setSaving] = useState(false);
@@ -103,6 +114,13 @@ export default function ProfilePage() {
       const followsData = await followsResponse.json();
       if (followsResponse.ok) {
         setFollows(followsData.follows || []);
+      }
+
+      // Fetch drafts
+      const draftsResponse = await fetch("/api/drafts");
+      const draftsData = await draftsResponse.json();
+      if (draftsResponse.ok) {
+        setDrafts(draftsData.drafts || []);
       }
 
       // Fetch reputation history
@@ -345,6 +363,16 @@ export default function ProfilePage() {
                 Bookmarks ({follows.length})
               </button>
               <button
+                onClick={() => setActiveTab("drafts")}
+                className={`pb-4 px-1 border-b-2 font-medium whitespace-nowrap text-sm md:text-base ${
+                  activeTab === "drafts"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Drafts ({drafts.length})
+              </button>
+              <button
                 onClick={() => setActiveTab("reputation")}
                 className={`pb-4 px-1 border-b-2 font-medium whitespace-nowrap text-sm md:text-base ${
                   activeTab === "reputation"
@@ -457,6 +485,74 @@ export default function ProfilePage() {
                   </div>
                 );
               })
+            )}
+          </div>
+        ) : activeTab === "drafts" ? (
+          <div className="space-y-4">
+            {drafts.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+                <p className="text-gray-600 mb-4">No drafts saved yet.</p>
+                <p className="text-sm text-gray-500">Your question and answer drafts are automatically saved as you type.</p>
+              </div>
+            ) : (
+              drafts.map((draft) => (
+                <div key={draft.id} className="bg-white rounded-lg shadow-sm border p-4 md:p-6 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                          draft.draft_type === "question" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"
+                        }`}>
+                          {draft.draft_type === "question" ? "Question Draft" : "Answer Draft"}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          Last saved {formatDistanceToNow(new Date(draft.updated_at), { addSuffix: true })}
+                        </span>
+                      </div>
+                      {draft.title && (
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2 truncate">
+                          {draft.title}
+                        </h3>
+                      )}
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {draft.body.substring(0, 200)}...
+                      </p>
+                      {draft.tags && (
+                        <div className="flex gap-2 mt-2 flex-wrap">
+                          {draft.tags.split(",").map((tag, idx) => (
+                            <span key={idx} className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Link
+                        href={draft.draft_type === "question" ? "/questions/ask" : draft.question_id ? `/questions/${draft.question_id}` : "/questions"}
+                        className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 whitespace-nowrap"
+                      >
+                        Continue
+                      </Link>
+                      <button
+                        onClick={async () => {
+                          if (confirm("Are you sure you want to delete this draft?")) {
+                            try {
+                              await fetch(`/api/drafts?id=${draft.id}`, { method: "DELETE" });
+                              setDrafts(drafts.filter(d => d.id !== draft.id));
+                            } catch (error) {
+                              console.error("Error deleting draft:", error);
+                            }
+                          }
+                        }}
+                        className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded text-sm hover:bg-gray-50"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         ) : activeTab === "reputation" ? (

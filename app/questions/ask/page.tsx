@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
@@ -32,11 +32,85 @@ export default function AskQuestionPage() {
   const [loading, setLoading] = useState(false);
   const [userEmailVerified, setUserEmailVerified] = useState(true);
   const [userReputation, setUserReputation] = useState(0);
+  const [draftId, setDraftId] = useState<number | null>(null);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"saved" | "saving" | "">("");
 
   useEffect(() => {
     fetchCollectives();
     checkEmailVerification();
+    loadDraft();
   }, []);
+
+  // Auto-save draft every 5 seconds when content changes
+  useEffect(() => {
+    if (!session || (!title && !body)) return;
+
+    const timer = setTimeout(() => {
+      saveDraft();
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [title, body, tags, session]);
+
+  const loadDraft = async () => {
+    try {
+      const response = await fetch("/api/drafts?type=question");
+      const data = await response.json();
+      
+      if (data.drafts && data.drafts.length > 0) {
+        const draft = data.drafts[0];
+        setTitle(draft.title || "");
+        setBody(draft.body || "");
+        setTags(draft.tags ? draft.tags.split(",") : []);
+        setDraftId(draft.id);
+      }
+    } catch (error) {
+      console.error("Error loading draft:", error);
+    }
+  };
+
+  const saveDraft = useCallback(async () => {
+    if (!body || body.trim().length === 0) return;
+
+    setAutoSaveStatus("saving");
+    try {
+      const response = await fetch("/api/drafts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          draftType: "question",
+          title,
+          bodyText: body,
+          tags: tags.join(","),
+          draftId,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        if (data.draftId && !draftId) {
+          setDraftId(data.draftId);
+        }
+        setAutoSaveStatus("saved");
+        setTimeout(() => setAutoSaveStatus(""), 2000);
+      }
+    } catch (error) {
+      console.error("Error saving draft:", error);
+    }
+  }, [title, body, tags, draftId]);
+
+  const deleteDraft = async () => {
+    if (!draftId) return;
+    
+    try {
+      await fetch(`/api/drafts?id=${draftId}`, {
+        method: "DELETE",
+      });
+      setDraftId(null);
+    } catch (error) {
+      console.error("Error deleting draft:", error);
+    }
+  };
 
   const fetchCollectives = async () => {
     try {
@@ -136,6 +210,9 @@ export default function AskQuestionPage() {
         return;
       }
 
+      // Delete draft after successful submission
+      await deleteDraft();
+
       // Redirect to the newly created question using slug
       router.push(`/questions/${data.slug || data.questionId}`);
     } catch (err: any) {
@@ -150,7 +227,14 @@ export default function AskQuestionPage() {
       <Navbar />
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <h2 className="text-3xl font-bold mb-2">Ask a Travel Question</h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-3xl font-bold">Ask a Travel Question</h2>
+          {autoSaveStatus && (
+            <span className="text-sm text-gray-500">
+              {autoSaveStatus === "saving" ? "Saving draft..." : "✓ Draft saved"}
+            </span>
+          )}
+        </div>
         <p className="text-gray-600 mb-8">
           Share your travel question with the OneCeylon community
         </p>

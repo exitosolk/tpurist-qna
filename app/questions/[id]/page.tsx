@@ -83,6 +83,8 @@ export default function QuestionDetailPage() {
   const [editingQuestion, setEditingQuestion] = useState(false);
   const [editingAnswerModal, setEditingAnswerModal] = useState<number | null>(null);
   const [userReputation, setUserReputation] = useState(0);
+  const [answerDraftId, setAnswerDraftId] = useState<number | null>(null);
+  const [draftSaveStatus, setDraftSaveStatus] = useState<"saved" | "saving" | "">("");
 
   useEffect(() => {
     fetchQuestion();
@@ -90,6 +92,83 @@ export default function QuestionDetailPage() {
       fetchCurrentUser();
     }
   }, [params.id, session]);
+
+  // Load answer draft
+  useEffect(() => {
+    if (question && session) {
+      loadAnswerDraft();
+    }
+  }, [question, session]);
+
+  // Auto-save answer draft every 5 seconds
+  useEffect(() => {
+    if (!session || !answerBody || !question) return;
+
+    const timer = setTimeout(() => {
+      saveAnswerDraft();
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [answerBody, session, question]);
+
+  const loadAnswerDraft = async () => {
+    if (!question) return;
+    
+    try {
+      const response = await fetch(`/api/drafts?type=answer&questionId=${question.id}`);
+      const data = await response.json();
+      
+      if (data.drafts && data.drafts.length > 0) {
+        const draft = data.drafts[0];
+        setAnswerBody(draft.body || "");
+        setAnswerDraftId(draft.id);
+      }
+    } catch (error) {
+      console.error("Error loading answer draft:", error);
+    }
+  };
+
+  const saveAnswerDraft = async () => {
+    if (!answerBody || answerBody.trim().length === 0 || !question) return;
+
+    setDraftSaveStatus("saving");
+    try {
+      const response = await fetch("/api/drafts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          draftType: "answer",
+          bodyText: answerBody,
+          questionId: question.id,
+          draftId: answerDraftId,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        if (data.draftId && !answerDraftId) {
+          setAnswerDraftId(data.draftId);
+        }
+        setDraftSaveStatus("saved");
+        setTimeout(() => setDraftSaveStatus(""), 2000);
+      }
+    } catch (error) {
+      console.error("Error saving answer draft:", error);
+    }
+  };
+
+  const deleteAnswerDraft = async () => {
+    if (!answerDraftId) return;
+    
+    try {
+      await fetch(`/api/drafts?id=${answerDraftId}`, {
+        method: "DELETE",
+      });
+      setAnswerDraftId(null);
+    } catch (error) {
+      console.error("Error deleting draft:", error);
+    }
+  };
 
   // Scroll to answer if hash is present in URL
   useEffect(() => {
@@ -486,6 +565,7 @@ export default function QuestionDetailPage() {
         setAnswerBody("");
         setExperienceDate("");
         setAnswerError("");
+        await deleteAnswerDraft(); // Delete draft after successful submission
         fetchQuestion();
       } else if (data.verification_required) {
         setAnswerError("Please verify your email address before posting answers. Check your inbox for the verification link, or request a new one from your profile settings.");
@@ -1120,6 +1200,14 @@ export default function QuestionDetailPage() {
 
           {session ? (
             <form onSubmit={handleSubmitAnswer}>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-semibold">Your Answer</h3>
+                {draftSaveStatus && (
+                  <span className="text-sm text-gray-500">
+                    {draftSaveStatus === "saving" ? "Saving draft..." : "✓ Draft saved"}
+                  </span>
+                )}
+              </div>
               <MarkdownEditor
                 value={answerBody}
                 onChange={setAnswerBody}
