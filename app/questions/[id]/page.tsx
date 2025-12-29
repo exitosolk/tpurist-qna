@@ -1179,8 +1179,6 @@ export default function QuestionDetailPage() {
 
         {/* Answer Form */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-xl font-bold mb-4">Your Answer</h3>
-          
           {/* Answer Error Banner */}
           {answerError && (
             <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4 rounded">
@@ -1201,7 +1199,7 @@ export default function QuestionDetailPage() {
           {session ? (
             <form onSubmit={handleSubmitAnswer}>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-semibold">Your Answer</h3>
+                <h3 className="text-xl font-bold">Your Answer</h3>
                 {draftSaveStatus && (
                   <span className="text-sm text-gray-500">
                     {draftSaveStatus === "saving" ? "Saving draft..." : "✓ Draft saved"}
