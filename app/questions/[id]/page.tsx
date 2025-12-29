@@ -682,7 +682,7 @@ export default function QuestionDetailPage() {
           <Link href="/questions" className="hover:text-blue-600">
             Questions
           </Link>
-          {question.tags.length > 0 && (
+          {question.tags.length > 0 ? (
             <>
               <ChevronRight className="h-4 w-4" />
               <Link 
@@ -692,7 +692,7 @@ export default function QuestionDetailPage() {
                 {question.tags[0].name}
               </Link>
             </>
-          )}
+          ) : null}
         </nav>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -870,7 +870,7 @@ export default function QuestionDetailPage() {
                       <span>{question.reputation} rep</span>
                       <span className="text-gray-400 mx-1">•</span>
                       asked {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}
-                      {question.edit_count > 0 && (
+                      {question.edit_count > 0 ? (
                         <>
                           <span className="text-gray-400 mx-1">•</span>
                           <Tooltip content="This question has been edited">
@@ -880,7 +880,7 @@ export default function QuestionDetailPage() {
                             </span>
                           </Tooltip>
                         </>
-                      )}
+                      ) : null}
                     </span>
                   </div>
                 </div>
@@ -1093,7 +1093,7 @@ export default function QuestionDetailPage() {
                       </div>
 
                       {/* Comments */}
-                      {answer.comments && answer.comments.length > 0 && (
+                      {answer.comments && answer.comments.length > 0 ? (
                         <div className="border-t pt-4 space-y-3">
                           {answer.comments.map((comment) => (
                             <div key={comment.id} className="text-sm border-l-2 border-gray-200 pl-4 py-2">
@@ -1107,7 +1107,7 @@ export default function QuestionDetailPage() {
                             </div>
                           ))}
                         </div>
-                      )}
+                      ) : null}
 
                       {/* Comment Form */}
                       {showCommentForm[answer.id] && session && (
