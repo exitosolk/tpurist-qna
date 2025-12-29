@@ -64,21 +64,22 @@ export async function PUT(
       finalBody = question.body; // Keep original body
     }
 
-    // Check for contact details in edits (for non-high-rep users)
-    if (!isHighRep && currentUser.reputation < 500) {
-      const phoneRegex = /(\+94|0)\s?\d{2,3}\s?\d{3}\s?\d{4}/g;
+    // Check for contact details in edits (for low-rep users, including authors)
+    if (currentUser.reputation < 500) {
+      // More comprehensive phone number regex (with or without spaces/dashes)
+      const phoneRegex = /(\+94|0)\s?\d{2,3}[\s\-]?\d{3,4}[\s\-]?\d{3,4}/g;
       const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
       const whatsappRegex = /(whatsapp|wa\.me)/gi;
 
-      if (
-        phoneRegex.test(finalBody) ||
-        urlRegex.test(finalBody) ||
-        whatsappRegex.test(finalBody)
-      ) {
+      const hasPhone = phoneRegex.test(finalBody) || phoneRegex.test(finalTitle);
+      const hasUrl = urlRegex.test(finalBody) || urlRegex.test(finalTitle);
+      const hasWhatsapp = whatsappRegex.test(finalBody) || whatsappRegex.test(finalTitle);
+
+      if (hasPhone || hasUrl || hasWhatsapp) {
         return NextResponse.json(
           {
             error:
-              "Contact details (phone numbers, URLs, WhatsApp) are not allowed in edits. Build reputation first.",
+              "Contact details (phone numbers, URLs, WhatsApp) are not allowed in posts from users with low reputation. Build your reputation by contributing quality content first.",
           },
           { status: 400 }
         );
