@@ -31,6 +31,31 @@ export default function UsersPage() {
     fetchUsers();
   }, [page, searchQuery]);
 
+  // Update meta tags for SEO
+  useEffect(() => {
+    document.title = 'Community Members - OneCeylon | Sri Lanka Travel Experts';
+    
+    const updateMetaTag = (name: string, content: string, isProperty = false) => {
+      const attribute = isProperty ? 'property' : 'name';
+      let tag = document.querySelector(`meta[${attribute}="${name}"]`) as HTMLMetaElement;
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(attribute, name);
+        document.head.appendChild(tag);
+      }
+      tag.content = content;
+    };
+
+    const description = 'Meet our community of Sri Lanka travel experts. Connect with experienced travelers, tour guides, and locals who share their knowledge about Ceylon.';
+    
+    updateMetaTag('description', description);
+    updateMetaTag('keywords', 'Sri Lanka travel community, Ceylon experts, travel guides, local experts, tourism helpers');
+    updateMetaTag('og:title', 'Community Members - OneCeylon', true);
+    updateMetaTag('og:description', description, true);
+    updateMetaTag('twitter:title', 'Community Members - OneCeylon');
+    updateMetaTag('twitter:description', description);
+  }, []);
+
   const fetchUsers = async () => {
     setLoading(true);
     try {

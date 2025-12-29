@@ -13,7 +13,7 @@ import EditQuestionModal from "@/components/EditQuestionModal";
 import EditAnswerModal from "@/components/EditAnswerModal";
 import Tooltip from "@/components/Tooltip";
 import Sidebar from "@/components/Sidebar";
-import { Share2, Edit, Bookmark, Check, Clock } from "lucide-react";
+import { Share2, Edit, Bookmark, Check, Clock, ChevronRight, Home } from "lucide-react";
 
 interface User {
   username: string;
@@ -116,6 +116,53 @@ export default function QuestionDetailPage() {
       fetchFollowedQuestion();
     }
   }, [question?.id, session]);
+
+  // Update meta tags for SEO
+  useEffect(() => {
+    if (question) {
+      // Update title
+      document.title = `${question.title} | OneCeylon`;
+      
+      // Update or create meta tags
+      const updateMetaTag = (name: string, content: string, isProperty = false) => {
+        const attribute = isProperty ? 'property' : 'name';
+        let tag = document.querySelector(`meta[${attribute}="${name}"]`) as HTMLMetaElement;
+        if (!tag) {
+          tag = document.createElement('meta');
+          tag.setAttribute(attribute, name);
+          document.head.appendChild(tag);
+        }
+        tag.content = content;
+      };
+
+      // Extract plain text from markdown body (first 155 characters)
+      const description = question.body.replace(/[#*`[\]()]/g, '').substring(0, 155) + '...';
+      
+      updateMetaTag('description', description);
+      updateMetaTag('keywords', question.tags.map(t => t.name).join(', '));
+      
+      // Open Graph tags
+      updateMetaTag('og:title', question.title, true);
+      updateMetaTag('og:description', description, true);
+      updateMetaTag('og:type', 'article', true);
+      updateMetaTag('og:url', `https://oneceylon.space/questions/${question.id}`, true);
+      
+      // Twitter Card tags
+      updateMetaTag('twitter:card', 'summary_large_image');
+      updateMetaTag('twitter:title', question.title);
+      updateMetaTag('twitter:description', description);
+      
+      // Article tags
+      updateMetaTag('article:published_time', question.created_at, true);
+      if (question.edited_at) {
+        updateMetaTag('article:modified_time', question.edited_at, true);
+      }
+      updateMetaTag('article:author', question.display_name, true);
+      question.tags.forEach(tag => {
+        updateMetaTag('article:tag', tag.name, true);
+      });
+    }
+  }, [question]);
 
   const fetchFollowedAnswers = async () => {
     try {
@@ -461,11 +508,113 @@ export default function QuestionDetailPage() {
     return <div className="min-h-screen flex items-center justify-center">Question not found</div>;
   }
 
+  // Schema.org structured data for Q&A
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "QAPage",
+    "mainEntity": {
+      "@type": "Question",
+      "name": question.title,
+      "text": question.body,
+      "answerCount": answers.length,
+      "upvoteCount": question.score || 0,
+      "dateCreated": question.created_at,
+      "dateModified": question.edited_at || question.created_at,
+      "author": {
+        "@type": "Person",
+        "name": question.display_name,
+        "url": `https://oneceylon.space/users/${question.username}`
+      },
+      ...(answers.length > 0 && {
+        "acceptedAnswer": answers.find(a => a.is_accepted) ? {
+          "@type": "Answer",
+          "text": answers.find(a => a.is_accepted)?.body,
+          "upvoteCount": answers.find(a => a.is_accepted)?.score || 0,
+          "dateCreated": answers.find(a => a.is_accepted)?.created_at,
+          "author": {
+            "@type": "Person",
+            "name": answers.find(a => a.is_accepted)?.display_name,
+            "url": `https://oneceylon.space/users/${answers.find(a => a.is_accepted)?.username}`
+          }
+        } : undefined,
+        "suggestedAnswer": answers.filter(a => !a.is_accepted).slice(0, 5).map(answer => ({
+          "@type": "Answer",
+          "text": answer.body,
+          "upvoteCount": answer.score || 0,
+          "dateCreated": answer.created_at,
+          "author": {
+            "@type": "Person",
+            "name": answer.display_name,
+            "url": `https://oneceylon.space/users/${answer.username}`
+          }
+        }))
+      })
+    }
+  };
+
+  // Breadcrumb schema
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://oneceylon.space"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Questions",
+        "item": "https://oneceylon.space/questions"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": question.title,
+        "item": `https://oneceylon.space/questions/${question.id}`
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Schema.org JSON-LD for Q&A */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      />
+      {/* Breadcrumb Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <Navbar />
 
       <main className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Breadcrumbs */}
+        <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-4" aria-label="Breadcrumb">
+          <Link href="/" className="hover:text-blue-600 flex items-center">
+            <Home className="h-4 w-4" />
+          </Link>
+          <ChevronRight className="h-4 w-4" />
+          <Link href="/questions" className="hover:text-blue-600">
+            Questions
+          </Link>
+          {question.tags.length > 0 && (
+            <>
+              <ChevronRight className="h-4 w-4" />
+              <Link 
+                href={`/questions/tagged/${question.tags[0].name}`}
+                className="hover:text-blue-600"
+              >
+                {question.tags[0].name}
+              </Link>
+            </>
+          )}
+        </nav>
+
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
           <div className="flex-1 min-w-0 lg:order-1">

@@ -1,0 +1,35 @@
+{
+  "name": "OneCeylon - Sri Lanka Travel Q&A",
+  "short_name": "OneCeylon",
+  "description": "Your complete guide to Sri Lanka travel - ask questions, get answers from locals and experienced travelers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["travel", "social", "lifestyle"],
+  "lang": "en-US",
+  "dir": "ltr",
+  "screenshots": [
+    {
+      "src": "/screenshots/home.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "OneCeylon Homepage"
+    }
+  ]
+}

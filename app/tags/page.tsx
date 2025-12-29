@@ -58,6 +58,31 @@ export default function TagsPage() {
     fetchTags();
   }, []);
 
+  // Update meta tags for SEO
+  useEffect(() => {
+    document.title = 'Browse Topics - OneCeylon | Sri Lanka Travel Guide';
+    
+    const updateMetaTag = (name: string, content: string, isProperty = false) => {
+      const attribute = isProperty ? 'property' : 'name';
+      let tag = document.querySelector(`meta[${attribute}="${name}"]`) as HTMLMetaElement;
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(attribute, name);
+        document.head.appendChild(tag);
+      }
+      tag.content = content;
+    };
+
+    const description = 'Browse all travel topics and destinations in Sri Lanka. Find questions and answers about beaches, wildlife, food, culture, and more.';
+    
+    updateMetaTag('description', description);
+    updateMetaTag('keywords', 'Sri Lanka travel topics, destination tags, beach, wildlife, food, culture, tourism categories');
+    updateMetaTag('og:title', 'Browse Topics - OneCeylon', true);
+    updateMetaTag('og:description', description, true);
+    updateMetaTag('twitter:title', 'Browse Topics - OneCeylon');
+    updateMetaTag('twitter:description', description);
+  }, []);
+
   const fetchTags = async () => {
     setLoading(true);
     try {
