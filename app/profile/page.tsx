@@ -116,6 +116,7 @@ export default function ProfilePage() {
         setEditForm({
           display_name: data.profile.display_name || "",
           bio: data.profile.bio || "",
+          home_country: data.profile.home_country || "",
         });
       }
 
