@@ -53,9 +53,9 @@ export async function awardBadge(
 
     // Create notification
     await conn.query(
-      `INSERT INTO notifications (user_id, type, content, reference_type, reference_id)
-       VALUES (?, 'badge', ?, 'badge', ?)`,
-      [userId, badge.notification_message, badge.id]
+      `INSERT INTO notifications (user_id, type, message, actor_id, question_id)
+       VALUES (?, 'badge', ?, NULL, NULL)`,
+      [userId, badge.notification_message]
     );
 
     return {
