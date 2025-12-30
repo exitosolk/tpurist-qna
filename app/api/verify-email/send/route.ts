@@ -148,18 +148,23 @@ export async function POST(req: NextRequest) {
                 .button { 
                   display: inline-block; 
                   background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-                  color: white; 
+                  color: #ffffff !important; 
                   padding: 16px 48px; 
-                  text-decoration: none; 
+                  text-decoration: none !important; 
                   border-radius: 50px;
-                  font-weight: 600;
-                  font-size: 16px;
+                  font-weight: 700;
+                  font-size: 18px;
                   box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
                   transition: all 0.3s ease;
+                  mso-padding-alt: 16px 48px;
                 }
                 .button:hover {
                   box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
                   transform: translateY(-2px);
+                }
+                .button span {
+                  color: #ffffff !important;
+                  text-decoration: none !important;
                 }
                 .divider {
                   height: 1px;
@@ -249,7 +254,9 @@ export async function POST(req: NextRequest) {
                     </div>
                     
                     <div class="button-container">
-                      <a href="${verificationUrl}" class="button">✓ Verify My Email</a>
+                      <a href="${verificationUrl}" class="button" style="color: #ffffff !important; text-decoration: none !important;">
+                        <span style="color: #ffffff !important;">✓ Verify My Email</span>
+                      </a>
                     </div>
                     
                     <div class="divider"></div>
