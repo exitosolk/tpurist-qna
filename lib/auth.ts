@@ -3,6 +3,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { query } from "@/lib/db";
+import { logReputationChange } from "@/lib/reputation";
+import { checkAyubowanBadge } from "@/lib/badges";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -95,6 +97,17 @@ export const authOptions: NextAuthOptions = {
             );
 
             user.id = result.insertId?.toString() || "";
+
+            // Log reputation gain for OAuth email verification
+            await logReputationChange({
+              userId: parseInt(user.id),
+              changeAmount: 10,
+              reason: "Email verified (OAuth)",
+              referenceType: 'email_verification',
+            });
+
+            // Check for Ayubowan badge (OAuth users have verified email)
+            await checkAyubowanBadge(parseInt(user.id));
           } else {
             // User exists, use existing ID
             user.id = existingUser.rows[0].id.toString();
