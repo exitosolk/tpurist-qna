@@ -318,6 +318,7 @@ export default function ProfilePage() {
                         setEditForm({
                           display_name: profile.display_name || "",
                           bio: profile.bio || "",
+                          home_country: profile.home_country || "",
                         });
                       }}
                       className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
