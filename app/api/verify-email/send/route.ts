@@ -65,39 +65,216 @@ export async function POST(req: NextRequest) {
         subject: "Verify your email address - OneCeylon",
         html: `
           <!DOCTYPE html>
-          <html>
+          <html lang="en">
             <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                .header { background: #2563eb; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-                .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-radius: 0 0 8px 8px; }
-                .button { display: inline-block; background: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
-                .footer { text-align: center; margin-top: 20px; color: #6b7280; font-size: 14px; }
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { 
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                  line-height: 1.6; 
+                  color: #1f2937;
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  padding: 40px 20px;
+                }
+                .email-wrapper { max-width: 600px; margin: 0 auto; }
+                .email-container { 
+                  background: white; 
+                  border-radius: 16px; 
+                  overflow: hidden;
+                  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                }
+                .header { 
+                  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+                  color: white; 
+                  padding: 50px 40px;
+                  text-align: center;
+                  position: relative;
+                }
+                .header::before {
+                  content: '🇱🇰';
+                  font-size: 48px;
+                  display: block;
+                  margin-bottom: 16px;
+                  animation: wave 2s ease-in-out infinite;
+                }
+                @keyframes wave {
+                  0%, 100% { transform: rotate(0deg); }
+                  25% { transform: rotate(-10deg); }
+                  75% { transform: rotate(10deg); }
+                }
+                .header h1 { 
+                  font-size: 32px; 
+                  font-weight: 700;
+                  margin: 0;
+                  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+                .header p {
+                  margin-top: 8px;
+                  font-size: 16px;
+                  opacity: 0.95;
+                }
+                .content { 
+                  padding: 50px 40px;
+                  background: white;
+                }
+                .greeting {
+                  font-size: 24px;
+                  font-weight: 600;
+                  color: #1f2937;
+                  margin-bottom: 24px;
+                }
+                .message {
+                  font-size: 16px;
+                  color: #4b5563;
+                  margin-bottom: 16px;
+                }
+                .highlight-box {
+                  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                  border-left: 4px solid #f59e0b;
+                  padding: 20px;
+                  border-radius: 8px;
+                  margin: 24px 0;
+                }
+                .highlight-box strong {
+                  color: #b45309;
+                  font-size: 18px;
+                }
+                .button-container { 
+                  text-align: center; 
+                  margin: 40px 0;
+                }
+                .button { 
+                  display: inline-block; 
+                  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+                  color: white; 
+                  padding: 16px 48px; 
+                  text-decoration: none; 
+                  border-radius: 50px;
+                  font-weight: 600;
+                  font-size: 16px;
+                  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+                  transition: all 0.3s ease;
+                }
+                .button:hover {
+                  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+                  transform: translateY(-2px);
+                }
+                .divider {
+                  height: 1px;
+                  background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+                  margin: 32px 0;
+                }
+                .link-section {
+                  background: #f9fafb;
+                  padding: 20px;
+                  border-radius: 8px;
+                  border: 1px solid #e5e7eb;
+                }
+                .link-section p {
+                  color: #6b7280;
+                  font-size: 13px;
+                  margin-bottom: 8px;
+                }
+                .link-section a {
+                  color: #2563eb;
+                  word-break: break-all;
+                  font-size: 13px;
+                }
+                .expiry-notice {
+                  color: #ef4444;
+                  font-size: 14px;
+                  font-weight: 500;
+                  text-align: center;
+                  margin-top: 16px;
+                }
+                .footer { 
+                  background: #f9fafb;
+                  padding: 30px 40px;
+                  text-align: center;
+                  border-top: 1px solid #e5e7eb;
+                }
+                .footer p {
+                  color: #6b7280;
+                  font-size: 14px;
+                  margin: 8px 0;
+                }
+                .social-links {
+                  margin-top: 20px;
+                }
+                .social-links a {
+                  display: inline-block;
+                  margin: 0 8px;
+                  color: #6b7280;
+                  text-decoration: none;
+                  font-size: 12px;
+                }
+                .badge {
+                  display: inline-block;
+                  background: #dbeafe;
+                  color: #1e40af;
+                  padding: 4px 12px;
+                  border-radius: 12px;
+                  font-size: 13px;
+                  font-weight: 600;
+                  margin: 4px;
+                }
               </style>
             </head>
             <body>
-              <div class="container">
-                <div class="header">
-                  <h1>Welcome to OneCeylon!</h1>
-                </div>
-                <div class="content">
-                  <h2>Hi ${user.display_name || user.username}!</h2>
-                  <p>Thanks for joining OneCeylon, the travel Q&A community for Sri Lanka.</p>
-                  <p>Please verify your email address to unlock all features and earn <strong>10 reputation points</strong>!</p>
-                  <div style="text-align: center;">
-                    <a href="${verificationUrl}" class="button">Verify Email Address</a>
+              <div class="email-wrapper">
+                <div class="email-container">
+                  <div class="header">
+                    <h1>Welcome to OneCeylon!</h1>
+                    <p>Your gateway to Sri Lanka's travel community</p>
                   </div>
-                  <p style="color: #6b7280; font-size: 14px;">
-                    Or copy and paste this link into your browser:<br>
-                    <a href="${verificationUrl}">${verificationUrl}</a>
-                  </p>
-                  <p style="color: #6b7280; font-size: 14px;">
-                    This link will expire in 24 hours.
-                  </p>
-                </div>
-                <div class="footer">
-                  <p>If you didn't create an account on OneCeylon, you can safely ignore this email.</p>
+                  
+                  <div class="content">
+                    <div class="greeting">Ayubowan, ${user.display_name || user.username}! 🙏</div>
+                    
+                    <p class="message">
+                      Welcome to <strong>OneCeylon</strong> – the premier Q&A community for travelers exploring the pearl of the Indian Ocean, Sri Lanka!
+                    </p>
+                    
+                    <p class="message">
+                      We're thrilled to have you join thousands of travelers, locals, and Sri Lanka enthusiasts sharing authentic insights, hidden gems, and travel wisdom.
+                    </p>
+                    
+                    <div class="highlight-box">
+                      <strong>🎁 Complete your verification to unlock:</strong><br>
+                      <span class="badge">+10 Reputation Points</span>
+                      <span class="badge">🙏 Ayubowan Badge</span>
+                      <span class="badge">Full Community Access</span>
+                    </div>
+                    
+                    <div class="button-container">
+                      <a href="${verificationUrl}" class="button">✓ Verify My Email</a>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="link-section">
+                      <p><strong>Button not working?</strong> Copy and paste this link into your browser:</p>
+                      <a href="${verificationUrl}">${verificationUrl}</a>
+                    </div>
+                    
+                    <p class="expiry-notice">⏰ This verification link expires in 24 hours</p>
+                  </div>
+                  
+                  <div class="footer">
+                    <p><strong>OneCeylon</strong> – Travel Sri Lanka with Confidence</p>
+                    <p>Ask questions • Share experiences • Discover hidden gems</p>
+                    <div class="divider" style="margin: 20px auto; max-width: 200px;"></div>
+                    <p style="font-size: 13px; color: #9ca3af;">
+                      Didn't create an account? You can safely ignore this email.
+                    </p>
+                    <div class="social-links">
+                      <a href="https://oneceylon.space">Visit Website</a> • 
+                      <a href="https://oneceylon.space/questions">Browse Questions</a> • 
+                      <a href="https://oneceylon.space/privacy">Privacy Policy</a>
+                    </div>
+                  </div>
                 </div>
               </div>
             </body>
