@@ -13,6 +13,7 @@ import EditQuestionModal from "@/components/EditQuestionModal";
 import EditAnswerModal from "@/components/EditAnswerModal";
 import Tooltip from "@/components/Tooltip";
 import Sidebar from "@/components/Sidebar";
+import FlagButton from "@/components/FlagButton";
 import { Share2, Edit, Bookmark, Check, Clock, ChevronRight, Home } from "lucide-react";
 
 interface User {
@@ -855,6 +856,15 @@ export default function QuestionDetailPage() {
                       </button>
                     </Tooltip>
                   )}
+
+                  {/* Flag button */}
+                  {session && question && (
+                    <FlagButton 
+                      contentType="question"
+                      contentId={question.id}
+                      compact={true}
+                    />
+                  )}
                 </div>
 
                 <div className="flex justify-end mt-4">
@@ -1079,6 +1089,15 @@ export default function QuestionDetailPage() {
                             </button>
                           </Tooltip>
                         )}
+
+                        {/* Flag button */}
+                        {session && (
+                          <FlagButton 
+                            contentType="answer"
+                            contentId={answer.id}
+                            compact={true}
+                          />
+                        )}
                         
                         <span className="text-gray-300">|</span>
                         
@@ -1098,12 +1117,21 @@ export default function QuestionDetailPage() {
                           {answer.comments.map((comment) => (
                             <div key={comment.id} className="text-sm border-l-2 border-gray-200 pl-4 py-2">
                               <p className="text-gray-700 mb-1">{comment.text}</p>
-                              <span className="text-gray-500">
-                                – <Link href={`/users/${comment.username}`} className="text-blue-600 hover:text-blue-800">
-                                  {comment.display_name || comment.username}
-                                </Link>
-                                {' '}({comment.reputation}) {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                              </span>
+                              <div className="flex items-center gap-2 flex-wrap text-gray-500">
+                                <span>
+                                  – <Link href={`/users/${comment.username}`} className="text-blue-600 hover:text-blue-800">
+                                    {comment.display_name || comment.username}
+                                  </Link>
+                                  {' '}({comment.reputation}) {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                                </span>
+                                {session && (
+                                  <FlagButton 
+                                    contentType="comment"
+                                    contentId={comment.id}
+                                    compact={true}
+                                  />
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>
