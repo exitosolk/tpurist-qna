@@ -18,12 +18,12 @@ export default function Navbar() {
 
   // Fetch user reputation for review queue access
   useEffect(() => {
-    if (session?.user?.id) {
-      fetch(`/api/users/${session.user.id}`)
+    if (session?.user?.email) {
+      fetch('/api/profile')
         .then(res => res.json())
         .then(data => {
-          if (data.reputation !== undefined) {
-            setUserReputation(data.reputation);
+          if (data.profile?.reputation !== undefined) {
+            setUserReputation(data.profile.reputation);
           }
         })
         .catch(err => console.error('Failed to fetch user reputation:', err));
