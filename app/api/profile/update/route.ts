@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
+import { checkAyubowanBadge } from "@/lib/badges";
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -12,7 +13,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { display_name, bio } = body;
+    const { display_name, bio, home_country } = body;
 
     // Validate input
     if (display_name && display_name.trim().length === 0) {
@@ -62,6 +63,11 @@ export async function PATCH(req: NextRequest) {
       values.push(bio);
     }
 
+    if (home_country !== undefined) {
+      updates.push("home_country = ?");
+      values.push(home_country);
+    }
+
     if (updates.length === 0) {
       return NextResponse.json(
         { error: "No fields to update" },
@@ -78,9 +84,12 @@ export async function PATCH(req: NextRequest) {
 
     // Fetch updated user
     const updatedUserResult = await query(
-      "SELECT id, username, email, display_name, bio, reputation, email_verified, created_at FROM users WHERE id = ?",
+      "SELECT id, username, email, display_name, bio, home_country, reputation, email_verified, created_at FROM users WHERE id = ?",
       [userId]
     );
+
+    // Check for Ayubowan badge (email verified + profile filled)
+    await checkAyubowanBadge(userId);
 
     return NextResponse.json({
       message: "Profile updated successfully",

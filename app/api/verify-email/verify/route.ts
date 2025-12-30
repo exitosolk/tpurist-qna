@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { logReputationChange } from "@/lib/reputation";
+import { checkAyubowanBadge } from "@/lib/badges";
 
 export async function GET(req: NextRequest) {
   try {
@@ -71,6 +72,9 @@ export async function GET(req: NextRequest) {
         referenceType: 'email_verification',
       });
     }
+
+    // Check for Ayubowan badge (email verified + profile filled)
+    await checkAyubowanBadge(user.id);
 
     return NextResponse.json({
       message: shouldAwardPoints 

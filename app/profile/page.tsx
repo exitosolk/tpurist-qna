@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
+import BadgeList from "@/components/BadgeList";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
@@ -76,7 +77,7 @@ export default function ProfilePage() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [reputationHistory, setReputationHistory] = useState<ReputationHistory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"questions" | "answers" | "bookmarks" | "drafts" | "reputation">("questions");
+  const [activeTab, setActiveTab] = useState<"questions" | "answers" | "bookmarks" | "drafts" | "reputation" | "badges">("questions");
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ display_name: "", bio: "" });
   const [saving, setSaving] = useState(false);
@@ -383,6 +384,16 @@ export default function ProfilePage() {
                 <span className="md:hidden">Activity ({profile?.reputation || 0})</span>
                 <span className="hidden md:inline">Reputation ({profile?.reputation || 0})</span>
               </button>
+              <button
+                onClick={() => setActiveTab("badges")}
+                className={`pb-4 px-1 border-b-2 font-medium whitespace-nowrap text-sm md:text-base ${
+                  activeTab === "badges"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Badges
+              </button>
             </nav>
           </div>
         </div>
@@ -589,6 +600,10 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
+          </div>
+        ) : activeTab === "badges" ? (
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <BadgeList showProgress={true} compact={false} />
           </div>
         ) : null}
       </main>

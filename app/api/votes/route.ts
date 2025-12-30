@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { createNotification } from "@/lib/notifications";
 import { logReputationChange } from "@/lib/reputation";
+import { updateRiceAndCurryProgress, checkFirstLandingBadge, checkSnapshotBadge } from "@/lib/badges";
 
 export async function POST(req: Request) {
   try {
@@ -238,6 +239,26 @@ export async function POST(req: Request) {
             questionId: notificationQuestionId,
             answerId: votableType === "answer" ? votableId : undefined,
           });
+        }
+
+        // Badge checks for upvotes
+        if (voteType === 1) {
+          // Rice & Curry: Track voter's progress towards 10 upvotes
+          await updateRiceAndCurryProgress(userId);
+
+          // First Landing: Check if question author earned their badge
+          if (votableType === "question") {
+            await checkFirstLandingBadge(contentOwnerId, votableId);
+          }
+
+          // Snapshot: Check if content with image got 5 upvotes
+          const updatedContent = await query(
+            `SELECT score FROM ${votableType}s WHERE id = ?`,
+            [votableId]
+          );
+          if (updatedContent.rows && updatedContent.rows.length > 0 && updatedContent.rows[0].score >= 5) {
+            await checkSnapshotBadge(contentOwnerId, votableType as 'question' | 'answer', votableId);
+          }
         }
       }
 
