@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
           CASE 
             WHEN rq.content_type = 'question' THEN q.title
             WHEN rq.content_type = 'answer' THEN SUBSTRING(a.body, 1, 200)
-            WHEN rq.content_type = 'comment' THEN c.body
+            WHEN rq.content_type = 'comment' THEN c.text
           END as content_preview,
           CASE 
             WHEN rq.content_type = 'question' THEN qu.username
