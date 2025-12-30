@@ -147,6 +147,18 @@ export async function POST(request: NextRequest) {
         [reviewQueueId, userId, flagVote]
       );
 
+      // Award 1 point for flagging/reviewing content
+      await connection.query(
+        `INSERT INTO reputation_history (user_id, points, reason, reference_type, reference_id)
+         VALUES (?, 1, 'Completed a review task', 'review', ?)`,
+        [userId, reviewQueueId]
+      );
+
+      await connection.query(
+        'UPDATE users SET reputation = reputation + 1 WHERE id = ?',
+        [userId]
+      );
+
       // Update vote counts
       await updateVoteCounts(connection, reviewQueueId);
 
