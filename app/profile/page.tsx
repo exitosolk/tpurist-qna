@@ -214,7 +214,9 @@ export default function ProfilePage() {
       const data = await response.json();
 
       if (response.ok) {
-        setProfile({ ...profile, avatar_url: data.avatarUrl });
+        if (profile) {
+          setProfile({ ...profile, avatar_url: data.avatarUrl });
+        }
         alert('Avatar updated successfully!');
       } else {
         alert(data.error || 'Failed to upload avatar');
