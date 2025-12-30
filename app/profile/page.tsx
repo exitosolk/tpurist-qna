@@ -79,7 +79,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"questions" | "answers" | "bookmarks" | "drafts" | "reputation" | "badges">("questions");
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ display_name: "", bio: "" });
+  const [editForm, setEditForm] = useState({ display_name: "", bio: "", home_country: "" });
   const [saving, setSaving] = useState(false);
   const [sendingVerification, setSendingVerification] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState("");
@@ -248,9 +248,17 @@ export default function ProfilePage() {
         {/* Profile Header */}
         <div className="bg-white rounded-lg shadow-sm border p-4 md:p-6 mb-6">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 md:w-24 md:h-24 bg-blue-100 rounded-full flex items-center justify-center text-2xl md:text-3xl font-bold text-blue-600 flex-shrink-0">
-              {profile.display_name?.charAt(0).toUpperCase() || profile.username.charAt(0).toUpperCase()}
-            </div>
+            {profile.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt={profile.display_name || profile.username}
+                className="w-16 h-16 md:w-24 md:h-24 rounded-full object-cover flex-shrink-0"
+              />
+            ) : (
+              <div className="w-16 h-16 md:w-24 md:h-24 bg-blue-100 rounded-full flex items-center justify-center text-2xl md:text-3xl font-bold text-blue-600 flex-shrink-0">
+                {profile.display_name?.charAt(0).toUpperCase() || profile.username.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               {isEditing ? (
                 <div className="space-y-4">
@@ -277,6 +285,19 @@ export default function ProfilePage() {
                       rows={4}
                       maxLength={1000}
                       placeholder="Tell us about yourself..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Home Country
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.home_country}
+                      onChange={(e) => setEditForm({ ...editForm, home_country: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      maxLength={100}
+                      placeholder="e.g., United States, Sri Lanka, etc."
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       {editForm.bio.length}/1000 characters
@@ -312,10 +333,23 @@ export default function ProfilePage() {
                     <span className="font-semibold text-blue-600">{profile.reputation} reputation</span>
                     <span className="text-gray-400">•</span>
                     <span>Joined {formatDistanceToNow(new Date(profile.created_at), { addSuffix: true })}</span>
+                    {profile.home_country && (
+                      <>
+                        <span className="text-gray-400">•</span>
+                        <span>📍 {profile.home_country}</span>
+                      </>
+                    )}
                   </div>
                   {profile.bio && <p className="text-sm md:text-base text-gray-700 mb-3">{profile.bio}</p>}
                   <button
-                    onClick={() => setIsEditing(true)}
+                    onClick={() => {
+                      setEditForm({
+                        display_name: profile?.display_name || "",
+                        bio: profile?.bio || "",
+                        home_country: profile?.home_country || "",
+                      });
+                      setIsEditing(true);
+                    }}
                     className="px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 font-medium text-sm"
                   >
                     Edit Profile
