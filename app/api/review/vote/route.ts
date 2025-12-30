@@ -74,6 +74,37 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'This review has already been completed' }, { status: 400 });
       }
 
+      // Check daily review limit (20 reviews per queue type per day)
+      const [dailyCountRows] = await connection.query<RowDataPacket[]>(
+        `SELECT COUNT(DISTINCT rv.review_queue_id) as review_count
+         FROM review_votes rv
+         JOIN review_queue rq ON rv.review_queue_id = rq.id
+         WHERE rv.user_id = ? 
+           AND rq.review_type = ?
+           AND DATE(rv.voted_at) = CURDATE()`,
+        [userId, review.review_type]
+      );
+
+      const dailyReviewCount = dailyCountRows[0]?.review_count || 0;
+      const DAILY_LIMIT = 20;
+
+      // Check if user has already voted on this specific item
+      const [existingVoteRows] = await connection.query<RowDataPacket[]>(
+        'SELECT id FROM review_votes WHERE review_queue_id = ? AND user_id = ?',
+        [reviewQueueId, userId]
+      );
+
+      const hasVotedOnThisItem = existingVoteRows.length > 0;
+
+      // Only count against limit if this is a new review (user hasn't voted on this item yet)
+      if (!hasVotedOnThisItem && dailyReviewCount >= DAILY_LIMIT) {
+        return NextResponse.json({ 
+          error: `Daily review limit reached. You can review up to ${DAILY_LIMIT} items per day in this queue. Come back tomorrow!`,
+          dailyLimit: DAILY_LIMIT,
+          reviewedToday: dailyReviewCount
+        }, { status: 429 });
+      }
+
       // Get minimum reputation required for this review type
       const [thresholdRows] = await connection.query<ReviewThreshold[]>(
         'SELECT min_reputation, votes_needed FROM review_thresholds WHERE review_type = ?',

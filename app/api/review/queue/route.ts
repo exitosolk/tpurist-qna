@@ -114,6 +114,20 @@ export async function GET(request: NextRequest) {
 
       const total = countRows[0].total;
 
+      // Get user's daily review count for this queue type
+      const [dailyCountRows] = await connection.query<RowDataPacket[]>(
+        `SELECT COUNT(DISTINCT rv.review_queue_id) as review_count
+         FROM review_votes rv
+         JOIN review_queue rq ON rv.review_queue_id = rq.id
+         WHERE rv.user_id = ? 
+           AND rq.review_type = ?
+           AND DATE(rv.voted_at) = CURDATE()`,
+        [userId, reviewType]
+      );
+
+      const reviewedToday = dailyCountRows[0]?.review_count || 0;
+      const DAILY_LIMIT = 20;
+
       connection.release();
 
       return NextResponse.json({
@@ -126,7 +140,12 @@ export async function GET(request: NextRequest) {
           totalPages: Math.ceil(total / limit)
         },
         userReputation,
-        minReputation
+        minReputation,
+        reviewLimit: {
+          dailyLimit: DAILY_LIMIT,
+          reviewedToday,
+          remaining: Math.max(0, DAILY_LIMIT - reviewedToday)
+        }
       });
 
     } catch (error) {

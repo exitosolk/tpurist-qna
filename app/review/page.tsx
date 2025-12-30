@@ -31,6 +31,11 @@ interface QueueData {
   };
   userReputation: number;
   minReputation: number;
+  reviewLimit: {
+    dailyLimit: number;
+    reviewedToday: number;
+    remaining: number;
+  };
 }
 
 export default function ReviewQueuePage() {
@@ -129,28 +134,32 @@ export default function ReviewQueuePage() {
   }
 
   const getVoteButtons = (item: ReviewQueueItem) => {
+    const isLimitReached = queueData?.reviewLimit.remaining === 0 && !item.user_vote;
+    
     if (item.review_type === 'spam_scam') {
       return (
         <div className="flex gap-2 mt-4">
           <button
             onClick={() => handleVote(item.id, 'hide')}
-            disabled={votingId === item.id || item.user_vote !== null}
+            disabled={votingId === item.id || item.user_vote !== null || isLimitReached}
             className={`px-4 py-2 rounded ${
               item.user_vote === 'hide'
                 ? 'bg-red-600 text-white'
                 : 'bg-red-100 text-red-700 hover:bg-red-200'
             } disabled:opacity-50`}
+            title={isLimitReached ? 'Daily review limit reached' : ''}
           >
             Hide (Spam/Scam)
           </button>
           <button
             onClick={() => handleVote(item.id, 'keep')}
-            disabled={votingId === item.id || item.user_vote !== null}
+            disabled={votingId === item.id || item.user_vote !== null || isLimitReached}
             className={`px-4 py-2 rounded ${
               item.user_vote === 'keep'
                 ? 'bg-green-600 text-white'
                 : 'bg-green-100 text-green-700 hover:bg-green-200'
             } disabled:opacity-50`}
+            title={isLimitReached ? 'Daily review limit reached' : ''}
           >
             Keep (Looks OK)
           </button>
@@ -161,23 +170,25 @@ export default function ReviewQueuePage() {
         <div className="flex gap-2 mt-4">
           <button
             onClick={() => handleVote(item.id, 'outdated')}
-            disabled={votingId === item.id || item.user_vote !== null}
+            disabled={votingId === item.id || item.user_vote !== null || isLimitReached}
             className={`px-4 py-2 rounded ${
               item.user_vote === 'outdated'
                 ? 'bg-orange-600 text-white'
                 : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
             } disabled:opacity-50`}
+            title={isLimitReached ? 'Daily review limit reached' : ''}
           >
             Mark as Outdated
           </button>
           <button
             onClick={() => handleVote(item.id, 'current')}
-            disabled={votingId === item.id || item.user_vote !== null}
+            disabled={votingId === item.id || item.user_vote !== null || isLimitReached}
             className={`px-4 py-2 rounded ${
               item.user_vote === 'current'
                 ? 'bg-green-600 text-white'
                 : 'bg-green-100 text-green-700 hover:bg-green-200'
             } disabled:opacity-50`}
+            title={isLimitReached ? 'Daily review limit reached' : ''}
           >
             Still Current
           </button>
@@ -212,7 +223,50 @@ export default function ReviewQueuePage() {
             </li>
             <li>Earn +1 rep for each review, +2 bonus if you agree with community consensus</li>
             <li>3 votes needed to take action on flagged content</li>
+            <li><strong>Daily limit:</strong> 20 reviews per queue per day to prevent fatigue</li>
           </ul>
+          
+          {/* Daily Limit Progress */}
+          {queueData?.reviewLimit && (
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">
+                  Reviews today ({activeTab === 'spam_scam' ? 'Spam/Scam' : 'Outdated'}):
+                </span>
+                <span className={`text-sm font-semibold ${
+                  queueData.reviewLimit.remaining === 0 
+                    ? 'text-red-600' 
+                    : queueData.reviewLimit.remaining <= 5 
+                      ? 'text-orange-600' 
+                      : 'text-green-600'
+                }`}>
+                  {queueData.reviewLimit.reviewedToday} / {queueData.reviewLimit.dailyLimit}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className={`h-2 rounded-full transition-all ${
+                    queueData.reviewLimit.remaining === 0 
+                      ? 'bg-red-600' 
+                      : queueData.reviewLimit.remaining <= 5 
+                        ? 'bg-orange-500' 
+                        : 'bg-green-500'
+                  }`}
+                  style={{ width: `${(queueData.reviewLimit.reviewedToday / queueData.reviewLimit.dailyLimit) * 100}%` }}
+                ></div>
+              </div>
+              {queueData.reviewLimit.remaining === 0 && (
+                <p className="text-sm text-red-600 mt-2">
+                  Daily limit reached. Come back tomorrow to continue reviewing!
+                </p>
+              )}
+              {queueData.reviewLimit.remaining > 0 && queueData.reviewLimit.remaining <= 5 && (
+                <p className="text-sm text-orange-600 mt-2">
+                  {queueData.reviewLimit.remaining} reviews remaining today
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
