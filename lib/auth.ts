@@ -4,7 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { query } from "@/lib/db";
 import { logReputationChange } from "@/lib/reputation";
-import { checkAyubowanBadge } from "@/lib/badges";
+import { checkAyubowanBadge, checkFirstLandingBadge, updateRiceAndCurryProgress, checkSnapshotBadge } from "@/lib/badges";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -118,6 +118,57 @@ export const authOptions: NextAuthOptions = {
                 "UPDATE users SET avatar_url = ?, display_name = ? WHERE id = ?",
                 [user.image, user.name, user.id]
               );
+            }
+
+            // Check for badges for existing users on login
+            const userId = parseInt(user.id);
+            
+            // Check Ayubowan badge
+            await checkAyubowanBadge(userId);
+
+            // Check Rice & Curry badge (10 upvotes)
+            await updateRiceAndCurryProgress(userId);
+
+            // Check First Landing badge for their questions
+            const userQuestions = await query(
+              `SELECT id, score, created_at 
+               FROM questions 
+               WHERE user_id = ? 
+               ORDER BY created_at ASC 
+               LIMIT 1`,
+              [userId]
+            );
+            if (userQuestions.rows.length > 0) {
+              const firstQuestion = userQuestions.rows[0];
+              await checkFirstLandingBadge(userId, firstQuestion.id);
+            }
+
+            // Check Snapshot badge for questions with images
+            const questionsWithImages = await query(
+              `SELECT id, score, body 
+               FROM questions 
+               WHERE user_id = ? AND score >= 5`,
+              [userId]
+            );
+            for (const q of questionsWithImages.rows) {
+              if (/!\[.*?\]\(.*?\)|<img\s+[^>]*src=/.test(q.body)) {
+                await checkSnapshotBadge(userId, 'question', q.id);
+                break; // Only need one
+              }
+            }
+
+            // Check Snapshot badge for answers with images
+            const answersWithImages = await query(
+              `SELECT id, score, body 
+               FROM answers 
+               WHERE user_id = ? AND score >= 5`,
+              [userId]
+            );
+            for (const a of answersWithImages.rows) {
+              if (/!\[.*?\]\(.*?\)|<img\s+[^>]*src=/.test(a.body)) {
+                await checkSnapshotBadge(userId, 'answer', a.id);
+                break; // Only need one
+              }
             }
           }
         } catch (error) {
