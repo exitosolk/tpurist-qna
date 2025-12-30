@@ -175,12 +175,12 @@ export async function updateRiceAndCurryProgress(userId: number): Promise<BadgeA
     const [voteRows] = await connection.query<any[]>(
       `SELECT COUNT(*) as count FROM (
         SELECT v.id FROM votes v
-        INNER JOIN questions q ON v.question_id = q.id
-        WHERE v.user_id = ? AND v.vote_type = 'up' AND q.user_id != ?
+        INNER JOIN questions q ON v.votable_id = q.id
+        WHERE v.user_id = ? AND v.vote_type = 1 AND v.votable_type = 'question' AND q.user_id != ?
         UNION ALL
         SELECT v.id FROM votes v
-        INNER JOIN answers a ON v.answer_id = a.id
-        WHERE v.user_id = ? AND v.vote_type = 'up' AND a.user_id != ?
+        INNER JOIN answers a ON v.votable_id = a.id
+        WHERE v.user_id = ? AND v.vote_type = 1 AND v.votable_type = 'answer' AND a.user_id != ?
       ) as all_upvotes`,
       [userId, userId, userId, userId]
     );
