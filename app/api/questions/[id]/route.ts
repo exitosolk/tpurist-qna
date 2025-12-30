@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { getBadgeTierCounts } from "@/lib/badges";
 
 export async function GET(
   req: Request,
@@ -22,16 +23,7 @@ export async function GET(
         u.username,
         u.display_name,
         u.avatar_url,
-        u.reputation,
-        COALESCE(
-          (SELECT JSON_ARRAYAGG(
-            JSON_OBJECT('id', t.id, 'name', t.name)
-          )
-          FROM question_tags qt2
-          JOIN tags t ON qt2.tag_id = t.id
-          WHERE qt2.question_id = q.id),
-          JSON_ARRAY()
-        ) as tags
+        u.reputation
       FROM questions q
       JOIN users u ON q.user_id = u.id
       WHERE q.id = ?`,
@@ -46,6 +38,18 @@ export async function GET(
     }
 
     const question = questionResult.rows[0];
+
+    // Get tags separately
+    const tagsResult = await query(
+      `SELECT t.id, t.name
+       FROM question_tags qt
+       JOIN tags t ON qt.tag_id = t.id
+       WHERE qt.question_id = ?`,
+      [questionId]
+    );
+
+    // Get badge counts for question author
+    const questionAuthorBadges = await getBadgeTierCounts(question.user_id);
 
     // Get answers with author info
     const answersResult = await query(
@@ -64,6 +68,14 @@ export async function GET(
 
     const answers = answersResult.rows;
 
+    // Get badge counts for each answer author
+    const answersWithBadges = await Promise.all(
+      answers.map(async (answer: any) => {
+        const badgeCounts = await getBadgeTierCounts(answer.user_id);
+        return { ...answer, badgeCounts };
+      })
+    );
+
     // Get comments for question
     const questionCommentsResult = await query(
       `SELECT 
@@ -80,9 +92,11 @@ export async function GET(
     return NextResponse.json({
       question: {
         ...question,
+        tags: tagsResult.rows,
+        badgeCounts: questionAuthorBadges,
         comments: questionCommentsResult.rows,
       },
-      answers,
+      answers: answersWithBadges,
     });
   } catch (error) {
     console.error("Error fetching question:", error);

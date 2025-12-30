@@ -11,6 +11,12 @@ interface BadgeAwardResult {
   notificationMessage?: string;
 }
 
+export interface BadgeTierCounts {
+  bronze: number;
+  silver: number;
+  gold: number;
+}
+
 /**
  * Award a badge to a user if they don't already have it
  */
@@ -239,6 +245,36 @@ export async function checkSnapshotBadge(
     }
 
     return { awarded: false };
+  } finally {
+    connection.release();
+  }
+}
+
+/**
+ * Get badge tier counts for a user
+ */
+export async function getBadgeTierCounts(userId: number): Promise<BadgeTierCounts> {
+  const connection = await pool.getConnection();
+  try {
+    const [rows] = await connection.query<any[]>(
+      `SELECT b.tier, COUNT(*) as count
+       FROM user_badges ub
+       JOIN badges b ON ub.badge_id = b.id
+       WHERE ub.user_id = ?
+       GROUP BY b.tier`,
+      [userId]
+    );
+
+    const counts: BadgeTierCounts = { bronze: 0, silver: 0, gold: 0 };
+    
+    rows.forEach((row: any) => {
+      const tier = row.tier.toLowerCase() as keyof BadgeTierCounts;
+      if (tier in counts) {
+        counts[tier] = row.count;
+      }
+    });
+
+    return counts;
   } finally {
     connection.release();
   }

@@ -14,13 +14,21 @@ import EditAnswerModal from "@/components/EditAnswerModal";
 import Tooltip from "@/components/Tooltip";
 import Sidebar from "@/components/Sidebar";
 import FlagButton from "@/components/FlagButton";
+import UserBadge from "@/components/UserBadge";
 import { Share2, Edit, Bookmark, Check, Clock, ChevronRight, Home } from "lucide-react";
+
+interface BadgeTierCounts {
+  bronze: number;
+  silver: number;
+  gold: number;
+}
 
 interface User {
   username: string;
   display_name: string;
   avatar_url?: string;
   reputation: number;
+  badgeCounts?: BadgeTierCounts;
 }
 
 interface Question extends User {
@@ -867,31 +875,28 @@ export default function QuestionDetailPage() {
                 </div>
 
                 <div className="flex justify-end mt-4">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
-                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold flex-shrink-0">
-                      {(question.display_name || question.username).charAt(0).toUpperCase()}
-                    </div>
-                    <span>
-                      <Link href={`/users/${question.username}`} className="text-blue-600 font-medium hover:text-blue-800">
-                        {question.display_name || question.username}
-                      </Link>
-                      <span className="text-gray-400 mx-1">•</span>
-                      <span>{question.reputation} rep</span>
-                      <span className="text-gray-400 mx-1">•</span>
-                      asked {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}
-                      {question.edit_count > 0 ? (
-                        <>
-                          <span className="text-gray-400 mx-1">•</span>
-                          <Tooltip content="This question has been edited">
-                            <span className="inline-flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              edited
-                            </span>
-                          </Tooltip>
-                        </>
-                      ) : null}
-                    </span>
-                  </div>
+                  <UserBadge
+                    username={question.username}
+                    displayName={question.display_name}
+                    avatarUrl={question.avatar_url}
+                    reputation={question.reputation}
+                    badgeCounts={question.badgeCounts}
+                  />
+                  <span className="text-xs sm:text-sm text-gray-500 ml-2">
+                    <span className="text-gray-400">•</span>
+                    {' '}asked {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}
+                    {question.edit_count > 0 ? (
+                      <>
+                        <span className="text-gray-400 mx-1">•</span>
+                        <Tooltip content="This question has been edited">
+                          <span className="inline-flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            edited
+                          </span>
+                        </Tooltip>
+                      </>
+                    ) : null}
+                  </span>
                 </div>
               </div>
             </div>
@@ -1179,18 +1184,17 @@ export default function QuestionDetailPage() {
                             </span>
                           </div>
                         )}
-                        <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
-                          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold flex-shrink-0">
-                            {(answer.display_name || answer.username).charAt(0).toUpperCase()}
-                          </div>
-                          <span>
-                            <Link href={`/users/${answer.username}`} className="text-blue-600 font-medium hover:text-blue-800">
-                              {answer.display_name || answer.username}
-                            </Link>
-                            <span className="text-gray-400 mx-1">•</span>
-                            <span>{answer.reputation} rep</span>
-                            <span className="text-gray-400 mx-1">•</span>
-                            answered {formatDistanceToNow(new Date(answer.created_at), { addSuffix: true })}
+                        <div className="flex items-center gap-2">
+                          <UserBadge
+                            username={answer.username}
+                            displayName={answer.display_name}
+                            avatarUrl={answer.avatar_url}
+                            reputation={answer.reputation}
+                            badgeCounts={answer.badgeCounts}
+                          />
+                          <span className="text-xs sm:text-sm text-gray-500">
+                            <span className="text-gray-400">•</span>
+                            {' '}answered {formatDistanceToNow(new Date(answer.created_at), { addSuffix: true })}
                           </span>
                         </div>
                       </div>

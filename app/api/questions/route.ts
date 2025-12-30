@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { generateSlug } from "@/lib/slug";
+import { getBadgeTierCounts } from "@/lib/badges";
 
 // GET /api/questions - List all questions
 export async function GET(req: Request) {
@@ -21,25 +22,7 @@ export async function GET(req: Request) {
         u.username,
         u.display_name,
         u.avatar_url,
-        u.reputation,
-        COALESCE(
-          (SELECT JSON_ARRAYAGG(
-            JSON_OBJECT('id', t.id, 'name', t.name)
-          )
-          FROM question_tags qt2
-          JOIN tags t ON qt2.tag_id = t.id
-          WHERE qt2.question_id = q.id),
-          JSON_ARRAY()
-        ) as tags,
-        COALESCE(
-          (SELECT JSON_ARRAYAGG(
-            JSON_OBJECT('id', c.id, 'name', c.name, 'slug', c.slug)
-          )
-          FROM collective_questions cq2
-          JOIN collectives c ON cq2.collective_id = c.id
-          WHERE cq2.question_id = q.id),
-          JSON_ARRAY()
-        ) as collectives
+        u.reputation
       FROM questions q
       JOIN users u ON q.user_id = u.id
     `;
@@ -80,8 +63,41 @@ export async function GET(req: Request) {
 
     const result = await query(queryText, params);
 
+    // Add tags, collectives, and badge counts for each question
+    const questionsWithExtras = await Promise.all(
+      result.rows.map(async (question: any) => {
+        // Get tags
+        const tagsResult = await query(
+          `SELECT t.id, t.name
+           FROM question_tags qt
+           JOIN tags t ON qt.tag_id = t.id
+           WHERE qt.question_id = ?`,
+          [question.id]
+        );
+
+        // Get collectives
+        const collectivesResult = await query(
+          `SELECT c.id, c.name, c.slug
+           FROM collective_questions cq
+           JOIN collectives c ON cq.collective_id = c.id
+           WHERE cq.question_id = ?`,
+          [question.id]
+        );
+
+        // Get badge counts
+        const badgeCounts = await getBadgeTierCounts(question.user_id);
+
+        return {
+          ...question,
+          tags: tagsResult.rows,
+          collectives: collectivesResult.rows,
+          badgeCounts,
+        };
+      })
+    );
+
     return NextResponse.json({
-      questions: result.rows,
+      questions: questionsWithExtras,
       page,
       hasMore: result.rows.length === limit,
     });
