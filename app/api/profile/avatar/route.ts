@@ -59,8 +59,8 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Save to public/avatars directory
-    const uploadDir = path.join(process.cwd(), 'public', 'avatars');
+    // Save to uploads/avatars directory (outside of public for persistence)
+    const uploadDir = path.join(process.cwd(), 'uploads', 'avatars');
     const filepath = path.join(uploadDir, filename);
 
     // Create directory if it doesn't exist
@@ -71,8 +71,8 @@ export async function POST(req: NextRequest) {
 
     await writeFile(filepath, buffer);
 
-    // Update user avatar URL in database
-    const avatarUrl = `/avatars/${filename}`;
+    // Update user avatar URL in database (use API route URL)
+    const avatarUrl = `/api/avatars/${filename}`;
     await query(
       'UPDATE users SET avatar_url = ? WHERE id = ?',
       [avatarUrl, userId]

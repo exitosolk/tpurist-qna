@@ -113,9 +113,9 @@ export const authOptions: NextAuthOptions = {
             user.id = existingUser.rows[0].id.toString();
             
             // Only update avatar if user doesn't have a custom uploaded one
-            // (custom avatars start with /avatars/, Google ones are full URLs)
+            // (custom avatars start with /api/avatars/, Google ones are full URLs)
             const existingAvatar = existingUser.rows[0].avatar_url;
-            const isCustomAvatar = existingAvatar && existingAvatar.startsWith('/avatars/');
+            const isCustomAvatar = existingAvatar && existingAvatar.startsWith('/api/avatars/');
             
             // Update display name if changed, and avatar only if not custom
             if (user.name) {
