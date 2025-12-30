@@ -64,6 +64,11 @@ export default function Navbar() {
                 <AlertTriangle className="w-4 h-4" />
                 Scams
               </Link>
+              {session && (
+                <Link href="/review" className="text-purple-600 hover:text-purple-700 font-medium">
+                  Review
+                </Link>
+              )}
               <Link href="/tags" className="text-gray-700 hover:text-blue-600">
                 Tags
               </Link>
@@ -171,6 +176,15 @@ export default function Navbar() {
               >
                 TukTuk Prices
               </Link>
+              {session && (
+                <Link
+                  href="/review"
+                  className="px-4 py-2 text-purple-600 hover:bg-purple-50 rounded font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Review Queue
+                </Link>
+              )}
               <Link
                 href="/tags"
                 className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
