@@ -18,6 +18,7 @@ interface UserProfile {
   avatar_url?: string;
   bio?: string;
   email_verified?: boolean;
+  home_country?: string;
 }
 
 interface Question {
