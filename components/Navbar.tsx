@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
@@ -12,8 +12,23 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [userReputation, setUserReputation] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Fetch user reputation for review queue access
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetch(`/api/users/${session.user.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.reputation !== undefined) {
+            setUserReputation(data.reputation);
+          }
+        })
+        .catch(err => console.error('Failed to fetch user reputation:', err));
+    }
+  }, [session]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +79,7 @@ export default function Navbar() {
                 <AlertTriangle className="w-4 h-4" />
                 Scams
               </Link>
-              {session && (
+              {session && userReputation >= 100 && (
                 <Link href="/review" className="text-purple-600 hover:text-purple-700 font-medium">
                   Review
                 </Link>
@@ -176,7 +191,7 @@ export default function Navbar() {
               >
                 TukTuk Prices
               </Link>
-              {session && (
+              {session && userReputation >= 100 && (
                 <Link
                   href="/review"
                   className="px-4 py-2 text-purple-600 hover:bg-purple-50 rounded font-medium"

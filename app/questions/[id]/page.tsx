@@ -858,13 +858,12 @@ export default function QuestionDetailPage() {
                   )}
 
                   {/* Flag button */}
-                  {session && question && (
-                    <FlagButton 
-                      contentType="question"
-                      contentId={question.id}
-                      compact={true}
-                    />
-                  )}
+                  <FlagButton 
+                    contentType="question"
+                    contentId={question.id}
+                    authorId={question.user_id}
+                    compact={true}
+                  />
                 </div>
 
                 <div className="flex justify-end mt-4">
@@ -1091,13 +1090,12 @@ export default function QuestionDetailPage() {
                         )}
 
                         {/* Flag button */}
-                        {session && (
-                          <FlagButton 
-                            contentType="answer"
-                            contentId={answer.id}
-                            compact={true}
-                          />
-                        )}
+                        <FlagButton 
+                          contentType="answer"
+                          contentId={answer.id}
+                          authorId={answer.user_id}
+                          compact={true}
+                        />
                         
                         <span className="text-gray-300">|</span>
                         
@@ -1124,13 +1122,12 @@ export default function QuestionDetailPage() {
                                   </Link>
                                   {' '}({comment.reputation}) {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                                 </span>
-                                {session && (
-                                  <FlagButton 
-                                    contentType="comment"
-                                    contentId={comment.id}
-                                    compact={true}
-                                  />
-                                )}
+                                <FlagButton 
+                                  contentType="comment"
+                                  contentId={comment.id}
+                                  authorId={comment.user_id}
+                                  compact={true}
+                                />
                               </div>
                             </div>
                           ))}

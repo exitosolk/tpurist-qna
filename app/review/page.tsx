@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Toast from '@/components/Toast';
 
 interface ReviewQueueItem {
   id: number;
@@ -38,6 +39,7 @@ export default function ReviewQueuePage() {
   const [activeTab, setActiveTab] = useState<'spam_scam' | 'outdated'>('spam_scam');
   const [queueData, setQueueData] = useState<QueueData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [error, setError] = useState('');
   const [votingId, setVotingId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
@@ -61,6 +63,17 @@ export default function ReviewQueuePage() {
       const data = await response.json();
 
       if (!response.ok) {
+        // If user doesn't have enough reputation, redirect to home with message
+        if (response.status === 403) {
+          setToast({
+            message: data.error || 'You need more reputation to access the review queue',
+            type: 'error'
+          });
+          setTimeout(() => {
+            router.push('/');
+          }, 2000);
+          return;
+        }
         throw new Error(data.error || 'Failed to fetch review queue');
       }
 
@@ -88,10 +101,18 @@ export default function ReviewQueuePage() {
         throw new Error(data.error || 'Failed to record vote');
       }
 
+      setToast({
+        message: 'Vote recorded successfully! +1 reputation earned.',
+        type: 'success'
+      });
+
       // Refresh the queue
       await fetchQueue();
     } catch (err: any) {
-      alert(err.message);
+      setToast({
+        message: err.message || 'Failed to record vote. Please try again.',
+        type: 'error'
+      });
     } finally {
       setVotingId(null);
     }
@@ -331,6 +352,15 @@ export default function ReviewQueuePage() {
           </>
         )}
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
