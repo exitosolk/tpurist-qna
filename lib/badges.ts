@@ -73,13 +73,13 @@ export async function awardBadge(
 
 /**
  * Check and award "Ayubowan" badge
- * Requires: email verified AND (bio OR home_country filled)
+ * Requires: email verified AND (bio OR home_country OR display_name filled)
  */
 export async function checkAyubowanBadge(userId: number): Promise<BadgeAwardResult> {
   const connection = await pool.getConnection();
   try {
     const [userRows] = await connection.query<any[]>(
-      `SELECT email_verified, bio, home_country 
+      `SELECT email_verified, bio, home_country, display_name 
        FROM users 
        WHERE id = ?`,
       [userId]
@@ -90,7 +90,9 @@ export async function checkAyubowanBadge(userId: number): Promise<BadgeAwardResu
     }
 
     const user = userRows[0];
-    const hasProfile = (user.bio && user.bio.trim()) || (user.home_country && user.home_country.trim());
+    const hasProfile = (user.bio && user.bio.trim()) || 
+                       (user.home_country && user.home_country.trim()) ||
+                       (user.display_name && user.display_name.trim());
     
     if (user.email_verified && hasProfile) {
       return await awardBadge(userId, 'Ayubowan', connection);
