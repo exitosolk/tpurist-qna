@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import BadgeList from "@/components/BadgeList";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
+import Toast from "@/components/Toast";
 
 interface UserProfile {
   id: number;
@@ -85,6 +86,7 @@ export default function ProfilePage() {
   const [sendingVerification, setSendingVerification] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -161,14 +163,15 @@ export default function ProfilePage() {
       const data = await response.json();
 
       if (response.ok) {
-        setProfile(data.user);
         setIsEditing(false);
+        await fetchProfile(); // Refetch to get updated data
+        setToast({ message: 'Profile updated successfully!', type: 'success' });
       } else {
-        alert(data.error || "Failed to update profile");
+        setToast({ message: data.error || 'Failed to update profile', type: 'error' });
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert("Failed to update profile");
+      setToast({ message: 'Failed to update profile', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -214,16 +217,14 @@ export default function ProfilePage() {
       const data = await response.json();
 
       if (response.ok) {
-        if (profile) {
-          setProfile({ ...profile, avatar_url: data.avatarUrl });
-        }
-        alert('Avatar updated successfully!');
+        await fetchProfile(); // Refetch to get updated avatar
+        setToast({ message: 'Avatar updated successfully!', type: 'success' });
       } else {
-        alert(data.error || 'Failed to upload avatar');
+        setToast({ message: data.error || 'Failed to upload avatar', type: 'error' });
       }
     } catch (error) {
       console.error('Error uploading avatar:', error);
-      alert('Failed to upload avatar');
+      setToast({ message: 'Failed to upload avatar', type: 'error' });
     } finally {
       setUploadingAvatar(false);
     }
@@ -250,6 +251,13 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
 
       <main className="container mx-auto px-4 py-8 max-w-5xl">
         {/* Email Verification Banner */}
