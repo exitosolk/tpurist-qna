@@ -92,8 +92,17 @@ export default function ProfilePage() {
 
     if (status === "authenticated") {
       fetchProfile();
+      checkBadges(); // Check for any eligible badges on profile load
     }
   }, [status]);
+
+  const checkBadges = async () => {
+    try {
+      await fetch('/api/badges/check', { method: 'POST' });
+    } catch (error) {
+      console.error('Failed to check badges:', error);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
