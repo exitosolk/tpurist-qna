@@ -112,11 +112,24 @@ export const authOptions: NextAuthOptions = {
             // User exists, use existing ID
             user.id = existingUser.rows[0].id.toString();
             
-            // Update avatar and display name if changed
-            if (user.image || user.name) {
+            // Only update avatar if user doesn't have a custom uploaded one
+            // (custom avatars start with /avatars/, Google ones are full URLs)
+            const existingAvatar = existingUser.rows[0].avatar_url;
+            const isCustomAvatar = existingAvatar && existingAvatar.startsWith('/avatars/');
+            
+            // Update display name if changed, and avatar only if not custom
+            if (user.name) {
               await query(
-                "UPDATE users SET avatar_url = ?, display_name = ? WHERE id = ?",
-                [user.image, user.name, user.id]
+                "UPDATE users SET display_name = ? WHERE id = ?",
+                [user.name, user.id]
+              );
+            }
+            
+            // Only update avatar from Google if user hasn't uploaded a custom one
+            if (user.image && !isCustomAvatar) {
+              await query(
+                "UPDATE users SET avatar_url = ? WHERE id = ?",
+                [user.image, user.id]
               );
             }
 
