@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import pool from '@/lib/db';
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { RowDataPacket, ResultSetHeader, PoolConnection } from 'mysql2/promise';
 
 interface UserRow extends RowDataPacket {
   reputation: number;
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Helper function to update vote counts
-async function updateVoteCounts(connection: any, reviewQueueId: number) {
+async function updateVoteCounts(connection: PoolConnection, reviewQueueId: number) {
   const [votes] = await connection.query<RowDataPacket[]>(
     `SELECT vote, COUNT(*) as count FROM review_votes 
      WHERE review_queue_id = ? GROUP BY vote`,
@@ -178,7 +178,7 @@ async function updateVoteCounts(connection: any, reviewQueueId: number) {
 }
 
 // Helper function to check thresholds and apply review action
-async function checkAndApplyReview(connection: any, reviewQueueId: number, votesNeeded: number) {
+async function checkAndApplyReview(connection: PoolConnection, reviewQueueId: number, votesNeeded: number) {
   const [reviewRows] = await connection.query<RowDataPacket[]>(
     `SELECT content_type, content_id, review_type, hide_votes, keep_votes, status 
      FROM review_queue WHERE id = ?`,
