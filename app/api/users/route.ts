@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { getBadgeTierCounts } from "@/lib/badges";
 
 export async function GET(request: Request) {
   try {
@@ -14,6 +15,7 @@ export async function GET(request: Request) {
         u.id,
         u.username,
         u.display_name,
+        u.avatar_url,
         u.reputation,
         u.created_at,
         u.bio,
@@ -45,6 +47,14 @@ export async function GET(request: Request) {
     const usersResult = await query(sql, params);
     const users = usersResult.rows;
     
+    // Get badge counts for each user
+    const usersWithBadges = await Promise.all(
+      users.map(async (user: any) => {
+        const badgeCounts = await getBadgeTierCounts(user.id);
+        return { ...user, badgeCounts };
+      })
+    );
+    
     // Get total count for pagination
     let countSql = `SELECT COUNT(*) as total FROM users`;
     const countParams: any[] = [];
@@ -58,7 +68,7 @@ export async function GET(request: Request) {
     const total = countResult.rows[0]?.total || 0;
     
     return NextResponse.json({
-      users,
+      users: usersWithBadges,
       pagination: {
         page,
         limit,

@@ -2,13 +2,21 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import { User, MapPin, Globe, Award, MessageSquare, HelpCircle, CheckCircle, Search, X } from "lucide-react";
+
+interface BadgeTierCounts {
+  bronze: number;
+  silver: number;
+  gold: number;
+}
 
 interface UserData {
   id: number;
   username: string;
   display_name: string;
+  avatar_url?: string;
   reputation: number;
   created_at: string;
   bio?: string;
@@ -17,6 +25,7 @@ interface UserData {
   email_verified: boolean;
   question_count: number;
   answer_count: number;
+  badgeCounts?: BadgeTierCounts;
 }
 
 export default function UsersPage() {
@@ -147,9 +156,21 @@ export default function UsersPage() {
                 >
                   {/* User Avatar & Info */}
                   <div className="flex items-start gap-3 mb-2">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0">
-                      {user.display_name?.[0]?.toUpperCase() || user.username?.[0]?.toUpperCase()}
-                    </div>
+                    {user.avatar_url ? (
+                      <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 bg-gray-200">
+                        <Image
+                          src={user.avatar_url}
+                          alt={user.display_name || user.username}
+                          width={48}
+                          height={48}
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0">
+                        {user.display_name?.[0]?.toUpperCase() || user.username?.[0]?.toUpperCase()}
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1 mb-0.5">
                         <h3 className="font-semibold text-gray-900 truncate">
@@ -203,6 +224,31 @@ export default function UsersPage() {
                         <span className="font-semibold text-gray-900">{user.reputation}</span>
                         <span className="text-gray-500 hidden sm:inline">rep</span>
                       </div>
+                      
+                      {/* Badge Counts */}
+                      {user.badgeCounts && (user.badgeCounts.bronze > 0 || user.badgeCounts.silver > 0 || user.badgeCounts.gold > 0) && (
+                        <div className="flex items-center gap-1.5">
+                          {user.badgeCounts.gold > 0 && (
+                            <span className="inline-flex items-center">
+                              <span className="w-2 h-2 rounded-full bg-yellow-500 mr-0.5"></span>
+                              <span className="font-medium">{user.badgeCounts.gold}</span>
+                            </span>
+                          )}
+                          {user.badgeCounts.silver > 0 && (
+                            <span className="inline-flex items-center">
+                              <span className="w-2 h-2 rounded-full bg-gray-400 mr-0.5"></span>
+                              <span className="font-medium">{user.badgeCounts.silver}</span>
+                            </span>
+                          )}
+                          {user.badgeCounts.bronze > 0 && (
+                            <span className="inline-flex items-center">
+                              <span className="w-2 h-2 rounded-full bg-amber-700 mr-0.5"></span>
+                              <span className="font-medium">{user.badgeCounts.bronze}</span>
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      
                       <div className="flex items-center gap-1 text-gray-600">
                         <MessageSquare className="w-3.5 h-3.5" />
                         <span>{user.question_count}</span>
