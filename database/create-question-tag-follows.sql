@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS tag_follows (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Add new notification types for follows
+-- Include all existing types to prevent data truncation errors
 ALTER TABLE notifications 
 MODIFY COLUMN type ENUM(
   'answer', 
@@ -40,7 +41,7 @@ MODIFY COLUMN type ENUM(
   'answer_downvote', 
   'comment', 
   'accepted_answer',
-  'followed_question_answer',  -- New answer on a followed question
-  'followed_tag_question',      -- New question with a followed tag
-  'badge_earned'
+  'badge',                       -- Existing from badge system
+  'followed_question_answer',    -- New: answer on a followed question
+  'followed_tag_question'        -- New: question with a followed tag
 ) NOT NULL;
