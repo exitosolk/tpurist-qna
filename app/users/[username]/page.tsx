@@ -130,103 +130,102 @@ export default function UserProfilePage() {
 
       <main className="container mx-auto px-4 py-8 max-w-5xl">
         {/* Profile Header */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <div className="flex items-start gap-6">
+        <div className="bg-white rounded-lg shadow-sm border p-6 mb-4">
+          <div className="flex items-start gap-4">
             {profile.avatar_url ? (
               <img
                 src={profile.avatar_url}
                 alt={`${profile.display_name || profile.username}'s avatar`}
-                className="w-24 h-24 rounded-full object-cover"
+                className="w-20 h-20 rounded-full object-cover flex-shrink-0"
               />
             ) : (
-              <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-3xl font-bold text-blue-600">
+              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-2xl font-bold text-blue-600 flex-shrink-0">
                 {profile.display_name?.charAt(0).toUpperCase() || profile.username.charAt(0).toUpperCase()}
               </div>
             )}
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-1">{profile.display_name || profile.username}</h1>
-              <p className="text-gray-600 mb-3">@{profile.username}</p>
-              <div className="flex gap-6 text-sm">
-                <div>
-                  <span className="text-2xl font-bold text-blue-600">{profile.reputation}</span>
-                  <span className="text-gray-600 ml-2">reputation</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Member for </span>
-                  <span className="font-medium">{formatDistanceToNow(new Date(profile.created_at))}</span>
-                </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold mb-1">{profile.display_name || profile.username}</h1>
+              <p className="text-gray-600 text-sm mb-2">
+                @{profile.username} • Joined {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+              </p>
+              {profile.bio && <p className="text-gray-700 mb-3">{profile.bio}</p>}
+              <div className="inline-flex items-center gap-1 text-sm">
+                <span className="font-bold text-blue-600">{profile.reputation}</span>
+                <span className="text-gray-600">reputation</span>
               </div>
-              {profile.bio && <p className="mt-4 text-gray-700">{profile.bio}</p>}
             </div>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="text-3xl font-bold text-blue-600">{questions.length}</div>
-            <div className="text-gray-600">Questions Asked</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="text-3xl font-bold text-green-600">{answers.length}</div>
-            <div className="text-gray-600">Answers Posted</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="text-3xl font-bold text-amber-600">{badges.length}</div>
-            <div className="text-gray-600">Badges Earned</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="text-3xl font-bold text-purple-600">{reputationHistory.length}</div>
-            <div className="text-gray-600">Reputation Events</div>
+        {/* Stats Bar */}
+        <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+          <div className="flex items-center justify-around text-center">
+            <div>
+              <div className="text-2xl font-bold text-gray-900">{profile.reputation}</div>
+              <div className="text-xs text-gray-600 mt-1">Reputation</div>
+            </div>
+            <div className="w-px h-12 bg-gray-200"></div>
+            <div>
+              <div className="text-2xl font-bold text-gray-900">{questions.length}</div>
+              <div className="text-xs text-gray-600 mt-1">Asked</div>
+            </div>
+            <div className="w-px h-12 bg-gray-200"></div>
+            <div>
+              <div className="text-2xl font-bold text-gray-900">{answers.length}</div>
+              <div className="text-xs text-gray-600 mt-1">Answers</div>
+            </div>
+            <div className="w-px h-12 bg-gray-200"></div>
+            <div>
+              <div className="text-2xl font-bold text-gray-900">{badges.length}</div>
+              <div className="text-xs text-gray-600 mt-1">Badges</div>
+            </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="mb-6">
-          <div className="border-b">
-            <nav className="flex gap-8">
-              <button
-                onClick={() => setActiveTab("questions")}
-                className={`pb-4 px-1 border-b-2 font-medium ${
-                  activeTab === "questions"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                Questions ({questions.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("answers")}
-                className={`pb-4 px-1 border-b-2 font-medium ${
-                  activeTab === "answers"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                Answers ({answers.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("badges")}
-                className={`pb-4 px-1 border-b-2 font-medium ${
-                  activeTab === "badges"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                Badges ({badges.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("reputation")}
-                className={`pb-4 px-1 border-b-2 font-medium ${
-                  activeTab === "reputation"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                Reputation History
-              </button>
-            </nav>
-          </div>
+        <div className="mb-6 -mx-4 px-4 overflow-x-auto">
+          <nav className="flex gap-2 min-w-max">
+            <button
+              onClick={() => setActiveTab("questions")}
+              className={`px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-colors ${
+                activeTab === "questions"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Questions ({questions.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("answers")}
+              className={`px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-colors ${
+                activeTab === "answers"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Answers ({answers.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("badges")}
+              className={`px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-colors ${
+                activeTab === "badges"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Badges ({badges.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("reputation")}
+              className={`px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-colors ${
+                activeTab === "reputation"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              History
+            </button>
+          </nav>
         </div>
 
         {/* Content */}
@@ -238,17 +237,17 @@ export default function UserProfilePage() {
               </div>
             ) : (
               questions.map((question) => (
-                <div key={question.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+                <div key={question.id} className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow">
                   <Link href={`/questions/${question.slug || question.id}`}>
-                    <h3 className="text-xl font-semibold text-blue-600 hover:text-blue-800 mb-2">
+                    <h3 className="text-lg font-semibold text-blue-600 hover:text-blue-800 mb-3">
                       {question.title}
                     </h3>
                   </Link>
-                  <div className="flex gap-6 text-sm text-gray-600">
+                  <div className="flex flex-wrap gap-4 text-xs text-gray-600">
                     <span>{question.score} votes</span>
                     <span>{question.answer_count} answers</span>
                     <span>{question.views} views</span>
-                    <span>asked {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}</span>
+                    <span>{formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}</span>
                   </div>
                 </div>
               ))
@@ -262,18 +261,18 @@ export default function UserProfilePage() {
               </div>
             ) : (
               answers.map((answer) => (
-                <div key={answer.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+                <div key={answer.id} className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow">
                   <Link href={`/questions/${answer.question_slug || answer.question_id}#answer-${answer.id}`}>
-                    <h3 className="text-lg font-medium text-blue-600 hover:text-blue-800 mb-2">
+                    <h3 className="text-lg font-medium text-blue-600 hover:text-blue-800 mb-3">
                       {answer.question_title}
                     </h3>
                   </Link>
-                  <div className="flex gap-6 text-sm text-gray-600">
+                  <div className="flex flex-wrap gap-4 text-xs text-gray-600">
                     <span>{answer.score} votes</span>
                     {answer.is_accepted && (
                       <span className="text-green-600 font-medium">✓ Accepted</span>
                     )}
-                    <span>answered {formatDistanceToNow(new Date(answer.created_at), { addSuffix: true })}</span>
+                    <span>{formatDistanceToNow(new Date(answer.created_at), { addSuffix: true })}</span>
                   </div>
                 </div>
               ))
