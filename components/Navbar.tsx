@@ -12,9 +12,28 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [exploreDropdownOpen, setExploreDropdownOpen] = useState(false);
   const [userReputation, setUserReputation] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Rotating search placeholders for better UX
+  const searchPlaceholders = [
+    "Search for 'Visa on arrival'...",
+    "Search 'Train to Ella'...",
+    "Search 'Best beaches in Sri Lanka'...",
+    "Search 'Sigiriya tickets'...",
+    "Search 'Safe areas in Colombo'...",
+  ];
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+
+  // Rotate placeholder text every 3 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % searchPlaceholders.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Fetch user reputation for review queue access
   useEffect(() => {
@@ -51,11 +70,11 @@ export default function Navbar() {
             </Link>
 
             {/* Desktop Search Bar */}
-            <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md">
+            <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-lg">
               <div className="relative w-full">
                 <input
                   type="text"
-                  placeholder="Search questions..."
+                  placeholder={searchPlaceholders[placeholderIndex]}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -65,31 +84,62 @@ export default function Navbar() {
             </form>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex gap-4 items-center shrink-0">
-              <Link href="/questions" className="text-gray-700 hover:text-blue-600 font-medium">
+            <nav className="hidden lg:flex gap-6 items-center shrink-0">
+              {/* Primary Navigation */}
+              <Link href="/questions" className="text-gray-700 hover:text-blue-600 font-medium whitespace-nowrap">
                 Questions
               </Link>
-              <Link href="/collectives" className="text-gray-700 hover:text-blue-600">
-                Collectives
-              </Link>
-              <Link href="/tuktuk-prices" className="text-gray-700 hover:text-blue-600">
+              <Link href="/tuktuk-prices" className="text-gray-700 hover:text-blue-600 font-medium whitespace-nowrap">
                 TukTuk Prices
               </Link>
-              <Link href="/scams" className="text-orange-600 hover:text-orange-700 flex items-center gap-1">
+              <Link href="/scams" className="text-orange-600 hover:text-orange-700 font-medium flex items-center gap-1 whitespace-nowrap">
                 <AlertTriangle className="w-4 h-4" />
                 Scams
               </Link>
-              {session && userReputation >= 100 && (
-                <Link href="/review" className="text-purple-600 hover:text-purple-700 font-medium">
-                  Review
-                </Link>
-              )}
-              <Link href="/tags" className="text-gray-700 hover:text-blue-600">
-                Tags
-              </Link>
-              <Link href="/users" className="text-gray-700 hover:text-blue-600">
-                Users
-              </Link>
+
+              {/* Explore Dropdown (Secondary Navigation) */}
+              <div 
+                className="relative"
+                onMouseEnter={() => setExploreDropdownOpen(true)}
+                onMouseLeave={() => setExploreDropdownOpen(false)}
+              >
+                <button className="text-gray-700 hover:text-blue-600 font-medium flex items-center gap-1 whitespace-nowrap">
+                  Explore
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {exploreDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-48 bg-white border rounded-lg shadow-lg py-2">
+                    <Link
+                      href="/tags"
+                      className="block px-4 py-2 hover:bg-gray-100 text-gray-700"
+                    >
+                      Tags
+                    </Link>
+                    <Link
+                      href="/users"
+                      className="block px-4 py-2 hover:bg-gray-100 text-gray-700"
+                    >
+                      Users
+                    </Link>
+                    <Link
+                      href="/collectives"
+                      className="block px-4 py-2 hover:bg-gray-100 text-gray-700"
+                    >
+                      Communities
+                    </Link>
+                    {session && userReputation >= 100 && (
+                      <Link
+                        href="/review"
+                        className="block px-4 py-2 hover:bg-purple-50 text-purple-600 border-t"
+                      >
+                        Review Queue
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {session ? (
                 <>
@@ -170,7 +220,7 @@ export default function Navbar() {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search questions..."
+                  placeholder={searchPlaceholders[placeholderIndex]}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   autoFocus
@@ -184,22 +234,7 @@ export default function Navbar() {
           {/* Mobile More Menu (Secondary Items) */}
           {mobileMenuOpen && (
             <nav className="md:hidden mt-4 pb-4 flex flex-col gap-2">
-              <Link
-                href="/tuktuk-prices"
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                TukTuk Prices
-              </Link>
-              {session && userReputation >= 100 && (
-                <Link
-                  href="/review"
-                  className="px-4 py-2 text-purple-600 hover:bg-purple-50 rounded font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Review Queue
-                </Link>
-              )}
+              <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Explore</div>
               <Link
                 href="/tags"
                 className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
@@ -214,6 +249,22 @@ export default function Navbar() {
               >
                 Users
               </Link>
+              <Link
+                href="/collectives"
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Communities
+              </Link>
+              {session && userReputation >= 100 && (
+                <Link
+                  href="/review"
+                  className="px-4 py-2 text-purple-600 hover:bg-purple-50 rounded font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Review Queue
+                </Link>
+              )}
 
               {session ? (
                 <>
@@ -282,7 +333,7 @@ export default function Navbar() {
             }`}
           >
             <Users className="w-6 h-6" />
-            <span className="text-xs">Explore</span>
+            <span className="text-xs">Community</span>
           </Link>
 
           {/* Ask Question (Center - Prominent) */}
