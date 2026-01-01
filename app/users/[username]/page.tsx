@@ -110,9 +110,17 @@ export default function UserProfilePage() {
         {/* Profile Header */}
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
           <div className="flex items-start gap-6">
-            <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-3xl font-bold text-blue-600">
-              {profile.display_name?.charAt(0).toUpperCase() || profile.username.charAt(0).toUpperCase()}
-            </div>
+            {profile.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt={`${profile.display_name || profile.username}'s avatar`}
+                className="w-24 h-24 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-3xl font-bold text-blue-600">
+                {profile.display_name?.charAt(0).toUpperCase() || profile.username.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div className="flex-1">
               <h1 className="text-3xl font-bold mb-1">{profile.display_name || profile.username}</h1>
               <p className="text-gray-600 mb-3">@{profile.username}</p>
