@@ -2,7 +2,7 @@ import { query } from "./db";
 
 interface NotificationParams {
   userId: number;
-  type: 'answer' | 'question_upvote' | 'question_downvote' | 'answer_upvote' | 'answer_downvote' | 'comment' | 'accepted_answer';
+  type: 'answer' | 'question_upvote' | 'question_downvote' | 'answer_upvote' | 'answer_downvote' | 'comment' | 'accepted_answer' | 'followed_question_answer' | 'followed_tag_question' | 'badge_earned';
   actorId: number;
   message: string;
   questionId?: number;
