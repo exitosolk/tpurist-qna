@@ -36,6 +36,24 @@ interface Answer {
   created_at: string;
 }
 
+interface Badge {
+  id: number;
+  name: string;
+  tier: 'bronze' | 'silver' | 'gold';
+  description: string;
+  icon: string;
+  awarded_at: string;
+}
+
+interface ReputationHistory {
+  id: number;
+  change_amount: number;
+  reason: string;
+  reference_type: string;
+  reference_id: number | null;
+  created_at: string;
+}
+
 export default function UserProfilePage() {
   const params = useParams();
   const router = useRouter();
@@ -44,8 +62,10 @@ export default function UserProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
+  const [badges, setBadges] = useState<Badge[]>([]);
+  const [reputationHistory, setReputationHistory] = useState<ReputationHistory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"questions" | "answers">("questions");
+  const [activeTab, setActiveTab] = useState<"questions" | "answers" | "badges" | "reputation">("questions");
 
   useEffect(() => {
     if (username) {
@@ -62,6 +82,8 @@ export default function UserProfilePage() {
         setProfile(data.profile);
         setQuestions(data.questions || []);
         setAnswers(data.answers || []);
+        setBadges(data.badges || []);
+        setReputationHistory(data.reputationHistory || []);
       } else if (response.status === 404) {
         // User not found
         setProfile(null);
@@ -140,7 +162,7 @@ export default function UserProfilePage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="text-3xl font-bold text-blue-600">{questions.length}</div>
             <div className="text-gray-600">Questions Asked</div>
@@ -148,6 +170,14 @@ export default function UserProfilePage() {
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="text-3xl font-bold text-green-600">{answers.length}</div>
             <div className="text-gray-600">Answers Posted</div>
+          </div>
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="text-3xl font-bold text-amber-600">{badges.length}</div>
+            <div className="text-gray-600">Badges Earned</div>
+          </div>
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="text-3xl font-bold text-purple-600">{reputationHistory.length}</div>
+            <div className="text-gray-600">Reputation Events</div>
           </div>
         </div>
 
@@ -174,6 +204,26 @@ export default function UserProfilePage() {
                 }`}
               >
                 Answers ({answers.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("badges")}
+                className={`pb-4 px-1 border-b-2 font-medium ${
+                  activeTab === "badges"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Badges ({badges.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("reputation")}
+                className={`pb-4 px-1 border-b-2 font-medium ${
+                  activeTab === "reputation"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Reputation History
               </button>
             </nav>
           </div>
@@ -204,7 +254,7 @@ export default function UserProfilePage() {
               ))
             )}
           </div>
-        ) : (
+        ) : activeTab === "answers" ? (
           <div className="space-y-4">
             {answers.length === 0 ? (
               <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
@@ -227,6 +277,122 @@ export default function UserProfilePage() {
                   </div>
                 </div>
               ))
+            )}
+          </div>
+        ) : activeTab === "badges" ? (
+          <div>
+            {badges.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+                <p className="text-gray-600">This user hasn't earned any badges yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Gold Badges */}
+                {badges.filter(b => b.tier === 'gold').length > 0 && (
+                  <div className="bg-white rounded-lg shadow-sm border p-6">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <span className="text-yellow-500">●</span>
+                      Gold Badges ({badges.filter(b => b.tier === 'gold').length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {badges.filter(b => b.tier === 'gold').map((badge) => (
+                        <div key={badge.id} className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                          <span className="text-2xl">{badge.icon}</span>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900">{badge.name}</h4>
+                            <p className="text-sm text-gray-600 mt-1">{badge.description}</p>
+                            <p className="text-xs text-gray-500 mt-2">
+                              Earned {formatDistanceToNow(new Date(badge.awarded_at), { addSuffix: true })}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Silver Badges */}
+                {badges.filter(b => b.tier === 'silver').length > 0 && (
+                  <div className="bg-white rounded-lg shadow-sm border p-6">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <span className="text-gray-400">●</span>
+                      Silver Badges ({badges.filter(b => b.tier === 'silver').length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {badges.filter(b => b.tier === 'silver').map((badge) => (
+                        <div key={badge.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <span className="text-2xl">{badge.icon}</span>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900">{badge.name}</h4>
+                            <p className="text-sm text-gray-600 mt-1">{badge.description}</p>
+                            <p className="text-xs text-gray-500 mt-2">
+                              Earned {formatDistanceToNow(new Date(badge.awarded_at), { addSuffix: true })}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Bronze Badges */}
+                {badges.filter(b => b.tier === 'bronze').length > 0 && (
+                  <div className="bg-white rounded-lg shadow-sm border p-6">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <span className="text-orange-600">●</span>
+                      Bronze Badges ({badges.filter(b => b.tier === 'bronze').length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {badges.filter(b => b.tier === 'bronze').map((badge) => (
+                        <div key={badge.id} className="flex items-start gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                          <span className="text-2xl">{badge.icon}</span>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900">{badge.name}</h4>
+                            <p className="text-sm text-gray-600 mt-1">{badge.description}</p>
+                            <p className="text-xs text-gray-500 mt-2">
+                              Earned {formatDistanceToNow(new Date(badge.awarded_at), { addSuffix: true })}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          // Reputation History Tab
+          <div className="bg-white rounded-lg shadow-sm border">
+            {reputationHistory.length === 0 ? (
+              <div className="p-12 text-center">
+                <p className="text-gray-600">No reputation history available.</p>
+              </div>
+            ) : (
+              <div className="divide-y">
+                {reputationHistory.map((entry) => (
+                  <div key={entry.id} className="p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <span className={`font-semibold ${
+                            entry.change_amount > 0 ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {entry.change_amount > 0 ? '+' : ''}{entry.change_amount}
+                          </span>
+                          <span className="text-gray-700">{entry.reason}</span>
+                        </div>
+                        <div className="mt-1 text-sm text-gray-500">
+                          {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {entry.reference_type}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         )}

@@ -46,6 +46,32 @@ export async function GET(
       [user.id]
     );
 
+    // Get user's badges
+    const badgesResult = await query(
+      `SELECT b.id, b.name, b.tier, b.description, b.icon, ub.awarded_at
+       FROM user_badges ub
+       JOIN badges b ON ub.badge_id = b.id
+       WHERE ub.user_id = ?
+       ORDER BY 
+         CASE b.tier
+           WHEN 'gold' THEN 1
+           WHEN 'silver' THEN 2
+           WHEN 'bronze' THEN 3
+         END,
+         ub.awarded_at DESC`,
+      [user.id]
+    );
+
+    // Get user's reputation history (last 50 entries)
+    const reputationHistoryResult = await query(
+      `SELECT id, change_amount, reason, reference_type, reference_id, created_at
+       FROM reputation_history
+       WHERE user_id = ?
+       ORDER BY created_at DESC
+       LIMIT 50`,
+      [user.id]
+    );
+
     // Don't expose email to other users
     const publicProfile = {
       ...user,
@@ -56,6 +82,8 @@ export async function GET(
       profile: publicProfile,
       questions: questionsResult.rows,
       answers: answersResult.rows,
+      badges: badgesResult.rows,
+      reputationHistory: reputationHistoryResult.rows,
     });
   } catch (error) {
     console.error("Error fetching user profile:", error);
