@@ -50,6 +50,25 @@ interface Follow {
   followed_at: string;
 }
 
+interface FollowedQuestion {
+  follow_id: number;
+  question_id: number;
+  slug?: string;
+  title: string;
+  score: number;
+  answer_count: number;
+  views: number;
+  followed_at: string;
+  created_at: string;
+}
+
+interface FollowedTag {
+  follow_id: number;
+  tag_name: string;
+  question_count: number;
+  followed_at: string;
+}
+
 interface Draft {
   id: number;
   draft_type: string;
@@ -76,10 +95,12 @@ export default function ProfilePage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [follows, setFollows] = useState<Follow[]>([]);
+  const [followedQuestions, setFollowedQuestions] = useState<FollowedQuestion[]>([]);
+  const [followedTags, setFollowedTags] = useState<FollowedTag[]>([]);
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [reputationHistory, setReputationHistory] = useState<ReputationHistory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"questions" | "answers" | "bookmarks" | "drafts" | "reputation" | "badges">("questions");
+  const [activeTab, setActiveTab] = useState<"questions" | "answers" | "bookmarks" | "following" | "drafts" | "reputation" | "badges">("questions");
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ display_name: "", bio: "", home_country: "" });
   const [saving, setSaving] = useState(false);
@@ -96,9 +117,30 @@ export default function ProfilePage() {
 
     if (status === "authenticated") {
       fetchProfile();
+      fetchFollowedContent();
       checkBadges(); // Check for any eligible badges on profile load
     }
-  }, [status]);
+  }, [status, router]);
+
+  const fetchFollowedContent = async () => {
+    try {
+      // Fetch followed questions
+      const questionsRes = await fetch("/api/follows/questions");
+      const questionsData = await questionsRes.json();
+      if (questionsRes.ok) {
+        setFollowedQuestions(questionsData.followedQuestions || []);
+      }
+
+      // Fetch followed tags
+      const tagsRes = await fetch("/api/follows/tags");
+      const tagsData = await tagsRes.json();
+      if (tagsRes.ok) {
+        setFollowedTags(tagsData.followedTags || []);
+      }
+    } catch (error) {
+      console.error("Error fetching followed content:", error);
+    }
+  };
 
   const checkBadges = async () => {
     try {
@@ -475,6 +517,16 @@ export default function ProfilePage() {
                 Bookmarks ({follows.length})
               </button>
               <button
+                onClick={() => setActiveTab("following")}
+                className={`pb-4 px-1 border-b-2 font-medium whitespace-nowrap text-sm md:text-base ${
+                  activeTab === "following"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Following ({followedQuestions.length + followedTags.length})
+              </button>
+              <button
                 onClick={() => setActiveTab("drafts")}
                 className={`pb-4 px-1 border-b-2 font-medium whitespace-nowrap text-sm md:text-base ${
                   activeTab === "drafts"
@@ -607,6 +659,78 @@ export default function ProfilePage() {
                   </div>
                 );
               })
+            )}
+          </div>
+        ) : activeTab === "following" ? (
+          <div className="space-y-6">
+            {followedQuestions.length === 0 && followedTags.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border p-8 md:p-12 text-center">
+                <div className="text-6xl mb-4">🔔</div>
+                <p className="text-gray-600 mb-4">You're not following any questions or tags yet.</p>
+                <p className="text-sm text-gray-500 mb-6">Follow questions to get notified when new answers are posted, or follow tags to discover new questions.</p>
+                <Link
+                  href="/questions"
+                  className="inline-block px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Browse Questions
+                </Link>
+              </div>
+            ) : (
+              <>
+                {/* Followed Questions */}
+                {followedQuestions.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                      <span>📝</span> Followed Questions ({followedQuestions.length})
+                    </h3>
+                    <div className="space-y-3">
+                      {followedQuestions.map((question) => (
+                        <div key={question.follow_id} className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow">
+                          <Link href={`/questions/${question.slug || question.question_id}`}>
+                            <h4 className="text-base font-medium text-blue-600 hover:text-blue-800 mb-2">
+                              {question.title}
+                            </h4>
+                          </Link>
+                          <div className="flex flex-wrap gap-4 text-xs text-gray-600">
+                            <span>{question.score} votes</span>
+                            <span>{question.answer_count} answers</span>
+                            <span>{question.views} views</span>
+                            <span>following since {formatDistanceToNow(new Date(question.followed_at), { addSuffix: true })}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Followed Tags */}
+                {followedTags.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                      <span>🏷️</span> Followed Tags ({followedTags.length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {followedTags.map((tag) => (
+                        <div key={tag.follow_id} className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow">
+                          <Link href={`/questions/tagged/${encodeURIComponent(tag.tag_name)}`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-base font-medium text-blue-600 hover:text-blue-800">
+                                #{tag.tag_name}
+                              </span>
+                              <span className="text-sm text-gray-500">
+                                {tag.question_count} questions
+                              </span>
+                            </div>
+                          </Link>
+                          <div className="text-xs text-gray-600">
+                            Following since {formatDistanceToNow(new Date(tag.followed_at), { addSuffix: true })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         ) : activeTab === "drafts" ? (

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { generateSlug } from "@/lib/slug";
 import { getBadgeTierCounts } from "@/lib/badges";
+import { createNotification } from "@/lib/notifications";
 
 // GET /api/questions - List all questions
 export async function GET(req: Request) {
@@ -214,6 +215,25 @@ export async function POST(req: Request) {
           "UPDATE tags SET question_count = question_count + 1 WHERE id = ?",
           [tagId]
         );
+
+        // Notify users following this tag
+        const tagFollowersResult = await query(
+          `SELECT DISTINCT user_id FROM tag_follows 
+           WHERE tag_name = ? AND user_id != ?`,
+          [tagName.toLowerCase(), userId]
+        );
+
+        if (tagFollowersResult.rows && tagFollowersResult.rows.length > 0) {
+          for (const follower of tagFollowersResult.rows) {
+            await createNotification({
+              userId: follower.user_id,
+              type: 'followed_tag_question',
+              actorId: userId,
+              message: `asked a new question with tag #${tagName}: "${title}"`,
+              questionId: questionId,
+            });
+          }
+        }
       }
     }
 

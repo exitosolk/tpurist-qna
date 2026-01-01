@@ -87,15 +87,41 @@ export async function POST(
       const questionOwnerId = questionResult.rows[0].user_id;
       const questionTitle = questionResult.rows[0].title;
 
-      // Create notification for question owner
-      await createNotification({
-        userId: questionOwnerId,
-        type: 'answer',
-        actorId: userId,
-        message: `answered your question "${questionTitle}"`,
-        questionId: parseInt(questionId),
-        answerId: answerId,
-      });
+      // Create notification for question owner (if not the answerer)
+      if (questionOwnerId !== userId) {
+        await createNotification({
+          userId: questionOwnerId,
+          type: 'answer',
+          actorId: userId,
+          message: `answered your question "${questionTitle}"`,
+          questionId: parseInt(questionId),
+          answerId: answerId,
+        });
+      }
+
+      // Notify all users following this question
+      const followersResult = await query(
+        `SELECT DISTINCT user_id FROM question_follows 
+         WHERE question_id = ? AND user_id != ?`,
+        [questionId, userId]
+      );
+
+      if (followersResult.rows && followersResult.rows.length > 0) {
+        // Create notifications for all followers
+        for (const follower of followersResult.rows) {
+          // Don't duplicate notification if follower is also the question owner
+          if (follower.user_id !== questionOwnerId) {
+            await createNotification({
+              userId: follower.user_id,
+              type: 'followed_question_answer',
+              actorId: userId,
+              message: `answered a question you're following: "${questionTitle}"`,
+              questionId: parseInt(questionId),
+              answerId: answerId,
+            });
+          }
+        }
+      }
     }
 
     return NextResponse.json(

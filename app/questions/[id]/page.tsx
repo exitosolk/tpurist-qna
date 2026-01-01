@@ -15,7 +15,7 @@ import Tooltip from "@/components/Tooltip";
 import Sidebar from "@/components/Sidebar";
 import FlagButton from "@/components/FlagButton";
 import UserBadge from "@/components/UserBadge";
-import { Share2, Edit, Bookmark, Check, Clock, ChevronRight, Home } from "lucide-react";
+import { Share2, Edit, Bookmark, Check, Clock, ChevronRight, Home, Bell, BellOff } from "lucide-react";
 
 interface BadgeTierCounts {
   bronze: number;
@@ -85,6 +85,7 @@ export default function QuestionDetailPage() {
   const [copiedAnswerId, setCopiedAnswerId] = useState<number | null>(null);
   const [followedAnswers, setFollowedAnswers] = useState<Record<number, boolean>>({});
   const [followedQuestion, setFollowedQuestion] = useState(false);
+  const [followingQuestion, setFollowingQuestion] = useState(false); // For notifications
   const [copiedQuestion, setCopiedQuestion] = useState(false);
   const [answerError, setAnswerError] = useState("");
   const [voteError, setVoteError] = useState("");
@@ -202,8 +203,24 @@ export default function QuestionDetailPage() {
   useEffect(() => {
     if (question && session) {
       fetchFollowedQuestion();
+      fetchFollowingQuestionStatus();
     }
   }, [question?.id, session]);
+
+  const fetchFollowingQuestionStatus = async () => {
+    if (!question || !session) return;
+    
+    try {
+      const response = await fetch(`/api/follows/check?questionIds=${question.id}`);
+      const data = await response.json();
+      
+      if (response.ok && data.questionFollows) {
+        setFollowingQuestion(!!data.questionFollows[question.id]);
+      }
+    } catch (error) {
+      console.error("Error fetching question follow status:", error);
+    }
+  };
 
   // Update meta tags for SEO
   useEffect(() => {
@@ -487,6 +504,41 @@ export default function QuestionDetailPage() {
     } catch (error) {
       console.error("Error bookmarking question:", error);
       setGeneralError("Failed to bookmark question");
+      setTimeout(() => setGeneralError(""), 5000);
+    }
+  };
+
+  const handleFollowQuestionForNotifications = async () => {
+    if (!session) {
+      setGeneralError("Please log in to follow questions");
+      setTimeout(() => setGeneralError(""), 5000);
+      return;
+    }
+
+    if (!question) return;
+
+    try {
+      const response = await fetch("/api/follows/questions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          questionId: question.id,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setFollowingQuestion(data.isFollowing);
+      } else {
+        setGeneralError(data.error || "Failed to follow question");
+        setTimeout(() => setGeneralError(""), 5000);
+      }
+    } catch (error) {
+      console.error("Error following question:", error);
+      setGeneralError("Failed to follow question");
       setTimeout(() => setGeneralError(""), 5000);
     }
   };
@@ -850,6 +902,21 @@ export default function QuestionDetailPage() {
                     >
                       <Bookmark className={`w-4 h-4 ${followedQuestion ? "fill-current" : ""}`} />
                       {followedQuestion ? "Bookmarked" : "Bookmark"}
+                    </button>
+                  </Tooltip>
+
+                  <Tooltip content={followingQuestion ? "Stop receiving notifications for new answers" : "Get notified when new answers are posted"}>
+                    <button
+                      onClick={handleFollowQuestionForNotifications}
+                      className={`flex items-center gap-1 ${
+                        followingQuestion ? "text-purple-600" : "hover:text-purple-600"
+                      }`}
+                    >
+                      {followingQuestion ? (
+                        <><Bell className="w-4 h-4 fill-current" /> Following</>
+                      ) : (
+                        <><BellOff className="w-4 h-4" /> Follow</>
+                      )}
                     </button>
                   </Tooltip>
 

@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
+import { Bell, BellOff } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 
@@ -25,16 +27,73 @@ interface Question {
 
 export default function TaggedQuestionsPage() {
   const params = useParams();
+  const { data: session } = useSession();
   const tag = params.tag as string;
   const decodedTag = decodeURIComponent(tag);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [tagInfo, setTagInfo] = useState<{ count: number; followers?: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState("newest");
+  const [isFollowingTag, setIsFollowingTag] = useState(false);
 
   useEffect(() => {
     fetchQuestions();
-  }, [sort, tag]);
+    if (session) {
+      checkTagFollowStatus();
+    }
+  }, [sort, tag, session]);
+
+  const checkTagFollowStatus = async () => {
+    if (!session) return;
+    
+    try {
+      const response = await fetch(`/api/follows/check?tagNames=${encodeURIComponent(decodedTag)}`);
+      const data = await response.json();
+      
+      if (response.ok && data.tagFollows) {
+        setIsFollowingTag(!!data.tagFollows[decodedTag]);
+      }
+    } catch (error) {
+      console.error("Error checking tag follow status:", error);
+    }
+  };
+
+  const handleFollowTag = async () => {
+    if (!session) {
+      alert("Please log in to follow tags");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/follows/tags", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          tagName: decodedTag,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setIsFollowingTag(data.isFollowing);
+        // Update follower count if available
+        if (tagInfo) {
+          setTagInfo({
+            ...tagInfo,
+            followers: (tagInfo.followers || 0) + (data.isFollowing ? 1 : -1)
+          });
+        }
+      } else {
+        alert(data.error || "Failed to follow tag");
+      }
+    } catch (error) {
+      console.error("Error following tag:", error);
+      alert("Failed to follow tag");
+    }
+  };
 
   const fetchQuestions = async () => {
     setLoading(true);
@@ -61,15 +120,35 @@ export default function TaggedQuestionsPage() {
           <div className="flex-1 min-w-0 lg:order-1">
         {/* Simplified Header */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2 gap-3">
             <h1 className="text-2xl md:text-3xl font-bold">#{decodedTag}</h1>
-            {/* Ask Question button - hidden on mobile (FAB exists) */}
-            <Link
-              href="/questions/ask"
-              className="hidden lg:inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Ask Question
-            </Link>
+            <div className="flex items-center gap-2">
+              {/* Follow Tag Button */}
+              {session && (
+                <button
+                  onClick={handleFollowTag}
+                  className={`flex items-center gap-1 px-3 py-2 rounded text-sm font-medium transition-colors ${
+                    isFollowingTag
+                      ? "bg-purple-100 text-purple-700 hover:bg-purple-200"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                  title={isFollowingTag ? "Stop receiving notifications for new questions" : "Get notified when new questions are posted with this tag"}
+                >
+                  {isFollowingTag ? (
+                    <><Bell className="w-4 h-4" /> Following</>
+                  ) : (
+                    <><BellOff className="w-4 h-4" /> Follow</>
+                  )}
+                </button>
+              )}
+              {/* Ask Question button - hidden on mobile (FAB exists) */}
+              <Link
+                href="/questions/ask"
+                className="hidden lg:inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Ask Question
+              </Link>
+            </div>
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-600">
             <span>{tagInfo?.count || questions.length} question{(tagInfo?.count || questions.length) !== 1 ? 's' : ''}</span>
