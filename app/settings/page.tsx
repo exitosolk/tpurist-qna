@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import { Settings, Mail, Lock, Shield, User, AlertCircle, CheckCircle, ChevronRight, ChevronDown } from "lucide-react";
+import { Settings, Mail, Lock, Shield, User, AlertCircle, CheckCircle, ChevronRight, ChevronDown, Bell, BellOff } from "lucide-react";
 import Link from "next/link";
 
 interface UserSettings {
@@ -15,6 +15,7 @@ interface UserSettings {
   bio: string;
   email_verified: boolean;
   created_at: string;
+  digest_frequency?: 'never' | 'daily' | 'weekly';
 }
 
 export default function SettingsPage() {
@@ -38,6 +39,11 @@ export default function SettingsPage() {
   
   // Email change tracking
   const [emailChanged, setEmailChanged] = useState(false);
+  
+  // Digest preferences
+  const [digestFrequency, setDigestFrequency] = useState<'never' | 'daily' | 'weekly'>('weekly');
+  const [digestMessage, setDigestMessage] = useState("");
+  const [digestSubmitting, setDigestSubmitting] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -61,6 +67,7 @@ export default function SettingsPage() {
         setUserSettings(user);
         setNewEmail(data.user.email || "");
         setEmailChanged(false);
+        setDigestFrequency(data.user.digest_frequency || 'weekly');
       }
     } catch (error) {
       console.error("Error fetching settings:", error);
@@ -163,6 +170,33 @@ export default function SettingsPage() {
       }
     } catch (error) {
       setEmailMessage("Failed to send verification email.");
+    }
+  };
+
+  const handleDigestUpdate = async (frequency: 'never' | 'daily' | 'weekly') => {
+    setDigestSubmitting(true);
+    setDigestMessage("");
+
+    try {
+      const response = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ digest_frequency: frequency }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setDigestFrequency(frequency);
+        setDigestMessage("✓ Email digest preferences updated successfully!");
+        setTimeout(() => setDigestMessage(""), 3000);
+      } else {
+        setDigestMessage(`Error: ${data.error}`);
+      }
+    } catch (error) {
+      setDigestMessage("Failed to update digest preferences. Please try again.");
+    } finally {
+      setDigestSubmitting(false);
     }
   };
 
@@ -336,6 +370,87 @@ export default function SettingsPage() {
               </form>
             </div>
           )}
+        </div>
+
+        {/* Email Digest Preferences */}
+        <div className="bg-white rounded-lg shadow-sm border p-4 md:p-6 mb-4">
+          <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2">
+            <Bell className="w-5 h-5" />
+            Email Digest
+          </h2>
+
+          <p className="text-sm text-gray-600 mb-4">
+            Get a summary of new answers to questions you follow and new questions in tags you follow.
+          </p>
+
+          <div className="space-y-3">
+            <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+              <input
+                type="radio"
+                name="digest"
+                value="weekly"
+                checked={digestFrequency === 'weekly'}
+                onChange={() => handleDigestUpdate('weekly')}
+                disabled={digestSubmitting}
+                className="mt-1"
+              />
+              <div className="flex-1">
+                <div className="font-medium">Weekly Digest</div>
+                <div className="text-xs text-gray-500">Receive a summary once a week (Recommended)</div>
+              </div>
+            </label>
+
+            <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+              <input
+                type="radio"
+                name="digest"
+                value="daily"
+                checked={digestFrequency === 'daily'}
+                onChange={() => handleDigestUpdate('daily')}
+                disabled={digestSubmitting}
+                className="mt-1"
+              />
+              <div className="flex-1">
+                <div className="font-medium">Daily Digest</div>
+                <div className="text-xs text-gray-500">Receive a summary every day</div>
+              </div>
+            </label>
+
+            <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+              <input
+                type="radio"
+                name="digest"
+                value="never"
+                checked={digestFrequency === 'never'}
+                onChange={() => handleDigestUpdate('never')}
+                disabled={digestSubmitting}
+                className="mt-1"
+              />
+              <div className="flex-1">
+                <div className="font-medium flex items-center gap-2">
+                  Never
+                  <BellOff className="w-4 h-4 text-gray-400" />
+                </div>
+                <div className="text-xs text-gray-500">Don't send me digest emails</div>
+              </div>
+            </label>
+          </div>
+
+          {digestMessage && (
+            <div className={`mt-4 p-3 rounded text-xs md:text-sm ${digestMessage.includes('✓') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+              {digestMessage}
+            </div>
+          )}
+
+          <div className="mt-4 pt-4 border-t">
+            <Link
+              href="/api/digest/preview"
+              target="_blank"
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Preview digest email →
+            </Link>
+          </div>
         </div>
 
         {/* Profile Link */}

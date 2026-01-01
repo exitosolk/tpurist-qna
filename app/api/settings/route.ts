@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     }
 
     const result = await query(
-      `SELECT id, username, email, display_name, bio, email_verified, created_at 
+      `SELECT id, username, email, display_name, bio, email_verified, created_at, digest_frequency 
        FROM users WHERE email = ?`,
       [session.user.email]
     );
@@ -52,7 +52,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { email, current_password, new_password } = body;
+    const { email, current_password, new_password, digest_frequency } = body;
 
     // Get user ID
     const userResult = await query(
@@ -119,10 +119,19 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    // Handle digest frequency update
+    if (digest_frequency && ['never', 'daily', 'weekly'].includes(digest_frequency)) {
+      await query(
+        "UPDATE users SET digest_frequency = ? WHERE id = ?",
+        [digest_frequency, user.id]
+      );
+    }
+
     return NextResponse.json({
       message: "Settings updated successfully",
       email_changed: email && email !== session.user.email,
-      password_changed: !!new_password
+      password_changed: !!new_password,
+      digest_updated: !!digest_frequency
     });
   } catch (error) {
     console.error("Error updating settings:", error);
