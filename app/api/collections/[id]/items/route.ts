@@ -6,7 +6,7 @@ import { query } from "@/lib/db";
 // POST /api/collections/[id]/items - Add question to collection
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -19,7 +19,8 @@ export async function POST(
     }
 
     const userId = parseInt(session.user.id);
-    const collectionId = parseInt(params.id);
+    const { id } = await params;
+    const collectionId = parseInt(id);
     const { question_id, note } = await req.json();
 
     if (isNaN(collectionId) || isNaN(question_id)) {
@@ -102,7 +103,7 @@ export async function POST(
 // DELETE /api/collections/[id]/items - Remove question from collection
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -115,7 +116,8 @@ export async function DELETE(
     }
 
     const userId = parseInt(session.user.id);
-    const collectionId = parseInt(params.id);
+    const { id } = await params;
+    const collectionId = parseInt(id);
     const { question_id } = await req.json();
 
     if (isNaN(collectionId) || isNaN(question_id)) {

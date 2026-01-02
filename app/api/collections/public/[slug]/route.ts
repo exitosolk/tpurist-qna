@@ -4,10 +4,10 @@ import { query } from "@/lib/db";
 // GET /api/collections/public/[slug] - Get public collection by slug
 export async function GET(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const slug = params.slug;
+    const { slug } = await params;
     const searchParams = req.nextUrl.searchParams;
     const username = searchParams.get("username");
 

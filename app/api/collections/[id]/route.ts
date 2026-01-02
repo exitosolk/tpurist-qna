@@ -6,11 +6,12 @@ import { query } from "@/lib/db";
 // GET /api/collections/[id] - Get collection details
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
-    const collectionId = parseInt(params.id);
+    const { id } = await params;
+    const collectionId = parseInt(id);
 
     if (isNaN(collectionId)) {
       return NextResponse.json(
@@ -98,7 +99,7 @@ export async function GET(
 // PATCH /api/collections/[id] - Update collection
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -111,7 +112,8 @@ export async function PATCH(
     }
 
     const userId = parseInt(session.user.id);
-    const collectionId = parseInt(params.id);
+    const { id } = await params;
+    const collectionId = parseInt(id);
 
     if (isNaN(collectionId)) {
       return NextResponse.json(
@@ -221,7 +223,7 @@ export async function PATCH(
 // DELETE /api/collections/[id] - Delete collection
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -234,7 +236,8 @@ export async function DELETE(
     }
 
     const userId = parseInt(session.user.id);
-    const collectionId = parseInt(params.id);
+    const { id } = await params;
+    const collectionId = parseInt(id);
 
     if (isNaN(collectionId)) {
       return NextResponse.json(
