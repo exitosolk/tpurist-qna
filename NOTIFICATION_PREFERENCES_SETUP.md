@@ -16,6 +16,33 @@ Or execute directly in your MySQL client:
 source database/create-notification-preferences.sql;
 ```
 
+## Email Configuration
+
+To enable email notifications, configure SMTP settings in your `.env` file:
+
+```env
+# SMTP Configuration (required for email notifications)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_FROM="OneCeylon" <noreply@oneceylon.space>
+NEXT_PUBLIC_BASE_URL=https://oneceylon.space
+```
+
+### Gmail Setup
+1. Enable 2-Factor Authentication on your Google account
+2. Generate an App Password at https://myaccount.google.com/apppasswords
+3. Use the App Password as `SMTP_PASS`
+
+### Other SMTP Providers
+- **SendGrid**: Use API key as password
+- **Mailgun**: Use SMTP credentials from dashboard
+- **AWS SES**: Use SMTP credentials from SES console
+
+**Note**: If SMTP is not configured, the system will only create in-app notifications (no emails will be sent).
+
 ## Features
 
 ### Email Notifications
@@ -85,19 +112,40 @@ await fetch('/api/notifications/preferences', {
 
 ## Integration with Notification System
 
-To respect user preferences when sending notifications, check preferences before sending:
+The system automatically checks user preferences before sending notifications:
+
+1. **In-App Notifications**: Created only if the user hasn't disabled that notification type
+2. **Email Notifications**: Sent only if:
+   - User's email is verified
+   - User has enabled that notification type
+   - SMTP is properly configured
+   - User has a valid email address
+
+### How It Works
+
+When a notification is triggered (e.g., someone answers your question):
 
 ```javascript
-// Example: Before sending email notification
-const [prefs] = await pool.execute(
-  'SELECT email_new_answer FROM notification_preferences WHERE user_id = ?',
-  [userId]
-);
-
-if (prefs[0]?.email_new_answer) {
-  // Send email notification
-}
+await createNotification({
+  userId: questionAuthorId,
+  type: 'answer',
+  actorId: answerAuthorId,
+  message: 'John Doe answered your question about Sigiriya',
+  questionId: questionId,
+  answerId: answerId
+});
 ```
+
+The system will:
+1. Check if user wants in-app notifications for this type → Create in-app notification
+2. Check if user wants email for this type → Send email (if email is verified)
+3. Respect all user preferences automatically
+
+### Automatic Preference Creation
+
+Default preferences are automatically created when:
+- User first visits Settings → Notification Preferences
+- System checks preferences for sending notifications (fallback to default behavior)
 
 ## UI Components
 
