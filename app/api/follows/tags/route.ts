@@ -116,7 +116,8 @@ export async function GET(req: Request) {
         tf.created_at as followed_at,
         COUNT(DISTINCT qt.question_id) as question_count
        FROM tag_follows tf
-       LEFT JOIN question_tags qt ON tf.tag_name = qt.tag
+       LEFT JOIN tags t ON tf.tag_name = t.name
+       LEFT JOIN question_tags qt ON t.id = qt.tag_id
        WHERE tf.user_id = ?
        GROUP BY tf.id, tf.tag_name, tf.created_at
        ORDER BY tf.created_at DESC`,

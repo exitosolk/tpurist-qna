@@ -68,7 +68,7 @@ export async function GET(
         q.slug as question_slug,
         q.score,
         q.answer_count,
-        q.view_count,
+        q.views as view_count,
         u.username as author_username,
         u.display_name as author_display_name
       FROM collection_items ci
