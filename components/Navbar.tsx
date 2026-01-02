@@ -69,22 +69,22 @@ export default function Navbar() {
               <h1 className="text-2xl font-bold text-blue-600">OneCeylon</h1>
             </Link>
 
-            {/* Desktop Search Bar - Only on Large Screens */}
-            <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-lg">
+            {/* Desktop Search Bar - Show on tablets and up */}
+            <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md lg:max-w-lg">
               <div className="relative w-full">
                 <input
                   type="text"
                   placeholder={searchPlaceholders[placeholderIndex]}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 md:px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-400" />
               </div>
             </form>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex gap-3 lg:gap-6 items-center shrink-0">
+            <nav className="hidden md:flex gap-2 lg:gap-4 xl:gap-6 items-center shrink-0">
               {/* Primary Navigation */}
               <Link href="/questions" className="text-gray-700 hover:text-blue-600 font-medium whitespace-nowrap text-sm lg:text-base">
                 Questions
@@ -196,8 +196,8 @@ export default function Navbar() {
               )}
             </nav>
 
-            {/* Mobile + Tablet: Search Icon, Notification, More Menu */}
-            <div className="lg:hidden flex items-center gap-2">
+            {/* Mobile Controls - Only on small screens */}
+            <div className="md:hidden flex items-center gap-2">
               <button
                 onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
                 className="p-2 hover:bg-gray-100 rounded"
@@ -205,9 +205,8 @@ export default function Navbar() {
                 <Search className="w-5 h-5" />
               </button>
               {session && <NotificationDropdown />}
-              {/* More menu only on small mobile, not tablets since they have full nav */}
               <button
-                className="md:hidden p-2 hover:bg-gray-100 rounded"
+                className="p-2 hover:bg-gray-100 rounded"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <MoreHorizontal className="w-6 h-6" />}
@@ -215,9 +214,9 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Mobile + Tablet Search Dropdown */}
+          {/* Mobile Search Dropdown - Only for small screens */}
           {mobileSearchOpen && (
-            <form onSubmit={handleSearch} className="lg:hidden mt-4">
+            <form onSubmit={handleSearch} className="md:hidden mt-4">
               <div className="relative">
                 <input
                   type="text"
