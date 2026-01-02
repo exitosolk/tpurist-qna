@@ -55,9 +55,11 @@ async function sendEmailNotification(userEmail: string, subject: string, message
       secure: process.env.SMTP_SECURE === 'true',
       auth: process.env.SMTP_USER ? {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        pass: process.env.SMTP_PASS || process.env.SMTP_PASSWORD, // Support both variable names
       } : undefined,
     });
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL || 'https://oneceylon.space';
 
     await transporter.sendMail({
       from: process.env.SMTP_FROM,
@@ -70,13 +72,15 @@ async function sendEmailNotification(userEmail: string, subject: string, message
           <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
           <p style="color: #6b7280; font-size: 12px;">
             You received this email because you have notifications enabled. 
-            <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://oneceylon.space'}/settings" style="color: #2563eb;">
+            <a href="${baseUrl}/settings" style="color: #2563eb;">
               Manage your notification preferences
             </a>
           </p>
         </div>
       `,
     });
+
+    console.log(`Email notification sent to ${userEmail}: ${subject}`);
   } catch (error) {
     console.error("Error sending email notification:", error);
   }
@@ -133,7 +137,10 @@ export async function createNotification({
 
     if (shouldSendEmail && userPrefs.email) {
       const subject = getEmailSubject(type);
+      console.log(`Attempting to send email to ${userPrefs.email} for notification type: ${type}`);
       await sendEmailNotification(userPrefs.email, subject, message);
+    } else {
+      console.log(`Email not sent - verified: ${userPrefs.email_verified}, has email: ${!!userPrefs.email}, pref enabled: ${userPrefs[emailPrefField]}`);
     }
   } catch (error) {
     console.error("Error creating notification:", error);
