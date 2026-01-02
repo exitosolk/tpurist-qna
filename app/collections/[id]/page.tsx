@@ -298,7 +298,7 @@ export default function CollectionPage() {
                 </div>
                 {collection.is_owner && (
                   <div className="flex gap-2 ml-4">
-                    {collection.is_public && (
+                    {!!collection.is_public && (
                       <button
                         onClick={handleShare}
                         className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded"
