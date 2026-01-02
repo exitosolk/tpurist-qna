@@ -41,7 +41,14 @@ const appPreferenceMap: Record<string, string> = {
   'followed_tag_question': 'app_followed_question',
 };
 
-async function sendEmailNotification(userEmail: string, subject: string, message: string) {
+async function sendEmailNotification(
+  userEmail: string, 
+  subject: string, 
+  message: string,
+  type: string,
+  questionId?: number,
+  answerId?: number
+) {
   // Check if SMTP is configured
   if (!process.env.SMTP_HOST || !process.env.SMTP_FROM) {
     console.log('SMTP not configured, skipping email notification');
@@ -60,23 +67,116 @@ async function sendEmailNotification(userEmail: string, subject: string, message
     });
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL || 'https://oneceylon.space';
+    
+    // Build the action URL based on notification type
+    let actionUrl = baseUrl;
+    let actionText = 'View Notification';
+    
+    if (questionId) {
+      actionUrl = `${baseUrl}/questions/${questionId}`;
+      actionText = type === 'answer' ? 'View Answer' : 'View Question';
+    }
+    
+    // Get icon based on notification type
+    const iconEmoji = getNotificationIcon(type);
 
     await transporter.sendMail({
       from: process.env.SMTP_FROM,
       to: userEmail,
       subject: `OneCeylon: ${subject}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2563eb;">OneCeylon</h2>
-          <p>${message}</p>
-          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
-          <p style="color: #6b7280; font-size: 12px;">
-            You received this email because you have notifications enabled. 
-            <a href="${baseUrl}/settings" style="color: #2563eb;">
-              Manage your notification preferences
-            </a>
-          </p>
-        </div>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${subject}</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f9fafb;">
+          <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f9fafb;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); overflow: hidden;">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding: 32px 40px; text-align: center;">
+                      <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">
+                        OneCeylon
+                      </h1>
+                      <p style="margin: 8px 0 0 0; color: #bfdbfe; font-size: 14px; font-weight: 500;">
+                        Your Sri Lankan Community Platform
+                      </p>
+                    </td>
+                  </tr>
+                  
+                  <!-- Icon Banner -->
+                  <tr>
+                    <td style="background-color: #eff6ff; padding: 24px; text-align: center;">
+                      <div style="font-size: 48px; line-height: 1;">
+                        ${iconEmoji}
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  <!-- Content -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      <h2 style="margin: 0 0 8px 0; color: #111827; font-size: 22px; font-weight: 600; line-height: 1.3;">
+                        ${subject}
+                      </h2>
+                      <p style="margin: 16px 0 32px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                        ${message}
+                      </p>
+                      
+                      <!-- CTA Button -->
+                      <table role="presentation" style="margin: 0 auto;">
+                        <tr>
+                          <td style="border-radius: 8px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
+                            <a href="${actionUrl}" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 16px; border-radius: 8px;">
+                              ${actionText} →
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  
+                  <!-- Divider -->
+                  <tr>
+                    <td style="padding: 0 40px;">
+                      <div style="border-top: 1px solid #e5e7eb;"></div>
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="padding: 32px 40px; background-color: #f9fafb;">
+                      <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px; line-height: 1.5; text-align: center;">
+                        You received this email because you have notifications enabled for this activity.
+                      </p>
+                      <p style="margin: 0; text-align: center;">
+                        <a href="${baseUrl}/settings" style="color: #2563eb; text-decoration: none; font-size: 14px; font-weight: 500;">
+                          Manage notification preferences
+                        </a>
+                        <span style="color: #d1d5db; margin: 0 8px;">•</span>
+                        <a href="${baseUrl}" style="color: #2563eb; text-decoration: none; font-size: 14px; font-weight: 500;">
+                          Visit OneCeylon
+                        </a>
+                      </p>
+                      <p style="margin: 20px 0 0 0; color: #9ca3af; font-size: 12px; text-align: center; line-height: 1.5;">
+                        OneCeylon - Connecting Sri Lankans Worldwide<br>
+                        © ${new Date().getFullYear()} OneCeylon. All rights reserved.
+                      </p>
+                    </td>
+                  </tr>
+                  
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `,
     });
 
@@ -84,6 +184,22 @@ async function sendEmailNotification(userEmail: string, subject: string, message
   } catch (error) {
     console.error("Error sending email notification:", error);
   }
+}
+
+function getNotificationIcon(type: string): string {
+  const icons: Record<string, string> = {
+    'answer': '💬',
+    'comment': '💭',
+    'question_upvote': '👍',
+    'question_downvote': '👎',
+    'answer_upvote': '⭐',
+    'answer_downvote': '📉',
+    'accepted_answer': '✅',
+    'badge': '🏆',
+    'followed_question_answer': '🔔',
+    'followed_tag_question': '🏷️',
+  };
+  return icons[type] || '📢';
 }
 
 export async function createNotification({
@@ -138,7 +254,7 @@ export async function createNotification({
     if (shouldSendEmail && userPrefs.email) {
       const subject = getEmailSubject(type);
       console.log(`Attempting to send email to ${userPrefs.email} for notification type: ${type}`);
-      await sendEmailNotification(userPrefs.email, subject, message);
+      await sendEmailNotification(userPrefs.email, subject, message, type, questionId, answerId);
     } else {
       console.log(`Email not sent - verified: ${userPrefs.email_verified}, has email: ${!!userPrefs.email}, pref enabled: ${userPrefs[emailPrefField]}`);
     }
