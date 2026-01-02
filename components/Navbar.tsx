@@ -206,7 +206,7 @@ export default function Navbar() {
               </button>
               {session && <NotificationDropdown />}
               <button
-                className="md:hidden p-2 hover:bg-gray-100 rounded"
+                className="p-2 hover:bg-gray-100 rounded"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <MoreHorizontal className="w-6 h-6" />}
@@ -231,9 +231,9 @@ export default function Navbar() {
             </form>
           )}
 
-          {/* Mobile More Menu (Secondary Items) */}
+          {/* Mobile & Tablet More Menu (Explore items) */}
           {mobileMenuOpen && (
-            <nav className="md:hidden mt-4 pb-4 flex flex-col gap-2">
+            <nav className="lg:hidden mt-4 pb-4 flex flex-col gap-2">
               <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Explore</div>
               <Link
                 href="/tags"
