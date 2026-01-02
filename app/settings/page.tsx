@@ -18,6 +18,31 @@ interface UserSettings {
   digest_frequency?: 'never' | 'daily' | 'weekly';
 }
 
+interface NotificationPreferences {
+  email_new_answer: boolean;
+  email_new_comment: boolean;
+  email_question_upvote: boolean;
+  email_question_downvote: boolean;
+  email_answer_upvote: boolean;
+  email_answer_downvote: boolean;
+  email_accepted_answer: boolean;
+  email_badge_earned: boolean;
+  email_followed_question: boolean;
+  app_new_answer: boolean;
+  app_new_comment: boolean;
+  app_question_upvote: boolean;
+  app_question_downvote: boolean;
+  app_answer_upvote: boolean;
+  app_answer_downvote: boolean;
+  app_accepted_answer: boolean;
+  app_badge_earned: boolean;
+  app_followed_question: boolean;
+  digest_frequency: 'none' | 'daily' | 'weekly';
+  digest_include_new_questions: boolean;
+  digest_include_top_questions: boolean;
+  digest_include_followed_tags: boolean;
+}
+
 export default function SettingsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -45,6 +70,12 @@ export default function SettingsPage() {
   const [digestMessage, setDigestMessage] = useState("");
   const [digestSubmitting, setDigestSubmitting] = useState(false);
 
+  // Notification preferences
+  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences | null>(null);
+  const [notifPrefsExpanded, setNotifPrefsExpanded] = useState(false);
+  const [notifPrefsMessage, setNotifPrefsMessage] = useState("");
+  const [notifPrefsSubmitting, setNotifPrefsSubmitting] = useState(false);
+
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
@@ -68,6 +99,13 @@ export default function SettingsPage() {
         setNewEmail(data.user.email || "");
         setEmailChanged(false);
         setDigestFrequency(data.user.digest_frequency || 'weekly');
+      }
+
+      // Fetch notification preferences
+      const prefsResponse = await fetch("/api/notifications/preferences");
+      const prefsData = await prefsResponse.json();
+      if (prefsResponse.ok && prefsData.preferences) {
+        setNotificationPrefs(prefsData.preferences);
       }
     } catch (error) {
       console.error("Error fetching settings:", error);
@@ -197,6 +235,35 @@ export default function SettingsPage() {
       setDigestMessage("Failed to update digest preferences. Please try again.");
     } finally {
       setDigestSubmitting(false);
+    }
+  };
+
+  const handleNotificationPrefUpdate = async (field: keyof NotificationPreferences, value: boolean | string) => {
+    if (!notificationPrefs) return;
+
+    setNotifPrefsSubmitting(true);
+    setNotifPrefsMessage("");
+
+    try {
+      const response = await fetch("/api/notifications/preferences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.preferences) {
+        setNotificationPrefs(data.preferences);
+        setNotifPrefsMessage("✓ Preferences updated!");
+        setTimeout(() => setNotifPrefsMessage(""), 2000);
+      } else {
+        setNotifPrefsMessage(`Error: ${data.error || 'Failed to update'}`);
+      }
+    } catch (error) {
+      setNotifPrefsMessage("Failed to update preferences. Please try again.");
+    } finally {
+      setNotifPrefsSubmitting(false);
     }
   };
 
@@ -368,6 +435,186 @@ export default function SettingsPage() {
                   {passwordSubmitting ? "Changing..." : "Change Password"}
                 </button>
               </form>
+            </div>
+          )}
+        </div>
+
+        {/* Notification Preferences - Collapsible */}
+        <div className="bg-white rounded-lg shadow-sm border mb-4">
+          <button
+            onClick={() => setNotifPrefsExpanded(!notifPrefsExpanded)}
+            className="w-full p-4 md:p-6 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Bell className="w-5 h-5 text-gray-700" />
+              <span className="text-lg md:text-xl font-bold">Notification Preferences</span>
+            </div>
+            {notifPrefsExpanded ? (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+
+          {notifPrefsExpanded && notificationPrefs && (
+            <div className="px-4 md:px-6 pb-4 md:pb-6 border-t">
+              <div className="mt-4 space-y-6">
+                {/* Email Notifications */}
+                <div>
+                  <h3 className="font-semibold text-base mb-3 flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    Email Notifications
+                  </h3>
+                  <div className="space-y-3 pl-6">
+                    <label className="flex items-center justify-between py-2 border-b">
+                      <span className="text-sm">New answers to your questions</span>
+                      <input
+                        type="checkbox"
+                        checked={!!notificationPrefs.email_new_answer}
+                        onChange={(e) => handleNotificationPrefUpdate('email_new_answer', e.target.checked)}
+                        disabled={notifPrefsSubmitting}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between py-2 border-b">
+                      <span className="text-sm">Comments on your posts</span>
+                      <input
+                        type="checkbox"
+                        checked={!!notificationPrefs.email_new_comment}
+                        onChange={(e) => handleNotificationPrefUpdate('email_new_comment', e.target.checked)}
+                        disabled={notifPrefsSubmitting}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between py-2 border-b">
+                      <span className="text-sm">Your answer is upvoted</span>
+                      <input
+                        type="checkbox"
+                        checked={!!notificationPrefs.email_answer_upvote}
+                        onChange={(e) => handleNotificationPrefUpdate('email_answer_upvote', e.target.checked)}
+                        disabled={notifPrefsSubmitting}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between py-2 border-b">
+                      <span className="text-sm">Your answer is accepted</span>
+                      <input
+                        type="checkbox"
+                        checked={!!notificationPrefs.email_accepted_answer}
+                        onChange={(e) => handleNotificationPrefUpdate('email_accepted_answer', e.target.checked)}
+                        disabled={notifPrefsSubmitting}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between py-2 border-b">
+                      <span className="text-sm">New badge earned</span>
+                      <input
+                        type="checkbox"
+                        checked={!!notificationPrefs.email_badge_earned}
+                        onChange={(e) => handleNotificationPrefUpdate('email_badge_earned', e.target.checked)}
+                        disabled={notifPrefsSubmitting}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between py-2">
+                      <span className="text-sm">New answers to followed questions</span>
+                      <input
+                        type="checkbox"
+                        checked={!!notificationPrefs.email_followed_question}
+                        onChange={(e) => handleNotificationPrefUpdate('email_followed_question', e.target.checked)}
+                        disabled={notifPrefsSubmitting}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* In-App Notifications */}
+                <div>
+                  <h3 className="font-semibold text-base mb-3 flex items-center gap-2">
+                    <Bell className="w-4 h-4" />
+                    In-App Notifications
+                  </h3>
+                  <div className="space-y-3 pl-6">
+                    <label className="flex items-center justify-between py-2 border-b">
+                      <span className="text-sm">New answers to your questions</span>
+                      <input
+                        type="checkbox"
+                        checked={!!notificationPrefs.app_new_answer}
+                        onChange={(e) => handleNotificationPrefUpdate('app_new_answer', e.target.checked)}
+                        disabled={notifPrefsSubmitting}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between py-2 border-b">
+                      <span className="text-sm">Comments on your posts</span>
+                      <input
+                        type="checkbox"
+                        checked={!!notificationPrefs.app_new_comment}
+                        onChange={(e) => handleNotificationPrefUpdate('app_new_comment', e.target.checked)}
+                        disabled={notifPrefsSubmitting}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between py-2 border-b">
+                      <span className="text-sm">Question upvotes</span>
+                      <input
+                        type="checkbox"
+                        checked={!!notificationPrefs.app_question_upvote}
+                        onChange={(e) => handleNotificationPrefUpdate('app_question_upvote', e.target.checked)}
+                        disabled={notifPrefsSubmitting}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between py-2 border-b">
+                      <span className="text-sm">Answer upvotes</span>
+                      <input
+                        type="checkbox"
+                        checked={!!notificationPrefs.app_answer_upvote}
+                        onChange={(e) => handleNotificationPrefUpdate('app_answer_upvote', e.target.checked)}
+                        disabled={notifPrefsSubmitting}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between py-2 border-b">
+                      <span className="text-sm">Your answer is accepted</span>
+                      <input
+                        type="checkbox"
+                        checked={!!notificationPrefs.app_accepted_answer}
+                        onChange={(e) => handleNotificationPrefUpdate('app_accepted_answer', e.target.checked)}
+                        disabled={notifPrefsSubmitting}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between py-2 border-b">
+                      <span className="text-sm">New badge earned</span>
+                      <input
+                        type="checkbox"
+                        checked={!!notificationPrefs.app_badge_earned}
+                        onChange={(e) => handleNotificationPrefUpdate('app_badge_earned', e.target.checked)}
+                        disabled={notifPrefsSubmitting}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between py-2">
+                      <span className="text-sm">New answers to followed questions</span>
+                      <input
+                        type="checkbox"
+                        checked={!!notificationPrefs.app_followed_question}
+                        onChange={(e) => handleNotificationPrefUpdate('app_followed_question', e.target.checked)}
+                        disabled={notifPrefsSubmitting}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {notifPrefsMessage && (
+                  <div className={`p-3 rounded text-xs md:text-sm ${notifPrefsMessage.includes('✓') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    {notifPrefsMessage}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
