@@ -735,8 +735,8 @@ export default function QuestionDetailPage() {
       <Navbar />
 
       <main className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Breadcrumbs */}
-        <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-4" aria-label="Breadcrumb">
+        {/* Desktop Breadcrumbs */}
+        <nav className="hidden md:flex items-center space-x-2 text-sm text-gray-600 mb-4" aria-label="Breadcrumb">
           <Link href="/" className="hover:text-blue-600 flex items-center">
             <Home className="h-4 w-4" />
           </Link>
@@ -756,6 +756,22 @@ export default function QuestionDetailPage() {
             </>
           ) : null}
         </nav>
+
+        {/* Mobile Back Button */}
+        <div className="md:hidden mb-4">
+          {question.tags.length > 0 && (
+            <div className="text-xs text-gray-500 mb-1 uppercase tracking-wide">
+              {question.tags[0].name}
+            </div>
+          )}
+          <button
+            onClick={() => window.history.back()}
+            className="flex items-center text-blue-600 hover:text-blue-800 font-medium"
+          >
+            <ChevronRight className="h-5 w-5 rotate-180" />
+            <span>Back</span>
+          </button>
+        </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
@@ -803,6 +819,22 @@ export default function QuestionDetailPage() {
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border p-4 md:p-6">
+            {/* Mobile Author Info - Top */}
+            <div className="md:hidden mb-4 pb-4 border-b">
+              <div className="flex items-center gap-2">
+                <UserBadge
+                  username={question.username}
+                  displayName={question.display_name}
+                  avatarUrl={question.avatar_url}
+                  reputation={question.reputation}
+                  badgeCounts={question.badgeCounts}
+                />
+                <span className="text-xs text-gray-500">
+                  asked {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}
+                </span>
+              </div>
+            </div>
+
             <div className="md:flex md:gap-4">
               {/* Desktop: Vote buttons on left (vertical) */}
               {currentUserId !== question.user_id && (
@@ -839,31 +871,35 @@ export default function QuestionDetailPage() {
               <div className="flex-1">
                 <MarkdownRenderer content={question.body} />
 
-                {/* Mobile: Horizontal voting bar below content */}
+                {/* Mobile: Compact pill-style voting */}
                 {currentUserId !== question.user_id && (
-                  <div className="md:hidden flex items-center gap-4 py-3 border-t border-b my-4">
-                    <button
-                      onClick={() => handleVote("question", question.id, 1)}
-                      className="p-2 hover:bg-gray-100 rounded"
-                      disabled={!session}
-                    >
-                      ▲
-                    </button>
-                    <span className="font-semibold">{question.score}</span>
-                    <button
-                      onClick={() => handleVote("question", question.id, -1)}
-                      className="p-2 hover:bg-gray-100 rounded"
-                      disabled={!session}
-                    >
-                      ▼
-                    </button>
+                  <div className="md:hidden my-4">
+                    <div className="inline-flex items-center bg-gray-100 rounded-full overflow-hidden">
+                      <button
+                        onClick={() => handleVote("question", question.id, 1)}
+                        className="px-4 py-2 hover:bg-gray-200 active:bg-gray-300 transition-colors"
+                        disabled={!session}
+                      >
+                        <span className="text-lg">▲</span>
+                      </button>
+                      <span className="px-3 font-semibold text-gray-800">{question.score}</span>
+                      <button
+                        onClick={() => handleVote("question", question.id, -1)}
+                        className="px-4 py-2 hover:bg-gray-200 active:bg-gray-300 transition-colors"
+                        disabled={!session}
+                      >
+                        <span className="text-lg">▼</span>
+                      </button>
+                    </div>
                   </div>
                 )}
                 {currentUserId === question.user_id && (
-                  <div className="md:hidden flex items-center gap-4 py-3 border-t border-b my-4">
-                    <div className="p-2 text-gray-400">▲</div>
-                    <span className="font-semibold">{question.score}</span>
-                    <div className="p-2 text-gray-400">▼</div>
+                  <div className="md:hidden my-4">
+                    <div className="inline-flex items-center bg-gray-100 rounded-full px-4 py-2">
+                      <span className="text-gray-400 mr-2">▲</span>
+                      <span className="font-semibold text-gray-800">{question.score}</span>
+                      <span className="text-gray-400 ml-2">▼</span>
+                    </div>
                   </div>
                 )}
 
@@ -947,7 +983,8 @@ export default function QuestionDetailPage() {
                   />
                 </div>
 
-                <div className="flex justify-end mt-4">
+                {/* Desktop Author Info - Bottom Right */}
+                <div className="hidden md:flex justify-end mt-4">
                   <UserBadge
                     username={question.username}
                     displayName={question.display_name}
@@ -1088,31 +1125,35 @@ export default function QuestionDetailPage() {
                         <>
                           <MarkdownRenderer content={answer.body} />
                           
-                          {/* Mobile: Horizontal voting bar */}
+                          {/* Mobile: Compact pill-style voting */}
                           {currentUserId !== answer.user_id && (
-                            <div className="md:hidden flex items-center gap-4 py-3 border-t border-b my-4">
-                              <button
-                                onClick={() => handleVote("answer", answer.id, 1)}
-                                className="p-2 hover:bg-gray-100 rounded"
-                                disabled={!session}
-                              >
-                                ▲
-                              </button>
-                              <span className="font-semibold">{answer.score}</span>
-                              <button
-                                onClick={() => handleVote("answer", answer.id, -1)}
-                                className="p-2 hover:bg-gray-100 rounded"
-                                disabled={!session}
-                              >
-                                ▼
-                              </button>
+                            <div className="md:hidden my-4">
+                              <div className="inline-flex items-center bg-gray-100 rounded-full overflow-hidden">
+                                <button
+                                  onClick={() => handleVote("answer", answer.id, 1)}
+                                  className="px-4 py-2 hover:bg-gray-200 active:bg-gray-300 transition-colors"
+                                  disabled={!session}
+                                >
+                                  <span className="text-lg">▲</span>
+                                </button>
+                                <span className="px-3 font-semibold text-gray-800">{answer.score}</span>
+                                <button
+                                  onClick={() => handleVote("answer", answer.id, -1)}
+                                  className="px-4 py-2 hover:bg-gray-200 active:bg-gray-300 transition-colors"
+                                  disabled={!session}
+                                >
+                                  <span className="text-lg">▼</span>
+                                </button>
+                              </div>
                             </div>
                           )}
                           {currentUserId === answer.user_id && (
-                            <div className="md:hidden flex items-center gap-4 py-3 border-t border-b my-4">
-                              <div className="p-2 text-gray-400">▲</div>
-                              <span className="font-semibold">{answer.score}</span>
-                              <div className="p-2 text-gray-400">▼</div>
+                            <div className="md:hidden my-4">
+                              <div className="inline-flex items-center bg-gray-100 rounded-full px-4 py-2">
+                                <span className="text-gray-400 mr-2">▲</span>
+                                <span className="font-semibold text-gray-800">{answer.score}</span>
+                                <span className="text-gray-400 ml-2">▼</span>
+                              </div>
                             </div>
                           )}
                         </>
@@ -1247,8 +1288,8 @@ export default function QuestionDetailPage() {
 
                       <div className="flex flex-col gap-2 mt-4">
                         {answer.experience_date && (
-                          <div className="text-xs sm:text-sm text-blue-600 flex items-center gap-1">
-                            <span>💰</span>
+                          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-blue-50 border-l-4 border-emerald-500 px-3 py-2 rounded-r text-sm font-medium text-emerald-800 w-fit">
+                            <span className="text-lg">💰</span>
                             <span>
                               Price info from: {new Date(answer.experience_date).toLocaleDateString('en-US', { 
                                 year: 'numeric', 

@@ -147,9 +147,9 @@ export default function AddToCollection({ questionId }: AddToCollectionProps) {
       
       <button
         onClick={() => setShowModal(true)}
-        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+        className="flex items-center gap-1 text-gray-600 hover:text-purple-600 transition-colors text-sm"
       >
-        <FolderPlus className="w-5 h-5" />
+        <FolderPlus className="w-4 h-4" />
         <span>Add to Collection</span>
       </button>
 
