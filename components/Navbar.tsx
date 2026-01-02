@@ -84,15 +84,15 @@ export default function Navbar() {
             </form>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex gap-6 items-center shrink-0">
+            <nav className="hidden md:flex gap-3 lg:gap-6 items-center shrink-0">
               {/* Primary Navigation */}
-              <Link href="/questions" className="text-gray-700 hover:text-blue-600 font-medium whitespace-nowrap">
+              <Link href="/questions" className="text-gray-700 hover:text-blue-600 font-medium whitespace-nowrap text-sm lg:text-base">
                 Questions
               </Link>
-              <Link href="/tuktuk-prices" className="text-gray-700 hover:text-blue-600 font-medium whitespace-nowrap">
+              <Link href="/tuktuk-prices" className="text-gray-700 hover:text-blue-600 font-medium whitespace-nowrap text-sm lg:text-base">
                 TukTuk Prices
               </Link>
-              <Link href="/scams" className="text-orange-600 hover:text-orange-700 font-medium flex items-center gap-1 whitespace-nowrap">
+              <Link href="/scams" className="text-orange-600 hover:text-orange-700 font-medium flex items-center gap-1 whitespace-nowrap text-sm lg:text-base">
                 <AlertTriangle className="w-4 h-4" />
                 Scams
               </Link>
@@ -103,7 +103,7 @@ export default function Navbar() {
                 onMouseEnter={() => setExploreDropdownOpen(true)}
                 onMouseLeave={() => setExploreDropdownOpen(false)}
               >
-                <button className="text-gray-700 hover:text-blue-600 font-medium flex items-center gap-1 whitespace-nowrap">
+                <button className="text-gray-700 hover:text-blue-600 font-medium flex items-center gap-1 whitespace-nowrap text-sm lg:text-base">
                   Explore
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -145,15 +145,15 @@ export default function Navbar() {
                 <>
                   <Link
                     href="/questions/ask"
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="px-3 lg:px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm lg:text-base whitespace-nowrap"
                   >
                     Ask Question
                   </Link>
                   <NotificationDropdown />
                   <div className="relative group">
-                    <button className="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+                    <button className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 rounded hover:bg-gray-100">
                       <User className="w-5 h-5" />
-                      <span>{session.user?.name || session.user?.email}</span>
+                      <span className="text-sm lg:text-base max-w-[100px] lg:max-w-none truncate">{session.user?.name || session.user?.email}</span>
                     </button>
                     <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                       <Link
@@ -182,13 +182,13 @@ export default function Navbar() {
                 <>
                   <Link
                     href="/login"
-                    className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded"
+                    className="px-3 lg:px-4 py-2 text-blue-600 hover:bg-blue-50 rounded text-sm lg:text-base"
                   >
                     Login
                   </Link>
                   <Link
                     href="/signup"
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="px-3 lg:px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm lg:text-base"
                   >
                     Sign Up
                   </Link>
@@ -312,7 +312,7 @@ export default function Navbar() {
       </header>
 
       {/* Mobile Bottom Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50 md:hidden">
         <div className="grid grid-cols-5 h-16">
           {/* Home */}
           <Link
@@ -383,7 +383,7 @@ export default function Navbar() {
 
       {/* Add bottom padding to content when bottom nav is visible */}
       <style jsx global>{`
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
           body {
             padding-bottom: 4rem;
           }
