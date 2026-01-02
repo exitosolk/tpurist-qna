@@ -15,6 +15,7 @@ import Tooltip from "@/components/Tooltip";
 import Sidebar from "@/components/Sidebar";
 import FlagButton from "@/components/FlagButton";
 import UserBadge from "@/components/UserBadge";
+import AddToCollection from "@/components/AddToCollection";
 import { Share2, Edit, Bookmark, Check, Clock, ChevronRight, Home, Bell, BellOff } from "lucide-react";
 
 interface BadgeTierCounts {
@@ -919,6 +920,11 @@ export default function QuestionDetailPage() {
                       )}
                     </button>
                   </Tooltip>
+
+                  {/* Add to Collection */}
+                  {session && (
+                    <AddToCollection questionId={question.id} />
+                  )}
 
                   {/* Edit button for authors and high-rep users */}
                   {session && (currentUserId === question.user_id || userReputation >= 500) && (

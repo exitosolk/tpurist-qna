@@ -88,6 +88,17 @@ interface ReputationHistory {
   created_at: string;
 }
 
+interface Collection {
+  id: number;
+  name: string;
+  description: string | null;
+  slug: string;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+  item_count: number;
+}
+
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -99,8 +110,9 @@ export default function ProfilePage() {
   const [followedTags, setFollowedTags] = useState<FollowedTag[]>([]);
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [reputationHistory, setReputationHistory] = useState<ReputationHistory[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"questions" | "answers" | "bookmarks" | "following" | "drafts" | "reputation" | "badges">("questions");
+  const [activeTab, setActiveTab] = useState<"questions" | "answers" | "bookmarks" | "following" | "collections" | "drafts" | "reputation" | "badges">("questions");
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ display_name: "", bio: "", home_country: "" });
   const [saving, setSaving] = useState(false);
@@ -118,6 +130,7 @@ export default function ProfilePage() {
     if (status === "authenticated") {
       fetchProfile();
       fetchFollowedContent();
+      fetchCollections();
       checkBadges(); // Check for any eligible badges on profile load
     }
   }, [status, router]);
@@ -139,6 +152,18 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error("Error fetching followed content:", error);
+    }
+  };
+
+  const fetchCollections = async () => {
+    try {
+      const response = await fetch("/api/collections");
+      const data = await response.json();
+      if (response.ok) {
+        setCollections(data.collections || []);
+      }
+    } catch (error) {
+      console.error("Error fetching collections:", error);
     }
   };
 
@@ -527,6 +552,16 @@ export default function ProfilePage() {
                 Following ({followedQuestions.length + followedTags.length})
               </button>
               <button
+                onClick={() => setActiveTab("collections")}
+                className={`pb-4 px-1 border-b-2 font-medium whitespace-nowrap text-sm md:text-base ${
+                  activeTab === "collections"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Collections ({collections.length})
+              </button>
+              <button
                 onClick={() => setActiveTab("drafts")}
                 className={`pb-4 px-1 border-b-2 font-medium whitespace-nowrap text-sm md:text-base ${
                   activeTab === "drafts"
@@ -730,6 +765,83 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 )}
+              </>
+            )}
+          </div>
+        ) : activeTab === "collections" ? (
+          <div className="space-y-6">
+            {collections.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border p-8 md:p-12 text-center">
+                <div className="text-6xl mb-4">📚</div>
+                <p className="text-gray-600 mb-4">You haven't created any collections yet.</p>
+                <p className="text-sm text-gray-500 mb-6">
+                  Collections help you organize questions you've saved. Create collections like "My Ella Trip" or "Best Beaches" to group related content.
+                </p>
+                <button
+                  onClick={() => {
+                    const name = prompt("Enter collection name:");
+                    if (name && name.trim()) {
+                      fetch("/api/collections", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name: name.trim(), is_public: false }),
+                      }).then(() => fetchCollections());
+                    }
+                  }}
+                  className="inline-block px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Create Your First Collection
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Your Collections</h3>
+                  <button
+                    onClick={() => {
+                      const name = prompt("Enter collection name:");
+                      if (name && name.trim()) {
+                        fetch("/api/collections", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ name: name.trim(), is_public: false }),
+                        }).then(() => fetchCollections());
+                      }
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                  >
+                    + New Collection
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {collections.map((collection) => (
+                    <Link
+                      key={collection.id}
+                      href={`/collections/${collection.id}`}
+                      className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="text-lg font-semibold text-gray-900 flex-1">
+                          {collection.name}
+                        </h4>
+                        {collection.is_public && (
+                          <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium ml-2">
+                            Public
+                          </span>
+                        )}
+                      </div>
+                      {collection.description && (
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          {collection.description}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <span>{collection.item_count} {collection.item_count === 1 ? 'question' : 'questions'}</span>
+                        <span>Updated {formatDistanceToNow(new Date(collection.updated_at), { addSuffix: true })}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </>
             )}
           </div>
