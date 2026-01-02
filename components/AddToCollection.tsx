@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { FolderPlus, Check, X, Plus } from "lucide-react";
+import { FolderPlus, Check, X, Plus, Lock, Globe } from "lucide-react";
+import Toast from "@/components/Toast";
 
 interface Collection {
   id: number;
@@ -22,7 +23,9 @@ export default function AddToCollection({ questionId }: AddToCollectionProps) {
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
+  const [newCollectionPublic, setNewCollectionPublic] = useState(false);
   const [addingTo, setAddingTo] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   useEffect(() => {
     if (showModal && session) {
@@ -54,7 +57,7 @@ export default function AddToCollection({ questionId }: AddToCollectionProps) {
       const createResponse = await fetch("/api/collections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newCollectionName.trim(), is_public: false }),
+        body: JSON.stringify({ name: newCollectionName.trim(), is_public: newCollectionPublic }),
       });
 
       if (createResponse.ok) {
@@ -69,13 +72,18 @@ export default function AddToCollection({ questionId }: AddToCollectionProps) {
 
         if (addResponse.ok) {
           setNewCollectionName("");
+          setNewCollectionPublic(false);
           setShowModal(false);
-          alert("Question added to new collection!");
+          setToast({ message: "Question added to new collection!", type: 'success' });
+        } else {
+          setToast({ message: "Failed to add question to collection", type: 'error' });
         }
+      } else {
+        setToast({ message: "Failed to create collection", type: 'error' });
       }
     } catch (error) {
       console.error("Error creating collection:", error);
-      alert("Failed to create collection");
+      setToast({ message: "Failed to create collection", type: 'error' });
     } finally {
       setCreating(false);
     }
@@ -93,14 +101,14 @@ export default function AddToCollection({ questionId }: AddToCollectionProps) {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Question added to collection!");
+        setToast({ message: "Question added to collection!", type: 'success' });
         setShowModal(false);
       } else {
-        alert(data.error || "Failed to add to collection");
+        setToast({ message: data.error || "Failed to add to collection", type: 'error' });
       }
     } catch (error) {
       console.error("Error adding to collection:", error);
-      alert("Failed to add to collection");
+      setToast({ message: "Failed to add to collection", type: 'error' });
     } finally {
       setAddingTo(null);
     }
@@ -112,6 +120,14 @@ export default function AddToCollection({ questionId }: AddToCollectionProps) {
 
   return (
     <>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+      
       <button
         onClick={() => setShowModal(true)}
         className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
@@ -145,27 +161,44 @@ export default function AddToCollection({ questionId }: AddToCollectionProps) {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Create New Collection
                     </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={newCollectionName}
-                        onChange={(e) => setNewCollectionName(e.target.value)}
-                        placeholder="e.g., My Ella Trip"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        onKeyPress={(e) => {
-                          if (e.key === "Enter") {
-                            handleCreateAndAdd();
-                          }
-                        }}
-                      />
-                      <button
-                        onClick={handleCreateAndAdd}
-                        disabled={creating || !newCollectionName.trim()}
-                        className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                      >
-                        <Plus className="w-4 h-4" />
-                        {creating ? "Creating..." : "Create"}
-                      </button>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newCollectionName}
+                          onChange={(e) => setNewCollectionName(e.target.value)}
+                          placeholder="e.g., My Ella Trip"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          onKeyPress={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              handleCreateAndAdd();
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={handleCreateAndAdd}
+                          disabled={creating || !newCollectionName.trim()}
+                          className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          {creating ? "Creating..." : "Create"}
+                        </button>
+                      </div>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={newCollectionPublic}
+                          onChange={(e) => setNewCollectionPublic(e.target.checked)}
+                          className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                        />
+                        <span className="text-sm text-gray-700 flex items-center gap-1">
+                          {newCollectionPublic ? (
+                            <><Globe className="w-4 h-4 text-green-600" /> Make public (anyone can view)</>
+                          ) : (
+                            <><Lock className="w-4 h-4 text-gray-600" /> Keep private (only you can view)</>
+                          )}
+                        </span>
+                      </label>
                     </div>
                   </div>
 

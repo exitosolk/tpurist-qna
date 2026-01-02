@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Globe, Lock, Edit2, Trash2, Share2, Check, Copy } from "lucide-react";
+import Toast from "@/components/Toast";
 
 interface Collection {
   id: number;
@@ -51,6 +52,9 @@ export default function CollectionPage() {
   const [editForm, setEditForm] = useState({ name: "", description: "", is_public: false });
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deletingItem, setDeletingItem] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCollection();
@@ -82,7 +86,7 @@ export default function CollectionPage() {
 
   const handleSave = async () => {
     if (!editForm.name.trim()) {
-      alert("Collection name cannot be empty");
+      setToast({ message: "Collection name cannot be empty", type: 'error' });
       return;
     }
 
@@ -97,45 +101,40 @@ export default function CollectionPage() {
       if (response.ok) {
         await fetchCollection();
         setIsEditing(false);
+        setToast({ message: "Collection updated successfully!", type: 'success' });
       } else {
         const data = await response.json();
-        alert(data.error || "Failed to update collection");
+        setToast({ message: data.error || "Failed to update collection", type: 'error' });
       }
     } catch (error) {
       console.error("Error updating collection:", error);
-      alert("Failed to update collection");
+      setToast({ message: "Failed to update collection", type: 'error' });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this collection? This action cannot be undone.")) {
-      return;
-    }
-
     try {
       const response = await fetch(`/api/collections/${collectionId}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
-        router.push("/profile?tab=collections");
+        setToast({ message: "Collection deleted successfully", type: 'success' });
+        setTimeout(() => router.push("/profile?tab=collections"), 1000);
       } else {
         const data = await response.json();
-        alert(data.error || "Failed to delete collection");
+        setToast({ message: data.error || "Failed to delete collection", type: 'error' });
       }
     } catch (error) {
       console.error("Error deleting collection:", error);
-      alert("Failed to delete collection");
+      setToast({ message: "Failed to delete collection", type: 'error' });
     }
+    setConfirmDelete(false);
   };
 
   const handleRemoveItem = async (questionId: number) => {
-    if (!confirm("Remove this question from the collection?")) {
-      return;
-    }
-
     try {
       const response = await fetch(`/api/collections/${collectionId}/items`, {
         method: "DELETE",
@@ -148,14 +147,16 @@ export default function CollectionPage() {
         if (collection) {
           setCollection({ ...collection, item_count: collection.item_count - 1 });
         }
+        setToast({ message: "Question removed from collection", type: 'success' });
       } else {
         const data = await response.json();
-        alert(data.error || "Failed to remove question");
+        setToast({ message: data.error || "Failed to remove question", type: 'error' });
       }
     } catch (error) {
       console.error("Error removing question:", error);
-      alert("Failed to remove question");
+      setToast({ message: "Failed to remove question", type: 'error' });
     }
+    setDeletingItem(null);
   };
 
   const handleShare = () => {
@@ -164,6 +165,7 @@ export default function CollectionPage() {
     const shareUrl = `${window.location.origin}/collections/public/${collection.slug}?username=${collection.username}`;
     navigator.clipboard.writeText(shareUrl);
     setCopied(true);
+    setToast({ message: "Share link copied to clipboard!", type: 'success' });
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -197,6 +199,14 @@ export default function CollectionPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
@@ -305,7 +315,7 @@ export default function CollectionPage() {
                       <Edit2 className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={handleDelete}
+                      onClick={() => setConfirmDelete(true)}
                       className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded"
                       title="Delete collection"
                     >
@@ -357,7 +367,7 @@ export default function CollectionPage() {
                   </div>
                   {collection.is_owner && (
                     <button
-                      onClick={() => handleRemoveItem(item.question_id)}
+                      onClick={() => setDeletingItem(item.question_id)}
                       className="text-gray-400 hover:text-red-600 p-2"
                       title="Remove from collection"
                     >
@@ -370,6 +380,58 @@ export default function CollectionPage() {
           )}
         </div>
       </main>
+
+      {/* Delete Collection Confirmation Modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold mb-4">Delete Collection?</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this collection? This action cannot be undone.
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Delete Collection
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Remove Item Confirmation Modal */}
+      {deletingItem !== null && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold mb-4">Remove Question?</h3>
+            <p className="text-gray-600 mb-6">
+              Remove this question from the collection?
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setDeletingItem(null)}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleRemoveItem(deletingItem)}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

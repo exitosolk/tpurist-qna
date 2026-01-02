@@ -8,6 +8,7 @@ import BadgeList from "@/components/BadgeList";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import Toast from "@/components/Toast";
+import { Globe, Lock, Plus, X } from "lucide-react";
 
 interface UserProfile {
   id: number;
@@ -120,6 +121,11 @@ export default function ProfilePage() {
   const [verificationMessage, setVerificationMessage] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState("");
+  const [newCollectionDescription, setNewCollectionDescription] = useState("");
+  const [newCollectionPublic, setNewCollectionPublic] = useState(false);
+  const [creatingCollection, setCreatingCollection] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -164,6 +170,43 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error("Error fetching collections:", error);
+    }
+  };
+
+  const createCollection = async () => {
+    if (!newCollectionName.trim()) {
+      setToast({ message: "Collection name cannot be empty", type: 'error' });
+      return;
+    }
+
+    setCreatingCollection(true);
+    try {
+      const response = await fetch("/api/collections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          name: newCollectionName.trim(),
+          description: newCollectionDescription.trim() || null,
+          is_public: newCollectionPublic
+        }),
+      });
+
+      if (response.ok) {
+        setToast({ message: "Collection created successfully!", type: 'success' });
+        setShowCreateModal(false);
+        setNewCollectionName("");
+        setNewCollectionDescription("");
+        setNewCollectionPublic(false);
+        await fetchCollections();
+      } else {
+        const data = await response.json();
+        setToast({ message: data.error || "Failed to create collection", type: 'error' });
+      }
+    } catch (error) {
+      console.error("Error creating collection:", error);
+      setToast({ message: "Failed to create collection", type: 'error' });
+    } finally {
+      setCreatingCollection(false);
     }
   };
 
@@ -778,16 +821,7 @@ export default function ProfilePage() {
                   Collections help you organize questions you've saved. Create collections like "My Ella Trip" or "Best Beaches" to group related content.
                 </p>
                 <button
-                  onClick={() => {
-                    const name = prompt("Enter collection name:");
-                    if (name && name.trim()) {
-                      fetch("/api/collections", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ name: name.trim(), is_public: false }),
-                      }).then(() => fetchCollections());
-                    }
-                  }}
+                  onClick={() => setShowCreateModal(true)}
                   className="inline-block px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
                   Create Your First Collection
@@ -798,19 +832,11 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">Your Collections</h3>
                   <button
-                    onClick={() => {
-                      const name = prompt("Enter collection name:");
-                      if (name && name.trim()) {
-                        fetch("/api/collections", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ name: name.trim(), is_public: false }),
-                        }).then(() => fetchCollections());
-                      }
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                    onClick={() => setShowCreateModal(true)}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 flex items-center gap-2"
                   >
-                    + New Collection
+                    <Plus className="w-4 h-4" />
+                    New Collection
                   </button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -836,7 +862,7 @@ export default function ProfilePage() {
                         </p>
                       )}
                       <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <span>{collection.item_count} {collection.item_count === 1 ? 'question' : 'questions'}</span>
+                        <span>{parseInt(collection.item_count as any) || 0} {parseInt(collection.item_count as any) === 1 ? 'question' : 'questions'}</span>
                         <span>Updated {formatDistanceToNow(new Date(collection.updated_at), { addSuffix: true })}</span>
                       </div>
                     </Link>
@@ -954,6 +980,100 @@ export default function ProfilePage() {
           </div>
         ) : null}
       </main>
+
+      {/* Create Collection Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">Create New Collection</h3>
+              <button
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setNewCollectionName("");
+                  setNewCollectionDescription("");
+                  setNewCollectionPublic(false);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Collection Name *
+                </label>
+                <input
+                  type="text"
+                  value={newCollectionName}
+                  onChange={(e) => setNewCollectionName(e.target.value)}
+                  placeholder="e.g., My Ella Trip"
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      createCollection();
+                    }
+                  }}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description (optional)
+                </label>
+                <textarea
+                  value={newCollectionDescription}
+                  onChange={(e) => setNewCollectionDescription(e.target.value)}
+                  placeholder="What's this collection about?"
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newCollectionPublic}
+                    onChange={(e) => setNewCollectionPublic(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700 flex items-center gap-1">
+                    {newCollectionPublic ? (
+                      <><Globe className="w-4 h-4 text-green-600" /> Make public (anyone can view)</>
+                    ) : (
+                      <><Lock className="w-4 h-4 text-gray-600" /> Keep private (only you can view)</>
+                    )}
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 p-4 border-t bg-gray-50">
+              <button
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setNewCollectionName("");
+                  setNewCollectionDescription("");
+                  setNewCollectionPublic(false);
+                }}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={createCollection}
+                disabled={creatingCollection || !newCollectionName.trim()}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {creatingCollection ? "Creating..." : "Create Collection"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
