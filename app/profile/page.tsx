@@ -127,6 +127,7 @@ function ProfileContent() {
   const [newCollectionDescription, setNewCollectionDescription] = useState("");
   const [newCollectionPublic, setNewCollectionPublic] = useState(false);
   const [creatingCollection, setCreatingCollection] = useState(false);
+  const [earnedBadgesCount, setEarnedBadgesCount] = useState(0);
 
   // Handle tab query parameter
   useEffect(() => {
@@ -146,9 +147,22 @@ function ProfileContent() {
       fetchProfile();
       fetchFollowedContent();
       fetchCollections();
+      fetchBadgesCount();
       checkBadges(); // Check for any eligible badges on profile load
     }
   }, [status, router]);
+
+  const fetchBadgesCount = async () => {
+    try {
+      const res = await fetch('/api/badges');
+      if (res.ok) {
+        const data = await res.json();
+        setEarnedBadgesCount(data.earned?.length || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching badges count:", error);
+    }
+  };
 
   const fetchFollowedContent = async () => {
     try {
@@ -642,7 +656,7 @@ function ProfileContent() {
                     : "border-transparent text-gray-600 hover:text-gray-900"
                 }`}
               >
-                Badges
+                Badges ({earnedBadgesCount})
               </button>
             </nav>
           </div>
