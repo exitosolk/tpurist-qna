@@ -105,7 +105,7 @@ async function sendEmailNotification(
                         OneCeylon
                       </h1>
                       <p style="margin: 8px 0 0 0; color: #bfdbfe; font-size: 14px; font-weight: 500;">
-                        Your Sri Lankan Community Platform
+                        Ask the island
                       </p>
                     </td>
                   </tr>

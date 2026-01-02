@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     default: 'OneCeylon - Sri Lanka Travel Q&A Community',
     template: '%s | OneCeylon',
   },
-  description: 'Get expert travel advice for Sri Lanka. Ask questions about destinations, transportation, accommodations, and experiences. Join our community of travelers and locals sharing authentic Sri Lanka travel tips.',
+  description: 'Ask the island. Get expert travel advice for Sri Lanka. Ask questions about destinations, transportation, accommodations, and experiences from travelers and locals who know Sri Lanka best.',
   keywords: [
     'Sri Lanka travel',
     'Sri Lanka tourism',
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://oneceylon.space',
     title: 'OneCeylon - Sri Lanka Travel Q&A Community',
-    description: 'Get expert travel advice for Sri Lanka. Join our community of travelers and locals.',
+    description: 'Ask the island. Get expert travel advice for Sri Lanka from travelers and locals who know it best.',
     siteName: 'OneCeylon',
     images: [
       {
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'OneCeylon - Sri Lanka Travel Q&A Community',
-    description: 'Get expert travel advice for Sri Lanka. Join our community of travelers and locals.',
+    description: 'Ask the island. Get expert travel advice for Sri Lanka from travelers and locals who know it best.',
     images: ['/og-image.png'],
     site: '@oneceylon',
     creator: '@oneceylon',

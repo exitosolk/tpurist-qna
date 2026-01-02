@@ -11,7 +11,7 @@ export default function Footer() {
           <div>
             <h3 className="font-bold text-gray-900 mb-4">OneCeylon</h3>
             <p className="text-gray-600 text-sm">
-              Your trusted community for Sri Lanka travel questions and answers. Get expert advice from fellow travelers and locals.
+              Ask the island. Your trusted community for Sri Lanka travel questions and answers.
             </p>
           </div>
 
