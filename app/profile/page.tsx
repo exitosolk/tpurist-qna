@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import BadgeList from "@/components/BadgeList";
 import Link from "next/link";
@@ -103,6 +103,7 @@ interface Collection {
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
@@ -126,6 +127,14 @@ export default function ProfilePage() {
   const [newCollectionDescription, setNewCollectionDescription] = useState("");
   const [newCollectionPublic, setNewCollectionPublic] = useState(false);
   const [creatingCollection, setCreatingCollection] = useState(false);
+
+  // Handle tab query parameter
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && ['questions', 'answers', 'bookmarks', 'following', 'collections', 'drafts', 'reputation', 'badges'].includes(tab)) {
+      setActiveTab(tab as any);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
