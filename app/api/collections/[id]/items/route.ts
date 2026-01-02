@@ -3,14 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
 
-interface RouteContext {
-  params: {
-    id: string;
-  };
-}
-
 // POST /api/collections/[id]/items - Add question to collection
-export async function POST(req: NextRequest, context: RouteContext) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -22,7 +19,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     }
 
     const userId = parseInt(session.user.id);
-    const collectionId = parseInt(context.params.id);
+    const collectionId = parseInt(params.id);
     const { question_id, note } = await req.json();
 
     if (isNaN(collectionId) || isNaN(question_id)) {
@@ -103,7 +100,10 @@ export async function POST(req: NextRequest, context: RouteContext) {
 }
 
 // DELETE /api/collections/[id]/items - Remove question from collection
-export async function DELETE(req: NextRequest, context: RouteContext) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -115,7 +115,7 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
     }
 
     const userId = parseInt(session.user.id);
-    const collectionId = parseInt(context.params.id);
+    const collectionId = parseInt(params.id);
     const { question_id } = await req.json();
 
     if (isNaN(collectionId) || isNaN(question_id)) {

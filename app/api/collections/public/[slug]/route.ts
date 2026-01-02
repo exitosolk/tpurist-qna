@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
-interface RouteContext {
-  params: {
-    slug: string;
-  };
-}
-
 // GET /api/collections/public/[slug] - Get public collection by slug
-export async function GET(req: NextRequest, context: RouteContext) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { slug: string } }
+) {
   try {
-    const slug = context.params.slug;
+    const slug = params.slug;
     const searchParams = req.nextUrl.searchParams;
     const username = searchParams.get("username");
 
