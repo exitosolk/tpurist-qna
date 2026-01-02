@@ -576,7 +576,7 @@ function ProfileContent() {
         {/* Tabs */}
         <div className="mb-6 sticky top-0 bg-gray-50 z-10 -mx-4 px-4 md:mx-0 md:px-0">
           <div className="border-b bg-white md:bg-transparent">
-            <nav className="flex gap-4 md:gap-8 overflow-x-auto scrollbar-hide">
+            <nav className="flex gap-3 md:gap-4 lg:gap-6 overflow-x-auto md:overflow-x-visible md:flex-wrap scrollbar-hide md:scrollbar-default">
               <button
                 onClick={() => setActiveTab("questions")}
                 className={`pb-4 px-1 border-b-2 font-medium whitespace-nowrap text-sm md:text-base ${
