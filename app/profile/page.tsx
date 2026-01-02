@@ -852,7 +852,7 @@ export default function ProfilePage() {
                   {collections.map((collection) => (
                     <Link
                       key={collection.id}
-                      href={`/collections/${collection.id}`}
+                      href={`/collections/${collection.slug}`}
                       className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow"
                     >
                       <div className="flex items-start justify-between mb-2">

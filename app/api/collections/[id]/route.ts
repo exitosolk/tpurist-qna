@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
 
-// GET /api/collections/[id] - Get collection details
+// GET /api/collections/[id] - Get collection details (supports both ID and slug)
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -11,33 +11,79 @@ export async function GET(
   try {
     const session = await getServerSession(authOptions);
     const { id } = await params;
-    const collectionId = parseInt(id);
+    const username = req.nextUrl.searchParams.get('username');
 
-    if (isNaN(collectionId)) {
-      return NextResponse.json(
-        { error: "Invalid collection ID" },
-        { status: 400 }
+    let collectionResult;
+    
+    // Check if it's a numeric ID or a slug
+    const isNumeric = /^\d+$/.test(id);
+    
+    if (isNumeric) {
+      // Legacy support: fetch by ID
+      const collectionId = parseInt(id);
+      collectionResult = await query(
+        `SELECT 
+          c.id,
+          c.user_id,
+          c.name,
+          c.description,
+          c.slug,
+          c.is_public,
+          c.created_at,
+          c.updated_at,
+          u.username,
+          u.display_name
+        FROM collections c
+        JOIN users u ON c.user_id = u.id
+        WHERE c.id = ?`,
+        [collectionId]
       );
+    } else {
+      // Fetch by slug (requires username if not owner or not public)
+      if (username) {
+        collectionResult = await query(
+          `SELECT 
+            c.id,
+            c.user_id,
+            c.name,
+            c.description,
+            c.slug,
+            c.is_public,
+            c.created_at,
+            c.updated_at,
+            u.username,
+            u.display_name
+          FROM collections c
+          JOIN users u ON c.user_id = u.id
+          WHERE c.slug = ? AND u.username = ?`,
+          [id, username]
+        );
+      } else if (session?.user?.id) {
+        // Try to find by slug in current user's collections
+        collectionResult = await query(
+          `SELECT 
+            c.id,
+            c.user_id,
+            c.name,
+            c.description,
+            c.slug,
+            c.is_public,
+            c.created_at,
+            c.updated_at,
+            u.username,
+            u.display_name
+          FROM collections c
+          JOIN users u ON c.user_id = u.id
+          WHERE c.slug = ? AND c.user_id = ?`,
+          [id, parseInt(session.user.id)]
+        );
+      } else {
+        return NextResponse.json(
+          { error: "Username required for slug-based lookup" },
+          { status: 400 }
+        );
+      }
     }
-
-    // Get collection
-    const collectionResult = await query(
-      `SELECT 
-        c.id,
-        c.user_id,
-        c.name,
-        c.description,
-        c.slug,
-        c.is_public,
-        c.created_at,
-        c.updated_at,
-        u.username,
-        u.display_name
-      FROM collections c
-      JOIN users u ON c.user_id = u.id
-      WHERE c.id = ?`,
-      [collectionId]
-    );
 
     if (!collectionResult.rows || collectionResult.rows.length === 0) {
       return NextResponse.json(
@@ -76,7 +122,7 @@ export async function GET(
       JOIN users u ON q.user_id = u.id
       WHERE ci.collection_id = ?
       ORDER BY ci.added_at DESC`,
-      [collectionId]
+      [collection.id]
     );
 
     return NextResponse.json({

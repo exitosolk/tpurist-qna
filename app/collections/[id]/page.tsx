@@ -42,7 +42,7 @@ export default function CollectionPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const params = useParams();
-  const collectionId = params.id as string;
+  const collectionSlug = params.id as string;
 
   const [collection, setCollection] = useState<Collection | null>(null);
   const [items, setItems] = useState<CollectionItem[]>([]);
@@ -58,11 +58,11 @@ export default function CollectionPage() {
 
   useEffect(() => {
     fetchCollection();
-  }, [collectionId]);
+  }, [collectionSlug]);
 
   const fetchCollection = async () => {
     try {
-      const response = await fetch(`/api/collections/${collectionId}`);
+      const response = await fetch(`/api/collections/${collectionSlug}`);
       const data = await response.json();
 
       if (response.ok) {
@@ -90,9 +90,11 @@ export default function CollectionPage() {
       return;
     }
 
+    if (!collection) return;
+
     setSaving(true);
     try {
-      const response = await fetch(`/api/collections/${collectionId}`, {
+      const response = await fetch(`/api/collections/${collection.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editForm),
@@ -115,8 +117,10 @@ export default function CollectionPage() {
   };
 
   const handleDelete = async () => {
+    if (!collection) return;
+
     try {
-      const response = await fetch(`/api/collections/${collectionId}`, {
+      const response = await fetch(`/api/collections/${collection.id}`, {
         method: "DELETE",
       });
 
@@ -135,8 +139,10 @@ export default function CollectionPage() {
   };
 
   const handleRemoveItem = async (questionId: number) => {
+    if (!collection) return;
+
     try {
-      const response = await fetch(`/api/collections/${collectionId}/items`, {
+      const response = await fetch(`/api/collections/${collection.id}/items`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question_id: questionId }),
