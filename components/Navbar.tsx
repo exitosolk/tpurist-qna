@@ -69,8 +69,8 @@ export default function Navbar() {
               <h1 className="text-2xl font-bold text-blue-600">OneCeylon</h1>
             </Link>
 
-            {/* Desktop Search Bar */}
-            <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-lg">
+            {/* Desktop Search Bar - Only on Large Screens */}
+            <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-lg">
               <div className="relative w-full">
                 <input
                   type="text"
@@ -196,8 +196,8 @@ export default function Navbar() {
               )}
             </nav>
 
-            {/* Mobile Top Bar: Search Icon + Notification + More Menu */}
-            <div className="md:hidden flex items-center gap-2">
+            {/* Mobile + Tablet: Search Icon, Notification, More Menu */}
+            <div className="lg:hidden flex items-center gap-2">
               <button
                 onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
                 className="p-2 hover:bg-gray-100 rounded"
@@ -205,8 +205,9 @@ export default function Navbar() {
                 <Search className="w-5 h-5" />
               </button>
               {session && <NotificationDropdown />}
+              {/* More menu only on small mobile, not tablets since they have full nav */}
               <button
-                className="p-2 hover:bg-gray-100 rounded"
+                className="md:hidden p-2 hover:bg-gray-100 rounded"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <MoreHorizontal className="w-6 h-6" />}
@@ -214,9 +215,9 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Mobile Search Dropdown */}
+          {/* Mobile + Tablet Search Dropdown */}
           {mobileSearchOpen && (
-            <form onSubmit={handleSearch} className="md:hidden mt-4">
+            <form onSubmit={handleSearch} className="lg:hidden mt-4">
               <div className="relative">
                 <input
                   type="text"
