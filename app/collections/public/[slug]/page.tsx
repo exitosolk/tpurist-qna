@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -35,6 +36,7 @@ interface CollectionItem {
 }
 
 export default function PublicCollectionPage() {
+  const { data: session } = useSession();
   const params = useParams();
   const searchParams = useSearchParams();
   const slug = params.slug as string;
@@ -192,12 +194,21 @@ export default function PublicCollectionPage() {
             <p className="text-gray-600 mb-4">
               Organize and share your favorite questions with the community.
             </p>
-            <Link
-              href="/signup"
-              className="inline-block px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Sign Up to Get Started
-            </Link>
+            {session ? (
+              <Link
+                href="/profile?tab=collections"
+                className="inline-block px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Go to My Collections
+              </Link>
+            ) : (
+              <Link
+                href="/signup"
+                className="inline-block px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Sign Up to Get Started
+              </Link>
+            )}
           </div>
         )}
       </main>
