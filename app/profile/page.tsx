@@ -850,7 +850,7 @@ export default function ProfilePage() {
                         <h4 className="text-lg font-semibold text-gray-900 flex-1">
                           {collection.name}
                         </h4>
-                        {collection.is_public && (
+                        {!!collection.is_public && (
                           <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium ml-2">
                             Public
                           </span>
