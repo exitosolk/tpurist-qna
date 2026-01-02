@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Car, AlertTriangle } from "lucide-react";
+import SuggestedFollows from "./SuggestedFollows";
 
 interface Tag {
   name: string;
@@ -131,6 +132,9 @@ export default function Sidebar({ currentTags = [] }: SidebarProps) {
 
   return (
     <div className="space-y-6">
+      {/* Suggested Follows */}
+      <SuggestedFollows />
+
       {/* Popular Tags */}
       <div className="bg-white rounded-lg shadow-sm border p-4">
         <h3 className="flex items-center gap-2 font-semibold mb-4">
