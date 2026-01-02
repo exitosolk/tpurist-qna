@@ -10,6 +10,7 @@ interface Collection {
   name: string;
   item_count: number;
   is_public: boolean;
+  has_question?: boolean;
 }
 
 interface AddToCollectionProps {
@@ -39,7 +40,23 @@ export default function AddToCollection({ questionId }: AddToCollectionProps) {
       const response = await fetch("/api/collections");
       const data = await response.json();
       if (response.ok) {
-        setCollections(data.collections || []);
+        const collectionsData = data.collections || [];
+        
+        // Check which collections already have this question
+        const collectionsWithStatus = await Promise.all(
+          collectionsData.map(async (collection: Collection) => {
+            try {
+              const checkResponse = await fetch(`/api/collections/${collection.id}`);
+              const checkData = await checkResponse.json();
+              const hasQuestion = checkData.items?.some((item: any) => item.question_id === questionId);
+              return { ...collection, has_question: hasQuestion };
+            } catch {
+              return { ...collection, has_question: false };
+            }
+          })
+        );
+        
+        setCollections(collectionsWithStatus);
       }
     } catch (error) {
       console.error("Error fetching collections:", error);
@@ -212,18 +229,26 @@ export default function AddToCollection({ questionId }: AddToCollectionProps) {
                         {collections.map((collection) => (
                           <button
                             key={collection.id}
-                            onClick={() => handleAddToCollection(collection.id)}
-                            disabled={addingTo === collection.id}
-                            className="w-full text-left p-3 border border-gray-200 rounded hover:bg-gray-50 hover:border-purple-300 transition-colors disabled:opacity-50"
+                            onClick={() => !collection.has_question && handleAddToCollection(collection.id)}
+                            disabled={addingTo === collection.id || collection.has_question}
+                            className={`w-full text-left p-3 border rounded transition-colors ${
+                              collection.has_question
+                                ? 'border-green-200 bg-green-50 cursor-not-allowed'
+                                : 'border-gray-200 hover:bg-gray-50 hover:border-purple-300 disabled:opacity-50'
+                            }`}
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex-1 min-w-0">
-                                <div className="font-medium text-gray-900 truncate">
+                                <div className="font-medium text-gray-900 truncate flex items-center gap-2">
                                   {collection.name}
+                                  {collection.has_question && (
+                                    <Check className="w-4 h-4 text-green-600" />
+                                  )}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {collection.item_count} {collection.item_count === 1 ? 'question' : 'questions'}
+                                  {parseInt(collection.item_count as any) || 0} {parseInt(collection.item_count as any) === 1 ? 'question' : 'questions'}
                                   {collection.is_public && " • Public"}
+                                  {collection.has_question && " • Already added"}
                                 </div>
                               </div>
                               {addingTo === collection.id && (
