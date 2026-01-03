@@ -6,6 +6,7 @@ import { generateSlug } from "@/lib/slug";
 import { getBadgeTierCounts } from "@/lib/badges";
 import { createNotification } from "@/lib/notifications";
 import { checkRateLimit, recordRateLimitAction } from "@/lib/rate-limit";
+import { checkQualityBan } from "@/lib/quality-ban";
 
 // GET /api/questions - List all questions
 export async function GET(req: Request) {
@@ -171,6 +172,19 @@ export async function POST(req: Request) {
           resetAt: rateLimitCheck.resetAt
         },
         { status: 429 }
+      );
+    }
+
+    // Check quality ban
+    const qualityBanCheck = await checkQualityBan(userId);
+    if (qualityBanCheck.isBanned) {
+      return NextResponse.json(
+        { 
+          error: qualityBanCheck.message,
+          quality_ban: true,
+          ban_level: qualityBanCheck.ban?.banLevel
+        },
+        { status: 403 }
       );
     }
 

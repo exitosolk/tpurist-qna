@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
+import { checkForQualityImprovement } from "@/lib/quality-ban";
 
 export async function PUT(
   request: Request,
@@ -158,6 +159,11 @@ export async function PUT(
     updateParams.push(questionId);
 
     await query(updateSql, updateParams);
+
+    // Check if this edit improves quality (for authors only)
+    if (isAuthor) {
+      await checkForQualityImprovement(currentUser.id, questionId);
+    }
 
     return NextResponse.json({
       success: true,

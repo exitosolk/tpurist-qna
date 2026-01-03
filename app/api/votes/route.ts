@@ -6,6 +6,7 @@ import { createNotification } from "@/lib/notifications";
 import { logReputationChange } from "@/lib/reputation";
 import { updateRiceAndCurryProgress, checkFirstLandingBadge, checkSnapshotBadge } from "@/lib/badges";
 import { checkRateLimit, recordRateLimitAction } from "@/lib/rate-limit";
+import { recordQualityStrike } from "@/lib/quality-ban";
 
 export async function POST(req: Request) {
   try {
@@ -183,6 +184,11 @@ export async function POST(req: Request) {
             referenceType: votableType as 'question' | 'answer',
             referenceId: votableId
           });
+
+          // Track quality strikes for questions when changing to downvote
+          if (votableType === "question" && voteType === -1) {
+            await recordQualityStrike(contentOwnerId, votableId, 'downvote');
+          }
         }
 
         return NextResponse.json({ message: "Vote updated" });
@@ -219,6 +225,11 @@ export async function POST(req: Request) {
           referenceType: votableType as 'question' | 'answer',
           referenceId: votableId
         });
+
+        // Track quality strikes for question downvotes
+        if (votableType === "question" && voteType === -1) {
+          await recordQualityStrike(contentOwnerId, votableId, 'downvote');
+        }
         // Create notification for upvotes only (not downvotes to avoid negativity)
         if (voteType === 1) {
           // Get content title/body for message
