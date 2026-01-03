@@ -226,9 +226,10 @@ async function evaluateAndApplyBan(userId: number): Promise<void> {
     if (existingBan.rows.length > 0) {
       // Update existing ban if it's less severe
       const currentBan = existingBan.rows[0];
-      const levelOrder = { warning: 0, week: 1, month: 2, permanent: 3 };
+      const currentBanLevel = currentBan.ban_level as BanLevel;
+      const levelOrder: Record<BanLevel, number> = { warning: 0, week: 1, month: 2, permanent: 3 };
       
-      if (levelOrder[banLevel] > levelOrder[currentBan.ban_level]) {
+      if (levelOrder[banLevel] > levelOrder[currentBanLevel]) {
         await query(
           `UPDATE user_quality_bans 
            SET ban_level = ?, 
