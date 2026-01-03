@@ -291,7 +291,7 @@ export async function POST(req: Request) {
           if (votableType === "answer" && contentOwnerId) {
             // Get question tags for this answer
             const answerTagsResult = await query(
-              `SELECT DISTINCT qt.tag_id 
+              `SELECT DISTINCT qt.tag_id, a.question_id
                FROM answers a
                JOIN question_tags qt ON a.question_id = qt.question_id
                WHERE a.id = ?`,
@@ -299,16 +299,19 @@ export async function POST(req: Request) {
             );
 
             // Award points for each tag (upvote on answer = 10 points)
-            for (const tagRow of answerTagsResult.rows) {
-              await updateUserTagScore(contentOwnerId, tagRow.tag_id, 10, false);
-              await recordTagActivity(
-                contentOwnerId,
-                tagRow.tag_id,
-                'upvote',
-                10,
-                notificationQuestionId,
-                votableId
-              );
+            if (answerTagsResult.rows.length > 0) {
+              const questionId = answerTagsResult.rows[0].question_id;
+              for (const tagRow of answerTagsResult.rows) {
+                await updateUserTagScore(contentOwnerId, tagRow.tag_id, 10, false);
+                await recordTagActivity(
+                  contentOwnerId,
+                  tagRow.tag_id,
+                  'upvote',
+                  10,
+                  questionId,
+                  votableId
+                );
+              }
             }
           }
         }
