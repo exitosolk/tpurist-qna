@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
           SUM(CASE WHEN qv.user_id = ? AND qv.vote_type = 1 THEN 1 ELSE 0 END)
         ) as total_score
        FROM tags t
-       INNER JOIN question_tags qt ON t.name = qt.tag_name
+       INNER JOIN question_tags qt ON t.id = qt.tag_id
        INNER JOIN questions q ON qt.question_id = q.id
        LEFT JOIN answers a ON q.id = a.question_id AND a.user_id = ?
        LEFT JOIN votes qv ON q.id = qv.votable_id AND qv.votable_type = 'question' AND qv.user_id = ?
@@ -62,13 +62,13 @@ export async function GET(req: NextRequest) {
     const suggestionsWithReasons = suggestions.map((tag: any) => {
       const reasons = [];
       if (tag.asked_score > 0) {
-        reasons.push(`You\'ve asked questions in this topic`);
+        reasons.push(`You have asked questions in this topic`);
       }
       if (tag.answered_score > 0) {
-        reasons.push(`You\'ve answered questions in this topic`);
+        reasons.push(`You have answered questions in this topic`);
       }
       if (tag.upvoted_score > 0) {
-        reasons.push(`You\'ve upvoted questions in this topic`);
+        reasons.push(`You have upvoted questions in this topic`);
       }
 
       return {
