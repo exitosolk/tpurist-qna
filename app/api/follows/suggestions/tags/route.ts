@@ -27,31 +27,42 @@ export async function GET(req: NextRequest) {
     // 4. Exclude tags the user is already following
     const [suggestions] = await pool.execute<RowDataPacket[]>(
       `SELECT 
-        t.id,
-        t.name,
-        t.description,
-        COUNT(DISTINCT q.id) as question_count,
-        SUM(CASE WHEN q.user_id = ? THEN 3 ELSE 0 END) as asked_score,
-        SUM(CASE WHEN a.user_id = ? THEN 2 ELSE 0 END) as answered_score,
-        SUM(CASE WHEN v.user_id = ? AND v.vote_type = 1 THEN 1 ELSE 0 END) as upvoted_score
-       FROM tags t
-       INNER JOIN question_tags qt ON t.id = qt.tag_id
-       INNER JOIN questions q ON qt.question_id = q.id
-       LEFT JOIN answers a ON q.id = a.question_id
-       LEFT JOIN votes v ON q.id = v.votable_id AND v.votable_type = 'question'
-       WHERE t.name NOT IN (
-         SELECT tag_name FROM tag_follows WHERE user_id = ?
-       )
-       AND (
-         q.user_id = ? OR
-         a.user_id = ? OR
-         v.user_id = ?
-       )
-       GROUP BY t.id, t.name, t.description
-       HAVING (SUM(CASE WHEN q.user_id = ? THEN 3 ELSE 0 END) + SUM(CASE WHEN a.user_id = ? THEN 2 ELSE 0 END) + SUM(CASE WHEN v.user_id = ? AND v.vote_type = 1 THEN 1 ELSE 0 END)) > 0
-       ORDER BY (SUM(CASE WHEN q.user_id = ? THEN 3 ELSE 0 END) + SUM(CASE WHEN a.user_id = ? THEN 2 ELSE 0 END) + SUM(CASE WHEN v.user_id = ? AND v.vote_type = 1 THEN 1 ELSE 0 END)) DESC, COUNT(DISTINCT q.id) DESC
+        tag_id,
+        tag_name,
+        tag_description,
+        question_count,
+        asked_score,
+        answered_score,
+        upvoted_score,
+        (asked_score + answered_score + upvoted_score) as total_score
+       FROM (
+         SELECT 
+           t.id as tag_id,
+           t.name as tag_name,
+           t.description as tag_description,
+           COUNT(DISTINCT q.id) as question_count,
+           SUM(CASE WHEN q.user_id = ? THEN 3 ELSE 0 END) as asked_score,
+           SUM(CASE WHEN a.user_id = ? THEN 2 ELSE 0 END) as answered_score,
+           SUM(CASE WHEN v.user_id = ? AND v.vote_type = 1 THEN 1 ELSE 0 END) as upvoted_score
+         FROM tags t
+         INNER JOIN question_tags qt ON t.id = qt.tag_id
+         INNER JOIN questions q ON qt.question_id = q.id
+         LEFT JOIN answers a ON q.id = a.question_id
+         LEFT JOIN votes v ON q.id = v.votable_id AND v.votable_type = 'question'
+         WHERE t.name NOT IN (
+           SELECT tag_name FROM tag_follows WHERE user_id = ?
+         )
+         AND (
+           q.user_id = ? OR
+           a.user_id = ? OR
+           v.user_id = ?
+         )
+         GROUP BY t.id, t.name, t.description
+       ) AS tag_scores
+       WHERE (asked_score + answered_score + upvoted_score) > 0
+       ORDER BY total_score DESC, question_count DESC
        LIMIT ?`,
-      [userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, limit]
+      [userId, userId, userId, userId, userId, userId, userId, limit]
     );
 
     // Calculate activity reasons for each suggestion
@@ -68,11 +79,11 @@ export async function GET(req: NextRequest) {
       }
 
       return {
-        name: tag.name,
-        description: tag.description,
+        name: tag.tag_name,
+        description: tag.tag_description,
         questionCount: tag.question_count,
         reason: reasons[0] || 'Based on your activity',
-        activityScore: tag.asked_score + tag.answered_score + tag.upvoted_score,
+        activityScore: tag.total_score,
       };
     });
 
