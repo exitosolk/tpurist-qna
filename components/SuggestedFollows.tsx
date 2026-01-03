@@ -179,7 +179,7 @@ export default function SuggestedFollows() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <Link
-                        href={`/tags/${tag.name}`}
+                        href={`/questions/tagged/${encodeURIComponent(tag.name)}`}
                         className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
                       >
                         #{tag.name}
