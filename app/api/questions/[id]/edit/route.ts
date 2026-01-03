@@ -162,7 +162,7 @@ export async function PUT(
 
     // Check if this edit improves quality (for authors only)
     if (isAuthor) {
-      await checkForQualityImprovement(currentUser.id, questionId);
+      await checkForQualityImprovement(currentUser.id);
     }
 
     return NextResponse.json({
