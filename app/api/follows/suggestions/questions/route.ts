@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
         q.id,
         q.title,
         q.slug,
-        q.view_count,
+        q.views,
         q.created_at,
         u.username as author_username,
         u.avatar_url as author_avatar,
@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
          )
        )
        GROUP BY q.id
-       ORDER BY matching_tags_count DESC, q.view_count DESC, q.created_at DESC
+       ORDER BY matching_tags_count DESC, q.views DESC, q.created_at DESC
        LIMIT ?`,
       [userId, userId, userId, userId, userId, userId, userId, limit]
     );
@@ -106,7 +106,7 @@ export async function GET(req: NextRequest) {
         id: q.id,
         title: q.title,
         slug: q.slug,
-        viewCount: q.view_count,
+        viewCount: q.views,
         answerCount: q.answer_count,
         tags: q.tags ? q.tags.split(', ') : [],
         author: {

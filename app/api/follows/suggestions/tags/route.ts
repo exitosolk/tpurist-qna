@@ -27,35 +27,31 @@ export async function GET(req: NextRequest) {
     // 4. Exclude tags the user is already following
     const [suggestions] = await pool.execute<RowDataPacket[]>(
       `SELECT 
+        t.id,
         t.name,
         t.description,
-        COUNT(DISTINCT qt.question_id) as question_count,
+        COUNT(DISTINCT q.id) as question_count,
         SUM(CASE WHEN q.user_id = ? THEN 3 ELSE 0 END) as asked_score,
         SUM(CASE WHEN a.user_id = ? THEN 2 ELSE 0 END) as answered_score,
-        SUM(CASE WHEN qv.user_id = ? AND qv.vote_type = 1 THEN 1 ELSE 0 END) as upvoted_score,
-        (
-          SUM(CASE WHEN q.user_id = ? THEN 3 ELSE 0 END) +
-          SUM(CASE WHEN a.user_id = ? THEN 2 ELSE 0 END) +
-          SUM(CASE WHEN qv.user_id = ? AND qv.vote_type = 1 THEN 1 ELSE 0 END)
-        ) as total_score
+        SUM(CASE WHEN v.user_id = ? AND v.vote_type = 1 THEN 1 ELSE 0 END) as upvoted_score
        FROM tags t
        INNER JOIN question_tags qt ON t.id = qt.tag_id
        INNER JOIN questions q ON qt.question_id = q.id
-       LEFT JOIN answers a ON q.id = a.question_id AND a.user_id = ?
-       LEFT JOIN votes qv ON q.id = qv.votable_id AND qv.votable_type = 'question' AND qv.user_id = ?
+       LEFT JOIN answers a ON q.id = a.question_id
+       LEFT JOIN votes v ON q.id = v.votable_id AND v.votable_type = 'question'
        WHERE t.name NOT IN (
          SELECT tag_name FROM tag_follows WHERE user_id = ?
        )
        AND (
          q.user_id = ? OR
          a.user_id = ? OR
-         qv.user_id = ?
+         v.user_id = ?
        )
-       GROUP BY t.name, t.description
-       HAVING total_score > 0
-       ORDER BY total_score DESC, question_count DESC
+       GROUP BY t.id, t.name, t.description
+       HAVING (asked_score + answered_score + upvoted_score) > 0
+       ORDER BY (asked_score + answered_score + upvoted_score) DESC, question_count DESC
        LIMIT ?`,
-      [userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, limit]
+      [userId, userId, userId, userId, userId, userId, userId, limit]
     );
 
     // Calculate activity reasons for each suggestion
@@ -76,7 +72,7 @@ export async function GET(req: NextRequest) {
         description: tag.description,
         questionCount: tag.question_count,
         reason: reasons[0] || 'Based on your activity',
-        activityScore: tag.total_score,
+        activityScore: tag.asked_score + tag.answered_score + tag.upvoted_score,
       };
     });
 
