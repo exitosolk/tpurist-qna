@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { createNotification } from "@/lib/notifications";
 import { logReputationChange } from "@/lib/reputation";
+import { updateUserTagScore, recordTagActivity } from "@/lib/tag-badges";
 
 export async function POST(
   req: Request,
@@ -140,6 +141,27 @@ export async function POST(
         questionId: answer.question_id,
         answerId: parseInt(answerId),
       });
+
+      // Tag Badge: Track accepted answer for tag badges
+      const questionTagsResult = await query(
+        `SELECT tag_id FROM question_tags WHERE question_id = ?`,
+        [answer.question_id]
+      );
+
+      // Award points and increment accepted answer count for each tag
+      for (const tagRow of questionTagsResult.rows) {
+        // Accepted answer awards reputation points (already done above) but doesn't add tag score points
+        // We only track the accepted answer count
+        await updateUserTagScore(answerOwnerId, tagRow.tag_id, 0, true);
+        await recordTagActivity(
+          answerOwnerId,
+          tagRow.tag_id,
+          'accepted_answer',
+          0, // No additional points, just tracking the acceptance
+          answer.question_id,
+          parseInt(answerId)
+        );
+      }
     }
 
     return NextResponse.json({ message: "Answer accepted successfully" });

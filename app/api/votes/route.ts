@@ -7,6 +7,7 @@ import { logReputationChange } from "@/lib/reputation";
 import { updateRiceAndCurryProgress, checkFirstLandingBadge, checkSnapshotBadge } from "@/lib/badges";
 import { checkRateLimit, recordRateLimitAction } from "@/lib/rate-limit";
 import { recordQualityStrike } from "@/lib/quality-ban";
+import { updateUserTagScore, recordTagActivity } from "@/lib/tag-badges";
 
 export async function POST(req: Request) {
   try {
@@ -284,6 +285,31 @@ export async function POST(req: Request) {
           );
           if (updatedContent.rows && updatedContent.rows.length > 0 && updatedContent.rows[0].score >= 5) {
             await checkSnapshotBadge(contentOwnerId, votableType as 'question' | 'answer', votableId);
+          }
+
+          // Tag Badge: Track points for answer upvotes
+          if (votableType === "answer" && contentOwnerId) {
+            // Get question tags for this answer
+            const answerTagsResult = await query(
+              `SELECT DISTINCT qt.tag_id 
+               FROM answers a
+               JOIN question_tags qt ON a.question_id = qt.question_id
+               WHERE a.id = ?`,
+              [votableId]
+            );
+
+            // Award points for each tag (upvote on answer = 10 points)
+            for (const tagRow of answerTagsResult.rows) {
+              await updateUserTagScore(contentOwnerId, tagRow.tag_id, 10, false);
+              await recordTagActivity(
+                contentOwnerId,
+                tagRow.tag_id,
+                'upvote',
+                10,
+                notificationQuestionId,
+                votableId
+              );
+            }
           }
         }
       }
