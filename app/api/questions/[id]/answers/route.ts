@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { createNotification } from "@/lib/notifications";
+import { checkRateLimit, recordRateLimitAction } from "@/lib/rate-limit";
 
 export async function POST(
   req: Request,
@@ -55,6 +56,20 @@ export async function POST(
 
     const userId = userResult.rows[0].id;
     const questionId = params.id;
+
+    // Check rate limit
+    const rateLimitCheck = await checkRateLimit(userId, 'answer');
+    if (!rateLimitCheck.allowed) {
+      return NextResponse.json(
+        { 
+          error: rateLimitCheck.message,
+          rate_limit_exceeded: true,
+          limit: rateLimitCheck.limit,
+          resetAt: rateLimitCheck.resetAt
+        },
+        { status: 429 }
+      );
+    }
 
     // Create answer
     const answerResult = await query(
@@ -123,6 +138,9 @@ export async function POST(
         }
       }
     }
+
+    // Record rate limit action
+    await recordRateLimitAction(userId, 'answer');
 
     return NextResponse.json(
       { answerId, message: "Answer posted successfully" },

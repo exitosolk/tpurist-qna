@@ -5,6 +5,7 @@ import { query } from "@/lib/db";
 import { generateSlug } from "@/lib/slug";
 import { getBadgeTierCounts } from "@/lib/badges";
 import { createNotification } from "@/lib/notifications";
+import { checkRateLimit, recordRateLimitAction } from "@/lib/rate-limit";
 
 // GET /api/questions - List all questions
 export async function GET(req: Request) {
@@ -159,6 +160,20 @@ export async function POST(req: Request) {
 
     const userId = userResult.rows[0].id;
 
+    // Check rate limit
+    const rateLimitCheck = await checkRateLimit(userId, 'question');
+    if (!rateLimitCheck.allowed) {
+      return NextResponse.json(
+        { 
+          error: rateLimitCheck.message,
+          rate_limit_exceeded: true,
+          limit: rateLimitCheck.limit,
+          resetAt: rateLimitCheck.resetAt
+        },
+        { status: 429 }
+      );
+    }
+
     // Create question
     const questionResult = await query(
       `INSERT INTO questions (user_id, title, body) 
@@ -253,6 +268,9 @@ export async function POST(req: Request) {
         );
       }
     }
+
+    // Record rate limit action
+    await recordRateLimitAction(userId, 'question');
 
     return NextResponse.json(
       { questionId, slug, message: "Question created successfully" },

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { query } from "@/lib/db";
+import { checkRateLimit, recordRateLimitAction } from "@/lib/rate-limit";
 
 // GET comments for an answer
 export async function GET(
@@ -84,12 +85,29 @@ export async function POST(
 
     const userId = userResult.rows[0].id;
 
+    // Check rate limit
+    const rateLimitCheck = await checkRateLimit(userId, 'comment');
+    if (!rateLimitCheck.allowed) {
+      return NextResponse.json(
+        { 
+          error: rateLimitCheck.message,
+          rate_limit_exceeded: true,
+          limit: rateLimitCheck.limit,
+          resetAt: rateLimitCheck.resetAt
+        },
+        { status: 429 }
+      );
+    }
+
     // Insert comment
     await query(
       `INSERT INTO comments (commentable_type, commentable_id, user_id, text)
        VALUES (?, ?, ?, ?)`,
       ["answer", answerId, userId, text]
     );
+
+    // Record rate limit action
+    await recordRateLimitAction(userId, 'comment');
 
     return NextResponse.json({ message: "Comment added successfully" }, { status: 201 });
   } catch (error) {

@@ -5,6 +5,7 @@ import { query } from "@/lib/db";
 import { createNotification } from "@/lib/notifications";
 import { logReputationChange } from "@/lib/reputation";
 import { updateRiceAndCurryProgress, checkFirstLandingBadge, checkSnapshotBadge } from "@/lib/badges";
+import { checkRateLimit, recordRateLimitAction } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
@@ -60,6 +61,20 @@ export async function POST(req: Request) {
 
     const userId = userResult.rows[0].id;
     const voterReputation = userResult.rows[0].reputation || 0;
+
+    // Check rate limit
+    const rateLimitCheck = await checkRateLimit(userId, 'vote');
+    if (!rateLimitCheck.allowed) {
+      return NextResponse.json(
+        { 
+          error: rateLimitCheck.message,
+          rate_limit_exceeded: true,
+          limit: rateLimitCheck.limit,
+          resetAt: rateLimitCheck.resetAt
+        },
+        { status: 429 }
+      );
+    }
 
     // Check if user is trying to vote on their own content
     const ownerCheckQuery = votableType === "question" 
@@ -261,6 +276,9 @@ export async function POST(req: Request) {
           }
         }
       }
+
+      // Record rate limit action
+      await recordRateLimitAction(userId, 'vote');
 
       return NextResponse.json({ message: "Vote recorded" }, { status: 201 });
     }
