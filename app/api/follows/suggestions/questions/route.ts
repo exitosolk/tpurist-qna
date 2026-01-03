@@ -94,10 +94,15 @@ export async function GET(req: NextRequest) {
            WHERE q2.user_id = ?
          )
        )
-       GROUP BY q.id
-       ORDER BY matching_tags_count DESC, q.views DESC, q.created_at DESC
+       GROUP BY q.id, q.title, q.slug, q.views, q.created_at, u.username, u.avatar_url
+       ORDER BY (
+          SELECT COUNT(*) FROM question_tags qt2
+          INNER JOIN tags t2 ON qt2.tag_id = t2.id
+          INNER JOIN tag_follows tf ON t2.name = tf.tag_name
+          WHERE qt2.question_id = q.id AND tf.user_id = ?
+       ) DESC, q.views DESC, q.created_at DESC
        LIMIT ?`,
-      [userId, userId, userId, userId, userId, userId, userId, limit]
+      [userId, userId, userId, userId, userId, userId, userId, userId, limit]
     );
 
     return NextResponse.json({

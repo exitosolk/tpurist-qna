@@ -48,10 +48,10 @@ export async function GET(req: NextRequest) {
          v.user_id = ?
        )
        GROUP BY t.id, t.name, t.description
-       HAVING (asked_score + answered_score + upvoted_score) > 0
-       ORDER BY (asked_score + answered_score + upvoted_score) DESC, question_count DESC
+       HAVING (SUM(CASE WHEN q.user_id = ? THEN 3 ELSE 0 END) + SUM(CASE WHEN a.user_id = ? THEN 2 ELSE 0 END) + SUM(CASE WHEN v.user_id = ? AND v.vote_type = 1 THEN 1 ELSE 0 END)) > 0
+       ORDER BY (SUM(CASE WHEN q.user_id = ? THEN 3 ELSE 0 END) + SUM(CASE WHEN a.user_id = ? THEN 2 ELSE 0 END) + SUM(CASE WHEN v.user_id = ? AND v.vote_type = 1 THEN 1 ELSE 0 END)) DESC, COUNT(DISTINCT q.id) DESC
        LIMIT ?`,
-      [userId, userId, userId, userId, userId, userId, userId, limit]
+      [userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, limit]
     );
 
     // Calculate activity reasons for each suggestion
