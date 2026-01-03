@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     // 3. Popular unanswered questions in user's interested topics
     // 4. Exclude questions the user already follows
     // 5. Exclude user's own questions
-    const [suggestions] = await pool.execute<RowDataPacket[]>(
+    const [suggestions] = await pool.query<RowDataPacket[]>(
       `SELECT DISTINCT
         q.id,
         q.title,
@@ -35,44 +35,10 @@ export async function GET(req: NextRequest) {
         q.created_at,
         u.username as author_username,
         u.avatar_url as author_avatar,
-        COUNT(DISTINCT a.id) as answer_count,
-        (
-          SELECT COUNT(*) FROM question_tags qt2
-          INNER JOIN tags t2 ON qt2.tag_id = t2.id
-          INNER JOIN tag_follows tf ON t2.name = tf.tag_name
-          WHERE qt2.question_id = q.id AND tf.user_id = ?
-        ) as matching_tags_count,
-        (
-          SELECT GROUP_CONCAT(t3.name SEPARATOR ', ')
-          FROM question_tags qt3
-          INNER JOIN tags t3 ON qt3.tag_id = t3.id
-          WHERE qt3.question_id = q.id
-          LIMIT 3
-        ) as tags,
-        CASE
-          WHEN EXISTS (
-            SELECT 1 FROM tag_follows tf
-            INNER JOIN tags t ON tf.tag_name = t.name
-            INNER JOIN question_tags qt ON t.id = qt.tag_id
-            WHERE tf.user_id = ? AND qt.question_id = q.id
-          ) THEN 'You follow this topic'
-          WHEN EXISTS (
-            SELECT 1 FROM question_tags qt
-            INNER JOIN tags t ON qt.tag_id = t.id
-            INNER JOIN (
-              SELECT DISTINCT t2.name as tag_name
-              FROM question_tags qt2
-              INNER JOIN tags t2 ON qt2.tag_id = t2.id
-              INNER JOIN questions q2 ON qt2.question_id = q2.id
-              WHERE q2.user_id = ?
-            ) user_tags ON t.name = user_tags.tag_name
-            WHERE qt.question_id = q.id
-          ) THEN 'Similar to questions you have asked'
-          ELSE 'Trending in your interests'
-        END as reason
+        (SELECT COUNT(*) FROM answers a WHERE a.question_id = q.id) as answer_count,
+        (SELECT GROUP_CONCAT(t3.name SEPARATOR ', ') FROM question_tags qt3 INNER JOIN tags t3 ON qt3.tag_id = t3.id WHERE qt3.question_id = q.id LIMIT 3) as tags
        FROM questions q
        INNER JOIN users u ON q.user_id = u.id
-       LEFT JOIN answers a ON q.id = a.question_id
        INNER JOIN question_tags qt ON q.id = qt.question_id
        INNER JOIN tags t ON qt.tag_id = t.id
        WHERE q.user_id != ?
@@ -80,12 +46,8 @@ export async function GET(req: NextRequest) {
          SELECT question_id FROM question_follows WHERE user_id = ?
        )
        AND (
-         -- Questions in tags user follows
-         t.name IN (
-           SELECT tag_name FROM tag_follows WHERE user_id = ?
-         )
+         t.name IN (SELECT tag_name FROM tag_follows WHERE user_id = ?)
          OR
-         -- Questions in tags user has asked about
          t.name IN (
            SELECT DISTINCT t2.name
            FROM question_tags qt2
@@ -95,9 +57,9 @@ export async function GET(req: NextRequest) {
          )
        )
        GROUP BY q.id, q.title, q.slug, q.views, q.created_at, u.username, u.avatar_url
-       ORDER BY matching_tags_count DESC, q.views DESC, q.created_at DESC
+       ORDER BY q.views DESC, q.created_at DESC
        LIMIT ?`,
-      [userId, userId, userId, userId, userId, userId, userId, limit]
+      [userId, userId, userId, userId, limit]
     );
 
     return NextResponse.json({
@@ -113,8 +75,8 @@ export async function GET(req: NextRequest) {
           username: q.author_username,
           avatarUrl: q.author_avatar,
         },
-        reason: q.reason,
-        matchingTagsCount: q.matching_tags_count,
+        reason: 'Based on your interests',
+        matchingTagsCount: 0,
         createdAt: q.created_at,
       })),
     });
