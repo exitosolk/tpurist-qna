@@ -5,7 +5,7 @@ import nodemailer from "nodemailer";
 
 interface NotificationParams {
   userId: number;
-  type: 'answer' | 'question_upvote' | 'question_downvote' | 'answer_upvote' | 'answer_downvote' | 'comment' | 'accepted_answer' | 'badge' | 'followed_question_answer' | 'followed_tag_question';
+  type: 'answer' | 'question_upvote' | 'question_downvote' | 'answer_upvote' | 'answer_downvote' | 'comment' | 'accepted_answer' | 'badge' | 'followed_question_answer' | 'followed_tag_question' | 'question_closed';
   actorId: number;
   message: string;
   questionId?: number;
@@ -25,6 +25,7 @@ const emailPreferenceMap: Record<string, string> = {
   'badge': 'email_badge_earned',
   'followed_question_answer': 'email_followed_question',
   'followed_tag_question': 'email_followed_question',
+  'question_closed': 'email_moderation',
 };
 
 // In-app preference mapping
@@ -39,6 +40,7 @@ const appPreferenceMap: Record<string, string> = {
   'badge': 'app_badge_earned',
   'followed_question_answer': 'app_followed_question',
   'followed_tag_question': 'app_followed_question',
+  'question_closed': 'app_moderation',
 };
 
 async function sendEmailNotification(
