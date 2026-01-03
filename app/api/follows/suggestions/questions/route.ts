@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
               WHERE q2.user_id = ?
             ) user_tags ON qt.tag_name = user_tags.tag_name
             WHERE qt.question_id = q.id
-          ) THEN 'Similar to questions you've asked'
+          ) THEN 'Similar to questions you\'ve asked'
           ELSE 'Trending in your interests'
         END as reason
        FROM questions q

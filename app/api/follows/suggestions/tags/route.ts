@@ -32,17 +32,17 @@ export async function GET(req: NextRequest) {
         COUNT(DISTINCT qt.question_id) as question_count,
         SUM(CASE WHEN q.user_id = ? THEN 3 ELSE 0 END) as asked_score,
         SUM(CASE WHEN a.user_id = ? THEN 2 ELSE 0 END) as answered_score,
-        SUM(CASE WHEN qv.user_id = ? AND qv.vote_type = 'upvote' THEN 1 ELSE 0 END) as upvoted_score,
+        SUM(CASE WHEN qv.user_id = ? AND qv.vote_type = 1 THEN 1 ELSE 0 END) as upvoted_score,
         (
           SUM(CASE WHEN q.user_id = ? THEN 3 ELSE 0 END) +
           SUM(CASE WHEN a.user_id = ? THEN 2 ELSE 0 END) +
-          SUM(CASE WHEN qv.user_id = ? AND qv.vote_type = 'upvote' THEN 1 ELSE 0 END)
+          SUM(CASE WHEN qv.user_id = ? AND qv.vote_type = 1 THEN 1 ELSE 0 END)
         ) as total_score
        FROM tags t
        INNER JOIN question_tags qt ON t.name = qt.tag_name
        INNER JOIN questions q ON qt.question_id = q.id
        LEFT JOIN answers a ON q.id = a.question_id AND a.user_id = ?
-       LEFT JOIN question_votes qv ON q.id = qv.question_id AND qv.user_id = ?
+       LEFT JOIN votes qv ON q.id = qv.votable_id AND qv.votable_type = 'question' AND qv.user_id = ?
        WHERE t.name NOT IN (
          SELECT tag_name FROM tag_follows WHERE user_id = ?
        )
@@ -62,13 +62,13 @@ export async function GET(req: NextRequest) {
     const suggestionsWithReasons = suggestions.map((tag: any) => {
       const reasons = [];
       if (tag.asked_score > 0) {
-        reasons.push(`You've asked questions in this topic`);
+        reasons.push(`You\'ve asked questions in this topic`);
       }
       if (tag.answered_score > 0) {
-        reasons.push(`You've answered questions in this topic`);
+        reasons.push(`You\'ve answered questions in this topic`);
       }
       if (tag.upvoted_score > 0) {
-        reasons.push(`You've upvoted questions in this topic`);
+        reasons.push(`You\'ve upvoted questions in this topic`);
       }
 
       return {
