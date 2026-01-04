@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import BadgeList from "@/components/BadgeList";
+import { TagBadgeCard } from "@/components/TagBadge";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import Toast from "@/components/Toast";
@@ -100,6 +101,18 @@ interface Collection {
   item_count: number;
 }
 
+interface TagBadge {
+  id: number;
+  tier: 'bronze' | 'silver' | 'gold';
+  tagName: string;
+  isActive: boolean;
+  score: number;
+  acceptedAnswers: number;
+  earnedAt: string;
+  lastActivity?: string;
+  markedInactiveAt?: string;
+}
+
 function ProfileContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -128,6 +141,7 @@ function ProfileContent() {
   const [newCollectionPublic, setNewCollectionPublic] = useState(false);
   const [creatingCollection, setCreatingCollection] = useState(false);
   const [earnedBadgesCount, setEarnedBadgesCount] = useState(0);
+  const [tagBadges, setTagBadges] = useState<TagBadge[]>([]);
 
   // Handle tab query parameter
   useEffect(() => {
@@ -158,6 +172,7 @@ function ProfileContent() {
       if (res.ok) {
         const data = await res.json();
         setEarnedBadgesCount(data.earned?.length || 0);
+        setTagBadges(data.tagBadges || []);
       }
     } catch (error) {
       console.error("Error fetching badges count:", error);
@@ -998,8 +1013,113 @@ function ProfileContent() {
             )}
           </div>
         ) : activeTab === "badges" ? (
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <BadgeList showProgress={true} compact={false} />
+          <div className="space-y-6">
+            {/* System Badges */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <h2 className="text-xl font-semibold mb-4">Achievement Badges</h2>
+              <BadgeList showProgress={true} compact={false} />
+            </div>
+
+            {/* Tag-Based Badges */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <h2 className="text-xl font-semibold mb-4">Tag Expertise Badges</h2>
+              <p className="text-sm text-gray-600 mb-6">
+                Earn badges by contributing quality answers in specific topics. Gold badges grant moderation privileges!
+              </p>
+
+              {tagBadges.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">🏆</div>
+                  <p className="text-gray-600 mb-2">You haven't earned any tag badges yet.</p>
+                  <p className="text-sm text-gray-500">
+                    Answer questions and get upvotes to earn Bronze, Silver, and Gold badges in specific tags.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Gold Badges */}
+                  {tagBadges.filter(b => b.tier === 'gold').length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <span className="text-yellow-500">🥇</span>
+                        Gold Badges ({tagBadges.filter(b => b.tier === 'gold' && b.isActive).length}
+                        {tagBadges.filter(b => b.tier === 'gold' && !b.isActive).length > 0 && (
+                          <span className="text-gray-500">+ {tagBadges.filter(b => b.tier === 'gold' && !b.isActive).length} inactive</span>
+                        )})
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {tagBadges
+                          .filter(b => b.tier === 'gold')
+                          .map((badge) => (
+                            <TagBadgeCard
+                              key={badge.id}
+                              tier={badge.tier}
+                              tagName={badge.tagName}
+                              isActive={badge.isActive}
+                              score={badge.score}
+                              acceptedAnswers={badge.acceptedAnswers}
+                              earnedAt={new Date(badge.earnedAt)}
+                              lastActivity={badge.lastActivity ? new Date(badge.lastActivity) : undefined}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Silver Badges */}
+                  {tagBadges.filter(b => b.tier === 'silver').length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <span className="text-gray-400">🥈</span>
+                        Silver Badges ({tagBadges.filter(b => b.tier === 'silver').length})
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {tagBadges
+                          .filter(b => b.tier === 'silver')
+                          .map((badge) => (
+                            <TagBadgeCard
+                              key={badge.id}
+                              tier={badge.tier}
+                              tagName={badge.tagName}
+                              isActive={badge.isActive}
+                              score={badge.score}
+                              acceptedAnswers={badge.acceptedAnswers}
+                              earnedAt={new Date(badge.earnedAt)}
+                              lastActivity={badge.lastActivity ? new Date(badge.lastActivity) : undefined}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bronze Badges */}
+                  {tagBadges.filter(b => b.tier === 'bronze').length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <span className="text-orange-600">🥉</span>
+                        Bronze Badges ({tagBadges.filter(b => b.tier === 'bronze').length})
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {tagBadges
+                          .filter(b => b.tier === 'bronze')
+                          .map((badge) => (
+                            <TagBadgeCard
+                              key={badge.id}
+                              tier={badge.tier}
+                              tagName={badge.tagName}
+                              isActive={badge.isActive}
+                              score={badge.score}
+                              acceptedAnswers={badge.acceptedAnswers}
+                              earnedAt={new Date(badge.earnedAt)}
+                              lastActivity={badge.lastActivity ? new Date(badge.lastActivity) : undefined}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         ) : null}
       </main>

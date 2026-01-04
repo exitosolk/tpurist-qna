@@ -15,6 +15,7 @@ import Tooltip from "@/components/Tooltip";
 import Sidebar from "@/components/Sidebar";
 import FlagButton from "@/components/FlagButton";
 import UserBadge from "@/components/UserBadge";
+import TagBadge from "@/components/TagBadge";
 import AddToCollection from "@/components/AddToCollection";
 import { Share2, Edit, Bookmark, Check, Clock, ChevronRight, Home, Bell, BellOff } from "lucide-react";
 
@@ -59,6 +60,13 @@ interface Answer extends User {
   comments?: Comment[];
 }
 
+interface UserTagBadge {
+  userId: number;
+  tagName: string;
+  tier: 'bronze' | 'silver' | 'gold';
+  isActive: boolean;
+}
+
 interface Comment {
   id: number;
   user_id: number;
@@ -95,7 +103,8 @@ export default function QuestionDetailPage() {
   const [editingAnswerModal, setEditingAnswerModal] = useState<number | null>(null);
   const [userReputation, setUserReputation] = useState(0);
   const [answerDraftId, setAnswerDraftId] = useState<number | null>(null);
-  const [draftSaveStatus, setDraftSaveStatus] = useState<"saved" | "saving" | "">("");
+  const [draftSaveStatus, setDraftSaveStatus] = useState<"saved" | "saving" | "">("";
+  const [userTagBadges, setUserTagBadges] = useState<UserTagBadge[]>([]);
 
   useEffect(() => {
     fetchQuestion();

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
+import { TagBadgeCard } from "@/components/TagBadge";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
@@ -45,6 +46,18 @@ interface Badge {
   awarded_at: string;
 }
 
+interface TagBadge {
+  id: number;
+  tier: 'bronze' | 'silver' | 'gold';
+  tagName: string;
+  isActive: boolean;
+  score: number;
+  acceptedAnswers: number;
+  earnedAt: string;
+  lastActivity?: string;
+  markedInactiveAt?: string;
+}
+
 interface ReputationHistory {
   id: number;
   change_amount: number;
@@ -63,6 +76,7 @@ export default function UserProfilePage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [badges, setBadges] = useState<Badge[]>([]);
+  const [tagBadges, setTagBadges] = useState<TagBadge[]>([]);
   const [reputationHistory, setReputationHistory] = useState<ReputationHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"questions" | "answers" | "badges" | "reputation">("questions");
@@ -84,6 +98,15 @@ export default function UserProfilePage() {
         setAnswers(data.answers || []);
         setBadges(data.badges || []);
         setReputationHistory(data.reputationHistory || []);
+        
+        // Fetch tag badges separately
+        if (data.profile?.id) {
+          const tagBadgesRes = await fetch(`/api/users/${data.profile.id}/tag-badges`);
+          if (tagBadgesRes.ok) {
+            const tagBadgesData = await tagBadgesRes.json();
+            setTagBadges(tagBadgesData.badges || []);
+          }
+        }
       } else if (response.status === 404) {
         // User not found
         setProfile(null);
@@ -279,84 +302,189 @@ export default function UserProfilePage() {
             )}
           </div>
         ) : activeTab === "badges" ? (
-          <div>
-            {badges.length === 0 ? (
+          <div className="space-y-6">
+            {/* System Badges */}
+            {badges.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h2 className="text-xl font-semibold mb-4">Achievement Badges</h2>
+                <div className="space-y-6">
+                  {/* Gold Badges */}
+                  {badges.filter(b => b.tier === 'gold').length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <span className="text-yellow-500">●</span>
+                        Gold Badges ({badges.filter(b => b.tier === 'gold').length})
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {badges.filter(b => b.tier === 'gold').map((badge) => (
+                          <div key={badge.id} className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <span className="text-2xl">{badge.icon}</span>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900">{badge.name}</h4>
+                              <p className="text-sm text-gray-600 mt-1">{badge.description}</p>
+                              <p className="text-xs text-gray-500 mt-2">
+                                Earned {formatDistanceToNow(new Date(badge.awarded_at), { addSuffix: true })}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Silver Badges */}
+                  {badges.filter(b => b.tier === 'silver').length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <span className="text-gray-400">●</span>
+                        Silver Badges ({badges.filter(b => b.tier === 'silver').length})
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {badges.filter(b => b.tier === 'silver').map((badge) => (
+                          <div key={badge.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <span className="text-2xl">{badge.icon}</span>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900">{badge.name}</h4>
+                              <p className="text-sm text-gray-600 mt-1">{badge.description}</p>
+                              <p className="text-xs text-gray-500 mt-2">
+                                Earned {formatDistanceToNow(new Date(badge.awarded_at), { addSuffix: true })}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bronze Badges */}
+                  {badges.filter(b => b.tier === 'bronze').length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <span className="text-orange-600">●</span>
+                        Bronze Badges ({badges.filter(b => b.tier === 'bronze').length})
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {badges.filter(b => b.tier === 'bronze').map((badge) => (
+                          <div key={badge.id} className="flex items-start gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                            <span className="text-2xl">{badge.icon}</span>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900">{badge.name}</h4>
+                              <p className="text-sm text-gray-600 mt-1">{badge.description}</p>
+                              <p className="text-xs text-gray-500 mt-2">
+                                Earned {formatDistanceToNow(new Date(badge.awarded_at), { addSuffix: true })}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Tag-Based Badges */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <h2 className="text-xl font-semibold mb-4">Tag Expertise Badges</h2>
+              <p className="text-sm text-gray-600 mb-6">
+                Expertise badges earned by contributing quality answers in specific topics.
+              </p>
+
+              {tagBadges.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-5xl mb-3">🏆</div>
+                  <p className="text-gray-600">No tag badges earned yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Gold Tag Badges */}
+                  {tagBadges.filter(b => b.tier === 'gold').length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <span className="text-yellow-500">🥇</span>
+                        Gold Badges ({tagBadges.filter(b => b.tier === 'gold' && b.isActive).length}
+                        {tagBadges.filter(b => b.tier === 'gold' && !b.isActive).length > 0 && (
+                          <span className="text-gray-500">+ {tagBadges.filter(b => b.tier === 'gold' && !b.isActive).length} inactive</span>
+                        )})
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {tagBadges
+                          .filter(b => b.tier === 'gold')
+                          .map((badge) => (
+                            <TagBadgeCard
+                              key={badge.id}
+                              tier={badge.tier}
+                              tagName={badge.tagName}
+                              isActive={badge.isActive}
+                              score={badge.score}
+                              acceptedAnswers={badge.acceptedAnswers}
+                              earnedAt={new Date(badge.earnedAt)}
+                              lastActivity={badge.lastActivity ? new Date(badge.lastActivity) : undefined}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Silver Tag Badges */}
+                  {tagBadges.filter(b => b.tier === 'silver').length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <span className="text-gray-400">🥈</span>
+                        Silver Badges ({tagBadges.filter(b => b.tier === 'silver').length})
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {tagBadges
+                          .filter(b => b.tier === 'silver')
+                          .map((badge) => (
+                            <TagBadgeCard
+                              key={badge.id}
+                              tier={badge.tier}
+                              tagName={badge.tagName}
+                              isActive={badge.isActive}
+                              score={badge.score}
+                              acceptedAnswers={badge.acceptedAnswers}
+                              earnedAt={new Date(badge.earnedAt)}
+                              lastActivity={badge.lastActivity ? new Date(badge.lastActivity) : undefined}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bronze Tag Badges */}
+                  {tagBadges.filter(b => b.tier === 'bronze').length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <span className="text-orange-600">🥉</span>
+                        Bronze Badges ({tagBadges.filter(b => b.tier === 'bronze').length})
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {tagBadges
+                          .filter(b => b.tier === 'bronze')
+                          .map((badge) => (
+                            <TagBadgeCard
+                              key={badge.id}
+                              tier={badge.tier}
+                              tagName={badge.tagName}
+                              isActive={badge.isActive}
+                              score={badge.score}
+                              acceptedAnswers={badge.acceptedAnswers}
+                              earnedAt={new Date(badge.earnedAt)}
+                              lastActivity={badge.lastActivity ? new Date(badge.lastActivity) : undefined}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Show empty state if no badges at all */}
+            {badges.length === 0 && tagBadges.length === 0 && (
               <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
                 <p className="text-gray-600">This user hasn't earned any badges yet.</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Gold Badges */}
-                {badges.filter(b => b.tier === 'gold').length > 0 && (
-                  <div className="bg-white rounded-lg shadow-sm border p-6">
-                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <span className="text-yellow-500">●</span>
-                      Gold Badges ({badges.filter(b => b.tier === 'gold').length})
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {badges.filter(b => b.tier === 'gold').map((badge) => (
-                        <div key={badge.id} className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                          <span className="text-2xl">{badge.icon}</span>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">{badge.name}</h4>
-                            <p className="text-sm text-gray-600 mt-1">{badge.description}</p>
-                            <p className="text-xs text-gray-500 mt-2">
-                              Earned {formatDistanceToNow(new Date(badge.awarded_at), { addSuffix: true })}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Silver Badges */}
-                {badges.filter(b => b.tier === 'silver').length > 0 && (
-                  <div className="bg-white rounded-lg shadow-sm border p-6">
-                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <span className="text-gray-400">●</span>
-                      Silver Badges ({badges.filter(b => b.tier === 'silver').length})
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {badges.filter(b => b.tier === 'silver').map((badge) => (
-                        <div key={badge.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                          <span className="text-2xl">{badge.icon}</span>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">{badge.name}</h4>
-                            <p className="text-sm text-gray-600 mt-1">{badge.description}</p>
-                            <p className="text-xs text-gray-500 mt-2">
-                              Earned {formatDistanceToNow(new Date(badge.awarded_at), { addSuffix: true })}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Bronze Badges */}
-                {badges.filter(b => b.tier === 'bronze').length > 0 && (
-                  <div className="bg-white rounded-lg shadow-sm border p-6">
-                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <span className="text-orange-600">●</span>
-                      Bronze Badges ({badges.filter(b => b.tier === 'bronze').length})
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {badges.filter(b => b.tier === 'bronze').map((badge) => (
-                        <div key={badge.id} className="flex items-start gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
-                          <span className="text-2xl">{badge.icon}</span>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">{badge.name}</h4>
-                            <p className="text-sm text-gray-600 mt-1">{badge.description}</p>
-                            <p className="text-xs text-gray-500 mt-2">
-                              Earned {formatDistanceToNow(new Date(badge.awarded_at), { addSuffix: true })}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>
