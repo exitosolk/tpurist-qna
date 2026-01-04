@@ -103,7 +103,7 @@ export default function QuestionDetailPage() {
   const [editingAnswerModal, setEditingAnswerModal] = useState<number | null>(null);
   const [userReputation, setUserReputation] = useState(0);
   const [answerDraftId, setAnswerDraftId] = useState<number | null>(null);
-  const [draftSaveStatus, setDraftSaveStatus] = useState<"saved" | "saving" | "">("";
+  const [draftSaveStatus, setDraftSaveStatus] = useState<"saved" | "saving" | "">("");
   const [userTagBadges, setUserTagBadges] = useState<UserTagBadge[]>([]);
 
   useEffect(() => {
