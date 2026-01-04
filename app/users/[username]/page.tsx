@@ -101,7 +101,7 @@ export default function UserProfilePage() {
         
         // Fetch tag badges separately
         if (data.profile?.id) {
-          const tagBadgesRes = await fetch(`/api/users/${data.profile.id}/tag-badges`);
+          const tagBadgesRes = await fetch(`/api/users/${username}/tag-badges`);
           if (tagBadgesRes.ok) {
             const tagBadgesData = await tagBadgesRes.json();
             setTagBadges(tagBadgesData.badges || []);
