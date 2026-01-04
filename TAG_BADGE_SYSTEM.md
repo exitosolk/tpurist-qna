@@ -8,7 +8,7 @@ The Tag Badge System implements a hierarchical expertise recognition system for 
 
 ## Badge Tiers & Requirements
 
-### Bronze Badge: "The Explorer"
+### Bronze Badge: "Island Explorer" 🗺️
 
 **Requirements:**
 - Tag score > 5
@@ -20,13 +20,14 @@ The Tag Badge System implements a hierarchical expertise recognition system for 
 **Privileges:**
 - Bragging rights on profile
 - Visual badge display next to username in tag-specific contexts
+- Share your achievement on social media
 
 **Example Path:**
 - Answer 1 question with this tag → Get 1 upvote → **Bronze badge earned**
 
 ---
 
-### Silver Badge: "The Guide"
+### Silver Badge: "Local Guide" 🧭
 
 **Requirements:**
 - Tag score > 25
@@ -40,13 +41,14 @@ The Tag Badge System implements a hierarchical expertise recognition system for 
 **Privileges:**
 - **Retagging Rights**: Can retag any question that includes this tag without approval
 - All Bronze privileges
+- Share your trusted advisor status on social media
 
 **Example Path:**
 - Answer 5 questions → Get 3 accepted + 2 upvoted (3 upvotes total) → **Silver badge earned**
 
 ---
 
-### Gold Badge: "The Resident Expert"
+### Gold Badge: "Ceylon Expert" 🏆
 
 **Requirements:**
 - Tag score > 75
@@ -62,6 +64,7 @@ The Tag Badge System implements a hierarchical expertise recognition system for 
 - **The Hammer**: Can single-handedly close questions as duplicate/spam/off-topic without waiting for community votes
 - All Silver privileges (retagging)
 - All Bronze privileges (display)
+- Share your master status and help others discover your expertise
 
 **Freshness Decay:**
 - If you don't earn 5+ points in 6 months, badge turns **grey (inactive)**
@@ -366,7 +369,7 @@ import { TagBadgeList } from '@/components/TagBadge';
 />
 ```
 
-### Badge Detail Card
+### Badge Detail Card with Social Sharing
 
 ```tsx
 import { TagBadgeCard } from '@/components/TagBadge';
@@ -380,7 +383,47 @@ import { TagBadgeCard } from '@/components/TagBadge';
   earnedAt={new Date('2025-06-01')}
   lastActivity={new Date('2025-12-28')}
 />
+// Users can click the share button to:
+// - Share on Twitter/Facebook/LinkedIn
+// - Copy achievement text to clipboard
 ```
+
+## Social Sharing
+
+### Badge Achievement Messages
+
+When users share their badges, they get pre-formatted messages:
+
+**Bronze (Island Explorer):**
+```
+🗺️ Just earned the "Island Explorer" badge in #beaches on OneCeylon! 
+15 points from helping travelers explore Sri Lanka. 🇱🇰
+
+Join the community: https://oneceylon.space
+```
+
+**Silver (Local Guide):**
+```
+🧭 Just earned the "Local Guide" badge in #temples on OneCeylon! 
+45 points from helping travelers explore Sri Lanka. 🇱🇰
+
+Join the community: https://oneceylon.space
+```
+
+**Gold (Ceylon Expert):**
+```
+🏆 Just earned the "Ceylon Expert" badge in #visa on OneCeylon! 
+150 points from helping travelers explore Sri Lanka. 🇱🇰
+
+Join the community: https://oneceylon.space
+```
+
+### Sharing Platforms Supported
+
+- **Twitter/X**: Opens tweet composer with pre-filled text
+- **Facebook**: Opens share dialog with achievement text
+- **LinkedIn**: Professional network sharing
+- **Clipboard**: Copy formatted text for any platform
 
 ## Integration Flow
 

@@ -1,6 +1,7 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Share2, Copy, Check } from 'lucide-react';
 
 interface TagBadgeProps {
   tier: 'bronze' | 'silver' | 'gold';
@@ -162,16 +163,56 @@ export const TagBadgeCard: React.FC<TagBadgeCardProps> = ({
   earnedAt,
   lastActivity
 }) => {
+  const [shareMenuOpen, setShareMenuOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const tierLabels = {
-    bronze: 'Explorer',
-    silver: 'Guide',
-    gold: 'Expert'
+    bronze: 'Island Explorer',
+    silver: 'Local Guide',
+    gold: 'Ceylon Expert'
+  };
+
+  const tierEmojis = {
+    bronze: '🗺️',
+    silver: '🧭',
+    gold: '🏆'
   };
 
   const tierDescriptions = {
-    bronze: 'Earned by helping others in this tag',
-    silver: 'Consistent problem solver • Can retag questions',
-    gold: 'Domain master • Can close duplicates/spam with single vote'
+    bronze: 'Discovered the path • Helping fellow travelers',
+    silver: 'Trusted advisor • Can retag questions',
+    gold: 'Master of the island • Single-vote moderation powers'
+  };
+
+  const getBadgeShareText = () => {
+    const emoji = tierEmojis[tier];
+    const label = tierLabels[tier];
+    return `${emoji} Just earned the "${label}" badge in #${tagName} on OneCeylon! ${score} points from helping travelers explore Sri Lanka. 🇱🇰\n\nJoin the community: https://oneceylon.space`;
+  };
+
+  const handleShare = async (platform: 'twitter' | 'facebook' | 'linkedin' | 'copy') => {
+    const shareText = getBadgeShareText();
+    const url = 'https://oneceylon.space';
+
+    if (platform === 'copy') {
+      try {
+        await navigator.clipboard.writeText(shareText);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+      }
+      return;
+    }
+
+    const shareUrls = {
+      twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(shareText)}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&summary=${encodeURIComponent(shareText)}`
+    };
+
+    window.open(shareUrls[platform], '_blank', 'width=600,height=400');
+    setShareMenuOpen(false);
   };
 
   return (
@@ -194,10 +235,60 @@ export const TagBadgeCard: React.FC<TagBadgeCardProps> = ({
                 </span>
               )}
             </div>
-            <div className="text-sm text-gray-600">
-              {tierLabels[tier]} Badge
+            <div className="text-sm text-gray-600 flex items-center gap-1">
+              <span>{tierEmojis[tier]}</span>
+              <span>{tierLabels[tier]} Badge</span>
             </div>
           </div>
+        </div>
+        
+        {/* Share Button */}
+        <div className="relative">
+          <button
+            onClick={() => setShareMenuOpen(!shareMenuOpen)}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Share this achievement"
+          >
+            <Share2 className="w-4 h-4 text-gray-600" />
+          </button>
+          
+          {/* Share Menu Dropdown */}
+          {shareMenuOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
+              <button
+                onClick={() => handleShare('twitter')}
+                className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm"
+              >
+                <span className="text-blue-400">𝕏</span>
+                <span>Share on Twitter</span>
+              </button>
+              <button
+                onClick={() => handleShare('facebook')}
+                className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm"
+              >
+                <span className="text-blue-600">f</span>
+                <span>Share on Facebook</span>
+              </button>
+              <button
+                onClick={() => handleShare('linkedin')}
+                className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm"
+              >
+                <span className="text-blue-700">in</span>
+                <span>Share on LinkedIn</span>
+              </button>
+              <div className="border-t border-gray-200 my-1"></div>
+              <button
+                onClick={() => handleShare('copy')}
+                className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm"
+              >
+                {copied ? (
+                  <><Check className="w-4 h-4 text-green-600" /> <span className="text-green-600">Copied!</span></>
+                ) : (
+                  <><Copy className="w-4 h-4" /> <span>Copy to clipboard</span></>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
