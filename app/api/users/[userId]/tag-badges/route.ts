@@ -7,9 +7,10 @@ import pool from '@/lib/db';
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  context: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const params = await context.params;
     const userId = parseInt(params.userId);
 
     if (isNaN(userId)) {
