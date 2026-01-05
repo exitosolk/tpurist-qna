@@ -21,7 +21,7 @@ interface QuestionRow extends RowDataPacket {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -30,7 +30,8 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const questionId = parseInt(params.id);
+    const { id } = await params;
+    const questionId = parseInt(id);
     const { reason } = await request.json();
 
     if (isNaN(questionId)) {
@@ -162,10 +163,11 @@ export async function POST(
 // Get reopen vote count for a question
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const questionId = parseInt(params.id);
+    const { id } = await params;
+    const questionId = parseInt(id);
 
     if (isNaN(questionId)) {
       return NextResponse.json({ error: 'Invalid question ID' }, { status: 400 });
