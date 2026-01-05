@@ -138,7 +138,13 @@ export async function closeQuestion(
     );
 
     // Record quality strike for question owner (2.0 strikes for closed question)
-    await recordQualityStrike(questionOwnerId, questionId, 'closed');
+    console.log(`[Closure] About to record closure strike for user ${questionOwnerId}, question ${questionId}`);
+    try {
+      await recordQualityStrike(questionOwnerId, questionId, 'closed');
+      console.log(`[Closure] Successfully recorded closure strike`);
+    } catch (error) {
+      console.error(`[Closure] ERROR recording closure strike:`, error);
+    }
 
     // Create notification for question owner
     const closeMessage = isAutomatic
