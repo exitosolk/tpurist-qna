@@ -101,6 +101,8 @@ export async function recordQualityStrike(
   reason?: string
 ): Promise<void> {
   try {
+    console.log(`[Quality Ban] Recording ${strikeType} strike for user ${userId}, question ${questionId}`);
+    
     // Get strike value from config
     const configKey = `strike_value_${strikeType}`;
     const configResult = await query(
@@ -111,6 +113,8 @@ export async function recordQualityStrike(
     const strikeValue = configResult.rows.length > 0 
       ? parseFloat(configResult.rows[0].config_value) 
       : 1.0;
+
+    console.log(`[Quality Ban] Strike value for ${strikeType}: ${strikeValue}`);
 
     // Insert or update the strike
     await query(
@@ -127,10 +131,13 @@ export async function recordQualityStrike(
     // Update question quality metrics
     await updateQuestionQualityMetrics(questionId);
 
+    console.log(`[Quality Ban] Evaluating ban status for user ${userId}...`);
     // Check if user should be banned
     await evaluateAndApplyBan(userId);
+    console.log(`[Quality Ban] Ban evaluation complete for user ${userId}`);
   } catch (error) {
-    console.error('Error recording quality strike:', error);
+    console.error(`[Quality Ban] ERROR recording quality strike for user ${userId}:`, error);
+    throw error; // Re-throw to see in parent
   }
 }
 
@@ -183,9 +190,11 @@ async function evaluateAndApplyBan(userId: number): Promise<void> {
     );
 
     const totalStrikes = parseFloat(strikeResult.rows[0]?.total_strikes || '0');
+    console.log(`[Quality Ban] User ${userId} has ${totalStrikes} total strikes`);
 
     // Get thresholds from config
     const thresholds = await getQualityBanThresholds();
+    console.log(`[Quality Ban] Thresholds:`, thresholds);
 
     // Determine ban level
     let banLevel: BanLevel | null = null;
@@ -206,8 +215,11 @@ async function evaluateAndApplyBan(userId: number): Promise<void> {
     }
 
     if (!banLevel) {
+      console.log(`[Quality Ban] User ${userId} has ${totalStrikes} strikes - no ban needed`);
       return; // No ban needed
     }
+
+    console.log(`[Quality Ban] User ${userId} should be banned at level: ${banLevel}, duration: ${duration} days`);
 
     // Check if user already has an active ban
     const existingBan = await query(
@@ -244,15 +256,18 @@ async function evaluateAndApplyBan(userId: number): Promise<void> {
       }
     } else {
       // Create new ban
+      console.log(`[Quality Ban] Creating new ban for user ${userId}:`, { banLevel, totalStrikes, expiresAt });
       await query(
         `INSERT INTO user_quality_bans 
          (user_id, ban_type, ban_level, total_strikes, active_strikes, expires_at, ban_reason)
          VALUES (?, 'question_ban', ?, ?, ?, ?, ?)`,
         [userId, banLevel, totalStrikes, totalStrikes, expiresAt, banReason]
       );
+      console.log(`[Quality Ban] Ban successfully created for user ${userId}`);
     }
   } catch (error) {
-    console.error('Error evaluating and applying ban:', error);
+    console.error(`[Quality Ban] ERROR evaluating and applying ban for user ${userId}:`, error);
+    throw error; // Re-throw to see the error in the parent call
   }
 }
 
