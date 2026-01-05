@@ -2,7 +2,11 @@
 import { PoolConnection } from 'mysql2/promise';
 import pool from './db';
 
-export type BadgeName = 'Ayubowan' | 'First Landing' | 'Rice & Curry' | 'Snapshot';
+export type BadgeName = 
+  // Bronze Tier
+  'Ayubowan' | 'First Landing' | 'Rice & Curry' | 'Snapshot' |
+  // Silver Tier
+  'Price Police' | 'Local Guide' | 'Communicator' | 'Seasoned Traveler';
 
 interface BadgeAwardResult {
   awarded: boolean;
@@ -275,6 +279,200 @@ export async function getBadgeTierCounts(userId: number): Promise<BadgeTierCount
     });
 
     return counts;
+  } finally {
+    connection.release();
+  }
+}
+
+// ============================================================================
+// SILVER TIER BADGES
+// ============================================================================
+
+/**
+ * Check and award "Price Police" badge
+ * Requires: User flagged content as "Outdated Price" which was then confirmed and hidden
+ */
+export async function checkPricePoliceBadge(
+  userId: number,
+  reviewQueueId: number
+): Promise<BadgeAwardResult> {
+  const connection = await pool.getConnection();
+  try {
+    // Check if this review queue item was flagged by this user and resulted in content being hidden
+    const [reviewRows] = await connection.query<any[]>(
+      `SELECT rq.id, cf.id as flag_id
+       FROM review_queue rq
+       LEFT JOIN content_flags cf ON cf.review_queue_id = rq.id
+       WHERE rq.id = ? 
+         AND rq.flagged_by = ? 
+         AND rq.review_type = 'outdated'
+         AND rq.status = 'completed'
+         AND cf.flag_type = 'outdated'
+         AND cf.is_active = TRUE`,
+      [reviewQueueId, userId]
+    );
+
+    if (reviewRows.length === 0) {
+      return { awarded: false };
+    }
+
+    // Award the badge - they successfully flagged outdated content
+    return await awardBadge(userId, 'Price Police', connection);
+  } finally {
+    connection.release();
+  }
+}
+
+/**
+ * Check and award "Local Guide" badge
+ * Requires: 10 answers within a specific location tag with combined score of 20+
+ */
+export async function checkLocalGuideBadge(
+  userId: number,
+  tagName: string
+): Promise<BadgeAwardResult> {
+  const connection = await pool.getConnection();
+  try {
+    // Count answers and total score for this user in this tag
+    const [statsRows] = await connection.query<any[]>(
+      `SELECT COUNT(DISTINCT a.id) as answer_count, COALESCE(SUM(a.score), 0) as total_score
+       FROM answers a
+       JOIN questions q ON a.question_id = q.id
+       JOIN question_tags qt ON q.id = qt.question_id
+       JOIN tags t ON qt.tag_id = t.id
+       WHERE a.user_id = ? 
+         AND t.name = ?`,
+      [userId, tagName]
+    );
+
+    if (statsRows.length === 0) {
+      return { awarded: false };
+    }
+
+    const stats = statsRows[0];
+    
+    // Check if requirements met: 10+ answers with 20+ combined score
+    if (stats.answer_count >= 10 && stats.total_score >= 20) {
+      return await awardBadge(userId, 'Local Guide', connection);
+    }
+
+    return { awarded: false };
+  } finally {
+    connection.release();
+  }
+}
+
+/**
+ * Update progress for "Communicator" badge
+ * Requires: 5 conversations in comments that led to an accepted answer
+ * Call this when an answer is accepted that has comments from this user
+ */
+export async function updateCommunicatorProgress(userId: number): Promise<BadgeAwardResult> {
+  const connection = await pool.getConnection();
+  try {
+    // Get badge ID
+    const [badgeRows] = await connection.query<any[]>(
+      'SELECT id FROM badges WHERE name = ?',
+      ['Communicator']
+    );
+
+    if (badgeRows.length === 0) {
+      return { awarded: false };
+    }
+
+    const badgeId = badgeRows[0].id;
+
+    // Count distinct accepted answers where user commented on the answer
+    const [countRows] = await connection.query<any[]>(
+      `SELECT COUNT(DISTINCT a.id) as count
+       FROM answers a
+       JOIN comments c ON c.commentable_type = 'answer' AND c.commentable_id = a.id
+       WHERE a.is_accepted = TRUE
+         AND c.user_id = ?
+         AND a.user_id != ?`,
+      [userId, userId] // User commented, but didn't write the answer
+    );
+
+    const conversationCount = countRows[0].count;
+
+    // Update progress
+    await connection.query(
+      `INSERT INTO badge_progress (user_id, badge_id, progress, target)
+       VALUES (?, ?, ?, 5)
+       ON DUPLICATE KEY UPDATE progress = VALUES(progress)`,
+      [userId, badgeId, conversationCount]
+    );
+
+    // Award badge if target reached
+    if (conversationCount >= 5) {
+      return await awardBadge(userId, 'Communicator', connection);
+    }
+
+    return { awarded: false };
+  } finally {
+    connection.release();
+  }
+}
+
+/**
+ * Update user's login streak and check for Seasoned Traveler badge
+ * Call this whenever a user logs in or visits the site
+ */
+export async function updateLoginStreak(userId: number): Promise<BadgeAwardResult> {
+  const connection = await pool.getConnection();
+  try {
+    // Get user's current streak data
+    const [userRows] = await connection.query<any[]>(
+      'SELECT last_login_at, current_streak, longest_streak FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (userRows.length === 0) {
+      return { awarded: false };
+    }
+
+    const user = userRows[0];
+    const now = new Date();
+    const lastLogin = user.last_login_at ? new Date(user.last_login_at) : null;
+
+    let newStreak = 1;
+    let newLongest = user.longest_streak || 0;
+
+    if (lastLogin) {
+      // Calculate days between logins
+      const daysSinceLastLogin = Math.floor((now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysSinceLastLogin === 0) {
+        // Same day - no change to streak
+        return { awarded: false };
+      } else if (daysSinceLastLogin === 1) {
+        // Consecutive day - increment streak
+        newStreak = (user.current_streak || 0) + 1;
+      } else {
+        // Streak broken - reset to 1
+        newStreak = 1;
+      }
+    }
+
+    // Update longest streak if current is higher
+    if (newStreak > newLongest) {
+      newLongest = newStreak;
+    }
+
+    // Update user record
+    await connection.query(
+      `UPDATE users 
+       SET last_login_at = ?, current_streak = ?, longest_streak = ?
+       WHERE id = ?`,
+      [now, newStreak, newLongest, userId]
+    );
+
+    // Check for Seasoned Traveler badge (30 day streak)
+    if (newStreak >= 30) {
+      return await awardBadge(userId, 'Seasoned Traveler', connection);
+    }
+
+    return { awarded: false };
   } finally {
     connection.release();
   }
