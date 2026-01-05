@@ -1461,7 +1461,7 @@ export default function QuestionDetailPage() {
               <p className="text-gray-600 font-medium mb-2">This question is closed</p>
               <p className="text-sm text-gray-500">New answers are not being accepted at this time.</p>
             </div>
-          ) : !session ? (
+          ) : (
             <div className="text-center py-8">
               <p className="text-gray-600 mb-4">You must be logged in to post an answer.</p>
               <Link
