@@ -45,6 +45,12 @@ interface Question extends User {
   edited_at?: string;
   edit_count: number;
   tags: Array<{ id: number; name: string }>;
+  is_closed: boolean;
+  closed_at?: string;
+  closed_by?: number;
+  close_reason?: string;
+  close_details?: string;
+  auto_closed: boolean;
 }
 
 interface Answer extends User {
@@ -827,6 +833,39 @@ export default function QuestionDetailPage() {
             <span>Viewed {question.views} times</span>
           </div>
 
+          {/* Closed Question Banner */}
+          {question.is_closed && (
+            <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-600 p-4 rounded">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <div className="ml-3 flex-1">
+                  <h3 className="text-lg font-semibold text-yellow-800">
+                    {question.auto_closed ? 'Automatically Closed' : 'Closed'}
+                  </h3>
+                  <div className="mt-2 text-sm text-yellow-700">
+                    <p>
+                      {question.close_details || 'This question has been closed.'}
+                    </p>
+                    {question.closed_at && (
+                      <p className="mt-1 text-xs text-yellow-600">
+                        Closed {formatDistanceToNow(new Date(question.closed_at), { addSuffix: true })}
+                      </p>
+                    )}
+                  </div>
+                  <div className="mt-3 text-sm">
+                    <p className="text-yellow-800">
+                      This question is not accepting new answers. You can still vote on existing answers or edit the question to improve it.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="bg-white rounded-lg shadow-sm border p-4 md:p-6">
             {/* Mobile Author Info - Top */}
             <div className="md:hidden mb-4 pb-4 border-b">
@@ -1348,7 +1387,7 @@ export default function QuestionDetailPage() {
             </div>
           )}
 
-          {session ? (
+          {session && !question.is_closed ? (
             <form onSubmit={handleSubmitAnswer}>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xl font-bold">Your Answer</h3>
@@ -1414,7 +1453,15 @@ export default function QuestionDetailPage() {
                 {submitting ? "Posting..." : "Post Your Answer"}
               </button>
             </form>
-          ) : (
+          ) : question.is_closed ? (
+            <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+              <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <p className="text-gray-600 font-medium mb-2">This question is closed</p>
+              <p className="text-sm text-gray-500">New answers are not being accepted at this time.</p>
+            </div>
+          ) : !session ? (
             <div className="text-center py-8">
               <p className="text-gray-600 mb-4">You must be logged in to post an answer.</p>
               <Link
