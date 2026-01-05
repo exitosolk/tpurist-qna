@@ -8,6 +8,7 @@ import { updateRiceAndCurryProgress, checkFirstLandingBadge, checkSnapshotBadge 
 import { checkRateLimit, recordRateLimitAction } from "@/lib/rate-limit";
 import { recordQualityStrike } from "@/lib/quality-ban";
 import { updateUserTagScore, recordTagActivity } from "@/lib/tag-badges";
+import { checkAutoClose } from "@/lib/closure";
 
 export async function POST(req: Request) {
   try {
@@ -189,6 +190,9 @@ export async function POST(req: Request) {
           // Track quality strikes for questions when changing to downvote
           if (votableType === "question" && voteType === -1) {
             await recordQualityStrike(contentOwnerId, votableId, 'downvote');
+            
+            // Check if question should be auto-closed
+            await checkAutoClose(votableId);
           }
         }
 
@@ -230,6 +234,9 @@ export async function POST(req: Request) {
         // Track quality strikes for question downvotes
         if (votableType === "question" && voteType === -1) {
           await recordQualityStrike(contentOwnerId, votableId, 'downvote');
+          
+          // Check if question should be auto-closed
+          await checkAutoClose(votableId);
         }
         // Create notification for upvotes only (not downvotes to avoid negativity)
         if (voteType === 1) {
