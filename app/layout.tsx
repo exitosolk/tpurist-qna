@@ -15,7 +15,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL('https://oneceylon.space'),
   title: {
-    default: 'OneCeylon - Sri Lanka Travel Q&A Community',
+    default: 'OneCeylon - Ask Sri Lanka Travel Questions & Get Expert Answers',
     template: '%s | OneCeylon',
   },
   description: 'Get expert Sri Lanka travel advice. Ask questions about destinations, transportation, accommodations from travelers and locals who know best.',
