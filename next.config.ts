@@ -4,9 +4,6 @@ const nextConfig: NextConfig = {
   poweredByHeader: false, // Remove X-Powered-By header for security
   compress: true, // Enable compression (gzip)
   
-  // Performance optimizations
-  swcMinify: true,
-  
   // Image optimization
   images: {
     formats: ['image/avif', 'image/webp'],
