@@ -834,7 +834,7 @@ export default function QuestionDetailPage() {
               </div>
 
               {/* Closed Question Banner */}
-              {question.is_closed && (
+              {Boolean(question.is_closed) && (
                 <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-600 p-4 rounded">
                   <div className="flex items-start">
                     <div className="flex-shrink-0">
