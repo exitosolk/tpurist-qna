@@ -38,10 +38,11 @@ function QuestionsContent() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState("newest");
+  const [filter, setFilter] = useState<string | null>(null);
 
   useEffect(() => {
     fetchQuestions();
-  }, [sort, tagFilter]);
+  }, [sort, filter, tagFilter]);
 
   const fetchQuestions = async () => {
     setLoading(true);
@@ -49,6 +50,9 @@ function QuestionsContent() {
       const params = new URLSearchParams({ sort });
       if (tagFilter) {
         params.append("tag", tagFilter);
+      }
+      if (filter) {
+        params.append("filter", filter);
       }
       const response = await fetch(`/api/questions?${params.toString()}`);
       const data = await response.json();
