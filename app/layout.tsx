@@ -8,6 +8,8 @@ const inter = Inter({
   subsets: ["latin"],
   display: 'swap',
   preload: true,
+  variable: '--font-inter',
+  fallback: ['system-ui', 'arial'],
 });
 
 export const metadata: Metadata = {
@@ -96,21 +98,29 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#2563eb" />
+        
+        {/* DNS Prefetch for external resources */}
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
       </head>
       <body className={inter.className}>
-        {/* Google Analytics */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-PC2E5MKLXJ"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-PC2E5MKLXJ');
-          `}
-        </Script>
+        {/* Google Analytics - Only in production */}
+        {process.env.NODE_ENV === 'production' && (
+          <>
+            <Script
+              src="https://www.googletagmanager.com/gtag/js?id=G-PC2E5MKLXJ"
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', 'G-PC2E5MKLXJ');
+              `}
+            </Script>
+          </>
+        )}
         
         <AuthProvider>{children}</AuthProvider>
       </body>
