@@ -827,44 +827,44 @@ export default function QuestionDetailPage() {
 
             {/* Question */}
             <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-4">{question.title}</h1>
-          <div className="flex gap-4 text-sm text-gray-600 mb-6">
-            <span>Asked {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}</span>
-            <span>Viewed {question.views} times</span>
-          </div>
-
-          {/* Closed Question Banner */}
-          {question.is_closed && (
-            <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-600 p-4 rounded">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
-                <div className="ml-3 flex-1">
-                  <h3 className="text-lg font-semibold text-yellow-800">
-                    {question.auto_closed ? 'Automatically Closed' : 'Closed'}
-                  </h3>
-                  <div className="mt-2 text-sm text-yellow-700">
-                    <p>
-                      {question.close_details || 'This question has been closed.'}
-                    </p>
-                    {question.closed_at && (
-                      <p className="mt-1 text-xs text-yellow-600">
-                        Closed {formatDistanceToNow(new Date(question.closed_at), { addSuffix: true })}
-                      </p>
-                    )}
-                  </div>
-                  <div className="mt-3 text-sm">
-                    <p className="text-yellow-800">
-                      This question is not accepting new answers. You can still vote on existing answers or edit the question to improve it.
-                    </p>
-                  </div>
-                </div>
+              <h1 className="text-3xl font-bold mb-4">{question.title}</h1>
+              <div className="flex gap-4 text-sm text-gray-600 mb-6">
+                <span>Asked {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}</span>
+                <span>Viewed {question.views} times</span>
               </div>
-            </div>
-          )}
+
+              {/* Closed Question Banner */}
+              {question.is_closed && (
+                <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-600 p-4 rounded">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <h3 className="text-lg font-semibold text-yellow-800">
+                        {question.auto_closed ? 'Automatically Closed' : 'Closed'}
+                      </h3>
+                      <div className="mt-2 text-sm text-yellow-700">
+                        <p>
+                          {question.close_details || 'This question has been closed.'}
+                        </p>
+                        {question.closed_at && (
+                          <p className="mt-1 text-xs text-yellow-600">
+                            Closed {formatDistanceToNow(new Date(question.closed_at), { addSuffix: true })}
+                          </p>
+                        )}
+                      </div>
+                      <div className="mt-3 text-sm">
+                        <p className="text-yellow-800">
+                          This question is not accepting new answers. You can still vote on existing answers or edit the question to improve it.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
           <div className="bg-white rounded-lg shadow-sm border p-4 md:p-6">
             {/* Mobile Author Info - Top */}
