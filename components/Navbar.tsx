@@ -110,7 +110,8 @@ export default function Navbar() {
                   </svg>
                 </button>
                 {exploreDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-48 bg-white border rounded-lg shadow-lg py-2">
+                  <div className="absolute top-full left-0 pt-2 w-48">
+                    <div className="bg-white border rounded-lg shadow-lg py-2">
                     <Link
                       href="/tags"
                       className="block px-4 py-2 hover:bg-gray-100 text-gray-700"
@@ -137,6 +138,7 @@ export default function Navbar() {
                         Review Queue
                       </Link>
                     )}
+                    </div>
                   </div>
                 )}
               </div>
