@@ -87,12 +87,15 @@ function QuestionsContent() {
 
         <div className="mb-6 overflow-x-auto">
           <div className="flex gap-2 min-w-max">
-            {["newest", "active", "votes", "unanswered"].map((sortOption) => (
+            {["newest", "active", "votes"].map((sortOption) => (
               <button
                 key={sortOption}
-                onClick={() => setSort(sortOption)}
+                onClick={() => {
+                  setSort(sortOption);
+                  setFilter(null);
+                }}
                 className={`px-4 py-2 rounded whitespace-nowrap ${
-                  sort === sortOption
+                  sort === sortOption && !filter
                     ? "bg-blue-600 text-white"
                     : "bg-white border hover:bg-gray-50"
                 }`}
@@ -100,6 +103,19 @@ function QuestionsContent() {
                 {sortOption.charAt(0).toUpperCase() + sortOption.slice(1)}
               </button>
             ))}
+            <button
+              onClick={() => {
+                setFilter("unanswered");
+                setSort("newest");
+              }}
+              className={`px-4 py-2 rounded whitespace-nowrap ${
+                filter === "unanswered"
+                  ? "bg-blue-600 text-white"
+                  : "bg-white border hover:bg-gray-50"
+              }`}
+            >
+              Unanswered
+            </button>
           </div>
         </div>
 
