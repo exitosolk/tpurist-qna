@@ -11,9 +11,9 @@ export default function HomePage() {
       <main className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold mb-4">
-            Every traveler has a story.
+            Sri Lanka Travel Questions & Answers
             <br />
-            <span className="text-blue-600">Share yours.</span>
+            <span className="text-blue-600">Every traveler has a story. Share yours.</span>
           </h1>
           <p className="text-xl text-gray-600 mb-4">
             Join the community of travelers exploring Sri Lanka. Ask questions, share experiences, and discover hidden gems.

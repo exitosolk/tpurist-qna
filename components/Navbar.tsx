@@ -66,7 +66,7 @@ export default function Navbar() {
           <div className="flex items-center justify-between gap-4">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 shrink-0">
-              <h1 className="text-2xl font-bold text-blue-600">OneCeylon</h1>
+              <div className="text-2xl font-bold text-blue-600">OneCeylon</div>
             </Link>
 
             {/* Desktop Search Bar - Large screens only */}
