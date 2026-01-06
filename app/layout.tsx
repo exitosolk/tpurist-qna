@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     default: 'OneCeylon - Sri Lanka Travel Q&A Community',
     template: '%s | OneCeylon',
   },
-  description: 'Ask the island. Get expert travel advice for Sri Lanka. Ask questions about destinations, transportation, accommodations, and experiences from travelers and locals who know Sri Lanka best.',
+  description: 'Get expert Sri Lanka travel advice. Ask questions about destinations, transportation, accommodations from travelers and locals who know best.',
   keywords: [
     'Sri Lanka travel',
     'Sri Lanka tourism',
