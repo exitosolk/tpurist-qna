@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import Navbar from "@/components/Navbar";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
-import { Car, TrendingUp, Calendar, MapPin, AlertCircle, CheckCircle, Zap, TrendingDown, Info, Circle } from "lucide-react";
+import { Car, TrendingUp, Calendar, MapPin, AlertCircle, CheckCircle, Zap, TrendingDown, Info, Circle, RefreshCw } from "lucide-react";
 
 interface RouteData {
   start_location: string;
@@ -263,11 +263,28 @@ export default function TukTukPricesPage() {
         {/* Live Pulse Section - Social Proof */}
         {livePulse.length > 0 && (
           <div className="mb-8 bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Zap className="w-6 h-6 text-green-600" />
-              <h2 className="text-2xl font-bold">Live Pulse</h2>
-              <span className="text-sm text-gray-500">· Recent reports from travelers</span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                {/* Pulsing live indicator */}
+                <div className="relative">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full animate-ping opacity-75"></div>
+                </div>
+                <h2 className="text-2xl font-bold">Live Pulse</h2>
+              </div>
+              {/* Refresh button */}
+              <button
+                onClick={() => fetchLivePulse()}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors group"
+                title="Refresh live data"
+              >
+                <RefreshCw className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors" />
+              </button>
             </div>
+            {/* Community-focused sub-heading */}
+            <p className="text-sm text-gray-600 mb-6">
+              Real-time fares paid by travelers just now
+            </p>
             <div className="grid md:grid-cols-2 gap-3">
               {livePulse.map((report, idx) => {
                 const timeAgo = getTimeAgo(new Date(report.created_at));
