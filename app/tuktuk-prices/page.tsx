@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import Navbar from "@/components/Navbar";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
-import { Car, TrendingUp, Calendar, MapPin, AlertCircle, CheckCircle, Zap, TrendingDown, Info } from "lucide-react";
+import { Car, TrendingUp, Calendar, MapPin, AlertCircle, CheckCircle, Zap, TrendingDown, Info, Circle } from "lucide-react";
 
 interface RouteData {
   start_location: string;
@@ -275,35 +275,41 @@ export default function TukTukPricesPage() {
                 const cleanEnd = sanitizeAddress(report.end_location);
                 return (
                   <div key={idx} className="bg-gray-50 rounded-lg hover:bg-gray-100 transition p-3">
-                    {/* Mobile-first vertical layout */}
-                    <div className="flex flex-col gap-2">
-                      {/* Route info */}
-                      <div className="text-sm">
-                        <div className="flex items-start gap-2">
-                          <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-gray-900">From: {cleanStart}</div>
-                            <div className="font-medium text-gray-900 mt-1">To: {cleanEnd}</div>
-                          </div>
-                        </div>
+                    {/* Mobile-first vertical layout with timeline pattern */}
+                    <div className="flex gap-3">
+                      {/* Timeline icons */}
+                      <div className="flex flex-col items-center pt-1">
+                        <Circle className="w-3 h-3 text-green-500 fill-green-500" />
+                        <div className="w-px h-full bg-gray-300 my-1"></div>
+                        <MapPin className="w-4 h-4 text-blue-500 fill-blue-500" />
                       </div>
                       
-                      {/* Divider */}
-                      <div className="border-t border-gray-200"></div>
-                      
-                      {/* Meta info and price */}
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-gray-500 flex items-center gap-2">
-                          <span>{timeAgo}</span>
-                          {report.distance_km && (
-                            <>
-                              <span>•</span>
-                              <span>{Number(report.distance_km).toFixed(1)} km</span>
-                            </>
-                          )}
+                      {/* Content */}
+                      <div className="flex-1 min-w-0 flex flex-col gap-2">
+                        {/* Route info */}
+                        <div className="text-sm space-y-1">
+                          <div className="font-medium text-gray-900 truncate">{cleanStart}</div>
+                          <div className="font-medium text-gray-900 truncate">{cleanEnd}</div>
                         </div>
-                        <div className="px-3 py-1 bg-blue-600 text-white rounded-md font-bold text-lg">
-                          {Math.round(report.price)} LKR
+                        
+                        {/* Divider */}
+                        <div className="border-t border-gray-200"></div>
+                        
+                        {/* Meta info and price */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="text-xs text-gray-500 flex items-center gap-1.5">
+                            <span>{timeAgo}</span>
+                            {report.distance_km && (
+                              <>
+                                <span>•</span>
+                                <span>{Number(report.distance_km).toFixed(1)} km</span>
+                              </>
+                            )}
+                          </div>
+                          {/* Price badge - informational, not actionable */}
+                          <div className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded font-bold text-base border border-blue-200">
+                            {Math.round(report.price)} LKR
+                          </div>
                         </div>
                       </div>
                     </div>
