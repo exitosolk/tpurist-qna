@@ -236,7 +236,33 @@ export default function Navbar() {
           {/* Mobile & Tablet More Menu (Explore items) */}
           {mobileMenuOpen && (
             <nav className="lg:hidden mt-4 pb-4 flex flex-col gap-2">
-              <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Explore</div>
+              {/* Primary Navigation */}
+              <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Navigate</div>
+              <Link
+                href="/questions"
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Questions
+              </Link>
+              <Link
+                href="/tuktuk-prices"
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                TukTuk Prices
+              </Link>
+              <Link
+                href="/scams"
+                className="px-4 py-2 text-orange-600 hover:bg-orange-50 rounded flex items-center gap-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <AlertTriangle className="w-4 h-4" />
+                Scams
+              </Link>
+              
+              {/* Explore Section */}
+              <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase mt-2">Explore</div>
               <Link
                 href="/tags"
                 className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
