@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
     // First, search our local cache using FULLTEXT search
     const cacheResults = await query(
-      `SELECT DISTINCT place_id, name, formatted_address, lat, lng, hit_count
+      `SELECT place_id, name, formatted_address, lat, lng, hit_count
        FROM places_cache
        WHERE MATCH(name, formatted_address, search_terms) AGAINST(? IN NATURAL LANGUAGE MODE)
        OR name LIKE ? 
