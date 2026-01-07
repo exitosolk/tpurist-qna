@@ -23,17 +23,23 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ predictions: [] });
     }
 
-    // First, search our local cache using FULLTEXT search
-    const cacheResults = await query(
-      `SELECT place_id, name, formatted_address, lat, lng, hit_count
-       FROM places_cache
-       WHERE MATCH(name, formatted_address, search_terms) AGAINST(? IN NATURAL LANGUAGE MODE)
-       OR name LIKE ? 
-       OR formatted_address LIKE ?
-       ORDER BY hit_count DESC, last_used_at DESC
-       LIMIT 5`,
-      [input, `%${input}%`, `%${input}%`]
-    );
+    // First, search our local cache using LIKE search
+    // Note: FULLTEXT search is optional - will use LIKE if FULLTEXT index doesn't exist
+    let cacheResults;
+    try {
+      cacheResults = await query(
+        `SELECT place_id, name, formatted_address, lat, lng, hit_count
+         FROM places_cache
+         WHERE name LIKE ? 
+         OR formatted_address LIKE ?
+         ORDER BY hit_count DESC, last_used_at DESC
+         LIMIT 5`,
+        [`%${input}%`, `%${input}%`]
+      );
+    } catch (error) {
+      console.error("Cache search error:", error);
+      cacheResults = { rows: [] };
+    }
 
     if (cacheResults.rows && cacheResults.rows.length > 0) {
       // Return cached results first
@@ -60,6 +66,7 @@ export async function GET(req: NextRequest) {
     }
 
     // If not in cache, fetch from Google Places API
+    console.log(`Fetching from Google Places API for: ${input}`);
     const url = new URL("https://maps.googleapis.com/maps/api/place/autocomplete/json");
     url.searchParams.set("input", input);
     url.searchParams.set("key", GOOGLE_PLACES_API_KEY);
@@ -71,6 +78,8 @@ export async function GET(req: NextRequest) {
     const response = await fetch(url.toString());
     const data = await response.json();
 
+    console.log(`Google Places API response status: ${data.status}`);
+    
     if (data.status === "OK" && data.predictions) {
       // Cache the predictions asynchronously
       cachePredictions(data.predictions, input).catch(console.error);
@@ -83,6 +92,12 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    // Handle API errors
+    if (data.status === "ZERO_RESULTS") {
+      return NextResponse.json({ predictions: [] });
+    }
+
+    console.error("Google Places API error:", data.status, data.error_message);
     return NextResponse.json({ predictions: [] });
   } catch (error) {
     console.error("Error in places autocomplete:", error);
