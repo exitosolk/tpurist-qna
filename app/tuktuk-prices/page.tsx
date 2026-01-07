@@ -266,7 +266,7 @@ export default function TukTukPricesPage() {
                     <div className="text-right ml-3">
                       <div className="text-lg font-bold text-blue-600">{Math.round(report.price)} LKR</div>
                       {report.distance_km && (
-                        <div className="text-xs text-gray-500">{report.distance_km.toFixed(1)} km</div>
+                        <div className="text-xs text-gray-500">{Number(report.distance_km).toFixed(1)} km</div>
                       )}
                     </div>
                   </div>
@@ -316,7 +316,7 @@ export default function TukTukPricesPage() {
 
               {searchDistance && (
                 <div className="text-sm text-gray-600 bg-blue-50 p-2 rounded">
-                  📍 Distance: ~{searchDistance.toFixed(1)} km
+                  📍 Distance: ~{Number(searchDistance).toFixed(1)} km
                 </div>
               )}
 
@@ -401,7 +401,7 @@ export default function TukTukPricesPage() {
                       )}
                       {routeData.avg_distance && (
                         <div className="text-xs text-gray-600">
-                          📍 Approx. distance: {routeData.avg_distance.toFixed(1)} km
+                          📍 Approx. distance: {Number(routeData.avg_distance).toFixed(1)} km
                         </div>
                       )}
                       {routeData.avg_per_km && (
@@ -428,7 +428,7 @@ export default function TukTukPricesPage() {
                           </div>
                           {report.distance_km && (
                             <div className="text-xs text-gray-600">
-                              {report.distance_km.toFixed(1)} km · {report.price_per_km ? `${Math.round(report.price_per_km)} LKR/km` : ''}
+                              {Number(report.distance_km).toFixed(1)} km · {report.price_per_km ? `${Math.round(Number(report.price_per_km))} LKR/km` : ''}
                             </div>
                           )}
                           {report.additional_notes && (
@@ -484,8 +484,8 @@ export default function TukTukPricesPage() {
 
               {reportDistance && (
                 <div className="text-sm text-gray-600 bg-blue-50 p-2 rounded">
-                  📍 Distance: ~{reportDistance.toFixed(1)} km
-                  {price && ` · Per km: ${Math.round(parseFloat(price) / reportDistance)} LKR/km`}
+                  📍 Distance: ~{Number(reportDistance).toFixed(1)} km
+                  {price && ` · Per km: ${Math.round(parseFloat(price) / Number(reportDistance))} LKR/km`}
                 </div>
               )}
 
