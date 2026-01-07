@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import Navbar from "@/components/Navbar";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
-import { Car, TrendingUp, Calendar, MapPin, AlertCircle, CheckCircle, Zap, TrendingDown } from "lucide-react";
+import { Car, TrendingUp, Calendar, MapPin, AlertCircle, CheckCircle, Zap, TrendingDown, Info } from "lucide-react";
 
 interface RouteData {
   start_location: string;
@@ -72,7 +72,7 @@ export default function TukTukPricesPage() {
   const [endLocation, setEndLocation] = useState("");
   const [endPlaceId, setEndPlaceId] = useState("");
   const [price, setPrice] = useState("");
-  const [dateOfTravel, setDateOfTravel] = useState("");
+  const [dateOfTravel, setDateOfTravel] = useState(new Date().toISOString().split('T')[0]); // Default to today
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
@@ -82,6 +82,9 @@ export default function TukTukPricesPage() {
   const [popularRoutes, setPopularRoutes] = useState<RouteData[]>([]);
   const [livePulse, setLivePulse] = useState<LivePulseReport[]>([]);
   const [perKmRate, setPerKmRate] = useState<PerKmRate | null>(null);
+
+  // UI state
+  const [showCalculation, setShowCalculation] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -268,11 +271,13 @@ export default function TukTukPricesPage() {
             <div className="grid md:grid-cols-2 gap-3">
               {livePulse.map((report, idx) => {
                 const timeAgo = getTimeAgo(new Date(report.created_at));
+                const cleanStart = sanitizeAddress(report.start_location);
+                const cleanEnd = sanitizeAddress(report.end_location);
                 return (
                   <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-gray-900 truncate">
-                        {report.start_location} → {report.end_location}
+                        {cleanStart} → {cleanEnd}
                       </div>
                       <div className="text-xs text-gray-500">{timeAgo}</div>
                     </div>
@@ -407,14 +412,85 @@ export default function TukTukPricesPage() {
                     {fairPricing ? (
                       <>
                         <div className="bg-white/70 rounded-lg p-4 border-2 border-green-300">
-                          <div className="text-sm font-semibold text-green-800 mb-2">
-                            ✅ Fair Price (Based on {Number(routeData.avg_distance).toFixed(1)} km)
+                          <div className="text-sm font-semibold text-green-800 mb-2 flex items-center justify-between">
+                            <span>✅ Fair Price ({Number(routeData.avg_distance).toFixed(1)} km)</span>
+                            <button
+                              onClick={() => setShowCalculation(!showCalculation)}
+                              className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                            >
+                              <Info className="w-3 h-3" />
+                              {showCalculation ? 'Hide' : 'See'} breakdown
+                            </button>
                           </div>
-                          <div className="text-3xl font-bold text-green-700">
+                          <div className="text-3xl font-bold text-green-700 mb-2">
                             {Math.round(fairPricing.min)} - {Math.round(fairPricing.max)} LKR
                           </div>
-                          <div className="text-sm text-gray-700 mt-2">
-                            Calculation: First km (100-120) + {Number(routeData.avg_distance) > 1 ? `${(Number(routeData.avg_distance) - 1).toFixed(1)} km × 80-100` : '0 km'}
+                          
+                          {/* Collapsible calculation */}
+                          {showCalculation && (
+                            <div className="text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded border border-gray-200">
+                              <div className="font-semibold mb-1">How we calculate fair price:</div>
+                              <div>• First km: 100-120 LKR</div>
+                              {Number(routeData.avg_distance) > 1 && (
+                                <div>• Next {(Number(routeData.avg_distance) - 1).toFixed(1)} km: × 80-100 LKR/km</div>
+                              )}
+                              <div className="mt-1 font-semibold">= {Math.round(fairPricing.min)} - {Math.round(fairPricing.max)} LKR</div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Visual Price Meter */}
+                        <div className="bg-white/70 rounded-lg p-4 border border-gray-200">
+                          <div className="text-sm font-medium text-gray-700 mb-3">Price Check</div>
+                          
+                          {/* Visual meter bar */}
+                          <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden mb-2">
+                            <div className="absolute h-full bg-green-400" style={{ width: '33%' }}></div>
+                            <div className="absolute h-full bg-yellow-300 left-[33%]" style={{ width: '33%' }}></div>
+                            <div className="absolute h-full bg-red-400 left-[66%]" style={{ width: '34%' }}></div>
+                            
+                            {/* Price indicator */}
+                            {(() => {
+                              const avgPrice = routeData.avg_price;
+                              const fairMax = fairPricing.max;
+                              const ripoffThreshold = fairMax * 1.5;
+                              let position = 0;
+                              
+                              if (avgPrice <= fairMax) {
+                                position = (avgPrice / fairMax) * 33;
+                              } else if (avgPrice <= fairMax * 1.3) {
+                                position = 33 + ((avgPrice - fairMax) / (fairMax * 0.3)) * 33;
+                              } else {
+                                position = Math.min(66 + ((avgPrice - fairMax * 1.3) / (fairMax * 0.2)) * 34, 95);
+                              }
+                              
+                              return (
+                                <div 
+                                  className="absolute top-0 h-full w-1 bg-gray-800"
+                                  style={{ left: `${position}%` }}
+                                >
+                                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold whitespace-nowrap">
+                                    ▼ {Math.round(avgPrice)}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </div>
+                          
+                          {/* Legend */}
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            <div className="text-center">
+                              <div className="font-semibold text-green-700">Fair Deal</div>
+                              <div className="text-gray-600">≤ {Math.round(fairPricing.max)}</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="font-semibold text-yellow-700">Negotiable</div>
+                              <div className="text-gray-600">{Math.round(fairPricing.max)}-{Math.round(fairPricing.max * 1.3)}</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="font-semibold text-red-700">Rip-off</div>
+                              <div className="text-gray-600">≥ {Math.round(fairPricing.max * 1.3)}</div>
+                            </div>
                           </div>
                         </div>
 
@@ -470,12 +546,12 @@ export default function TukTukPricesPage() {
                     <div className="pt-3 border-t border-gray-200 space-y-1">
                       <div className="text-xs text-gray-600 flex items-center gap-2">
                         <TrendingUp className="w-3 h-3" />
-                        Based on <strong>{routeData.report_count} reports</strong> in the last 6 months
+                        Based on <strong>{routeData.report_count} {pluralize(routeData.report_count, 'report')}</strong> in the last 6 months
                       </div>
                       {routeData.reports_last_week > 0 && (
                         <div className="text-xs text-green-600 flex items-center gap-1">
                           <Zap className="w-3 h-3" />
-                          {routeData.reports_last_week} reports this week (data is fresh!)
+                          {routeData.reports_last_week} {pluralize(routeData.reports_last_week, 'report')} this week (data is fresh!)
                         </div>
                       )}
                       {routeData.avg_distance && (
@@ -674,7 +750,7 @@ export default function TukTukPricesPage() {
                     </div>
                     <div className="text-xs text-gray-500 flex items-center gap-1 mt-2">
                       <Calendar className="w-3 h-3" />
-                      {route.report_count} reports
+                      {route.report_count} {pluralize(route.report_count, 'report')}
                     </div>
                   </div>
                 </div>
@@ -696,4 +772,33 @@ function getTimeAgo(date: Date): string {
   if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
   if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
   return date.toLocaleDateString();
+}
+
+// Sanitize address for display (remove zip codes, "Sri Lanka", etc.)
+function sanitizeAddress(address: string): string {
+  return address
+    .replace(/, Sri Lanka/gi, '') // Remove "Sri Lanka"
+    .replace(/\s*\d{5,6}\s*/g, ' ') // Remove zip codes (5-6 digits)
+    .replace(/,\s*,/g, ',') // Remove double commas
+    .trim();
+}
+
+// Get price status and color based on fair pricing
+function getPriceStatus(actualPrice: number, fairMin: number, fairMax: number): {
+  status: string;
+  color: string;
+  bgColor: string;
+} {
+  if (actualPrice <= fairMax) {
+    return { status: 'Fair Deal', color: 'text-green-700', bgColor: 'bg-green-100' };
+  } else if (actualPrice <= fairMax * 1.3) {
+    return { status: 'Negotiable', color: 'text-yellow-700', bgColor: 'bg-yellow-100' };
+  } else {
+    return { status: 'Rip-off', color: 'text-red-700', bgColor: 'bg-red-100' };
+  }
+}
+
+// Pluralize helper
+function pluralize(count: number, singular: string, plural?: string): string {
+  return count === 1 ? singular : (plural || singular + 's');
 }
