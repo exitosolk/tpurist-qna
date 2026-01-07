@@ -333,13 +333,37 @@ export default function TukTukPricesPage() {
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={searching}
-                className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium text-lg"
-              >
-                {searching ? "Searching..." : "Search Route"}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={searching}
+                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium text-lg"
+                >
+                  {searching ? "Searching..." : "Search Route"}
+                </button>
+                
+                {(searchStart || searchEnd) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchStart("");
+                      setSearchStartPlaceId("");
+                      setSearchEnd("");
+                      setSearchEndPlaceId("");
+                      setSearchDistance(null);
+                      setRouteData(null);
+                      setFairPricing(null);
+                      setRecentReports([]);
+                      setHasSearched(false);
+                      setSearchError("");
+                    }}
+                    className="px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+                    title="Clear search"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
             </form>
 
             {searchError && (
