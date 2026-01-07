@@ -19,6 +19,12 @@ interface RouteData {
   reports_last_week: number;
 }
 
+interface FairPricing {
+  min: number;
+  max: number;
+  fair: number;
+}
+
 interface RecentReport {
   price: number;
   distance_km?: number;
@@ -53,6 +59,7 @@ export default function TukTukPricesPage() {
   const [searchEnd, setSearchEnd] = useState("");
   const [searchEndPlaceId, setSearchEndPlaceId] = useState("");
   const [routeData, setRouteData] = useState<RouteData | null>(null);
+  const [fairPricing, setFairPricing] = useState<FairPricing | null>(null);
   const [recentReports, setRecentReports] = useState<RecentReport[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
@@ -147,6 +154,7 @@ export default function TukTukPricesPage() {
 
       if (response.ok) {
         setRouteData(data.route || null);
+        setFairPricing(data.fair_pricing || null);
         setRecentReports(data.recent_reports || []);
         setHasSearched(true);
       } else {
@@ -221,24 +229,29 @@ export default function TukTukPricesPage() {
           <div className="mb-6 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-6 text-white">
             <div className="flex items-center gap-3 mb-3">
               <Zap className="w-8 h-8" />
-              <h2 className="text-2xl font-bold">Current Market Rate (Per KM)</h2>
+              <h2 className="text-2xl font-bold">Sri Lankan TukTuk Fair Pricing</h2>
             </div>
             <div className="grid md:grid-cols-3 gap-4">
               <div>
-                <div className="text-sm opacity-90">Average</div>
+                <div className="text-sm opacity-90">First Kilometer</div>
                 <div className="text-3xl font-bold">
-                  {Math.round(perKmRate.avg_per_km)} LKR/km
+                  100-120 LKR
                 </div>
+                <div className="text-xs opacity-75 mt-1">Standard starting rate</div>
               </div>
               <div>
-                <div className="text-sm opacity-90">Fair Range</div>
+                <div className="text-sm opacity-90">Additional Kilometers</div>
                 <div className="text-2xl font-semibold">
-                  {Math.round(perKmRate.min_per_km)} - {Math.round(perKmRate.max_per_km)}
+                  80-100 LKR/km
                 </div>
+                <div className="text-xs opacity-75 mt-1">Each km after the first</div>
               </div>
               <div>
-                <div className="text-sm opacity-90">Data Confidence</div>
-                <div className="text-lg">Based on {perKmRate.total_reports} rides</div>
+                <div className="text-sm opacity-90">Community Data</div>
+                <div className="text-lg">
+                  Avg: {Math.round(perKmRate.avg_per_km)} LKR/km
+                </div>
+                <div className="text-xs opacity-75 mt-1">Based on {perKmRate.total_reports} rides</div>
               </div>
             </div>
           </div>
@@ -366,24 +379,66 @@ export default function TukTukPricesPage() {
                   </h3>
                   
                   <div className="space-y-3">
-                    {/* Fair Range */}
-                    <div>
-                      <div className="text-sm text-gray-600 mb-1">✅ Fair Range</div>
-                      <div className="text-3xl font-bold text-green-700">
-                        {Math.round(routeData.min_price)} - {Math.round(routeData.max_price)} LKR
+                    {/* Fair Price Based on Distance */}
+                    {fairPricing ? (
+                      <>
+                        <div className="bg-white/70 rounded-lg p-4 border-2 border-green-300">
+                          <div className="text-sm font-semibold text-green-800 mb-2">
+                            ✅ Fair Price (Based on {Number(routeData.avg_distance).toFixed(1)} km)
+                          </div>
+                          <div className="text-3xl font-bold text-green-700">
+                            {Math.round(fairPricing.min)} - {Math.round(fairPricing.max)} LKR
+                          </div>
+                          <div className="text-sm text-gray-700 mt-2">
+                            Calculation: First km (100-120) + {Number(routeData.avg_distance) > 1 ? `${(Number(routeData.avg_distance) - 1).toFixed(1)} km × 80-100` : '0 km'}
+                          </div>
+                        </div>
+
+                        {/* What People Actually Paid */}
+                        <div className="bg-white/50 rounded-lg p-3 border border-blue-200">
+                          <div className="text-sm font-medium text-gray-700 mb-1">
+                            📊 What Travelers Reported
+                          </div>
+                          <div className="text-2xl font-bold text-blue-600">
+                            {Math.round(routeData.min_price)} - {Math.round(routeData.max_price)} LKR
+                          </div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            Average paid: {Math.round(routeData.avg_price)} LKR
+                            {routeData.avg_price > fairPricing.max * 1.2 && (
+                              <span className="text-red-600 font-semibold ml-2">
+                                ⚠️ Overpaid by ~{Math.round(routeData.avg_price - fairPricing.fair)} LKR
+                              </span>
+                            )}
+                            {routeData.avg_price <= fairPricing.max && (
+                              <span className="text-green-600 font-semibold ml-2">
+                                ✓ Fair deals reported
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div>
+                        <div className="text-sm text-gray-600 mb-1">📊 Reported Price Range</div>
+                        <div className="text-3xl font-bold text-blue-600">
+                          {Math.round(routeData.min_price)} - {Math.round(routeData.max_price)} LKR
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1">
+                          Average: {Math.round(routeData.avg_price)} LKR
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600 mt-1">
-                        Average: {Math.round(routeData.avg_price)} LKR
-                      </div>
-                    </div>
+                    )}
 
                     {/* Rip-off Alert */}
                     <div className="pt-3 border-t border-gray-200">
                       <div className="flex items-center gap-2 text-sm">
                         <AlertCircle className="w-4 h-4 text-red-500" />
                         <span className="text-red-700 font-semibold">
-                          Rip-off Alert: {Math.round(routeData.max_price * 1.5)}+ LKR
+                          Rip-off Alert: {fairPricing ? Math.round(fairPricing.max * 1.5) : Math.round(routeData.max_price * 1.5)}+ LKR
                         </span>
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Don't pay more than 50% above fair price
                       </div>
                     </div>
 

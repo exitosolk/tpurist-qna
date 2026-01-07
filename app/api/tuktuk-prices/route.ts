@@ -4,6 +4,40 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import crypto from "crypto";
 
+// Sri Lankan TukTuk Fair Pricing Structure
+const TUKTUK_PRICING = {
+  FIRST_KM_MIN: 100,
+  FIRST_KM_MAX: 120,
+  ADDITIONAL_KM_MIN: 80,
+  ADDITIONAL_KM_MAX: 100,
+};
+
+// Calculate fair price based on distance
+function calculateFairPrice(distanceKm: number) {
+  if (!distanceKm || distanceKm <= 0) return null;
+  
+  const firstKmPrice = (TUKTUK_PRICING.FIRST_KM_MIN + TUKTUK_PRICING.FIRST_KM_MAX) / 2; // 110
+  const additionalKmPrice = (TUKTUK_PRICING.ADDITIONAL_KM_MIN + TUKTUK_PRICING.ADDITIONAL_KM_MAX) / 2; // 90
+  
+  if (distanceKm <= 1) {
+    return {
+      min: TUKTUK_PRICING.FIRST_KM_MIN * distanceKm,
+      max: TUKTUK_PRICING.FIRST_KM_MAX * distanceKm,
+      fair: firstKmPrice * distanceKm,
+    };
+  }
+  
+  const firstKm = firstKmPrice;
+  const remainingKm = distanceKm - 1;
+  const additionalCost = remainingKm * additionalKmPrice;
+  
+  return {
+    min: TUKTUK_PRICING.FIRST_KM_MIN + (remainingKm * TUKTUK_PRICING.ADDITIONAL_KM_MIN),
+    max: TUKTUK_PRICING.FIRST_KM_MAX + (remainingKm * TUKTUK_PRICING.ADDITIONAL_KM_MAX),
+    fair: firstKm + additionalCost,
+  };
+}
+
 // POST /api/tuktuk-prices - Submit a new tuktuk price report (supports anonymous)
 export async function POST(req: NextRequest) {
   try {
@@ -191,8 +225,17 @@ export async function GET(req: NextRequest) {
         [start, end, start, end]
       );
 
+      const routeData = result.rows[0] || null;
+      
+      // Calculate fair price based on average distance
+      let fairPricing = null;
+      if (routeData && routeData.avg_distance) {
+        fairPricing = calculateFairPrice(Number(routeData.avg_distance));
+      }
+
       return NextResponse.json({
-        route: result.rows[0] || null,
+        route: routeData,
+        fair_pricing: fairPricing,
         recent_reports: recentReports.rows || [],
       });
     } else {
