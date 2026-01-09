@@ -66,6 +66,13 @@ function QuestionsMapContent() {
       
       // Fetch nearby questions for list view
       fetchNearbyQuestions(latitude, longitude, parseInt(urlRadius || "50"));
+    } else {
+      // Default to Sri Lanka center when no params
+      const defaultLocation = { lat: 7.8731, lng: 80.7718 };
+      setMapCenter(defaultLocation);
+      setUserLocation(defaultLocation);
+      setRadius(100); // Wider radius for default view
+      fetchNearbyQuestions(defaultLocation.lat, defaultLocation.lng, 100);
     }
   }, [searchParams]);
 
