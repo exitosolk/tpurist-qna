@@ -8,6 +8,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Bell, BellOff } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
+import UserBadge from "@/components/UserBadge";
 
 interface Question {
   id: number;
@@ -20,9 +21,15 @@ interface Question {
   created_at: string;
   username: string;
   display_name: string;
+  avatar_url?: string;
   reputation: number;
   tags: Array<{ id: number; name: string }>;
   collectives?: Array<{ id: number; name: string; slug: string }>;
+  badgeCounts?: {
+    gold: number;
+    silver: number;
+    bronze: number;
+  };
 }
 
 export default function TaggedQuestionsPage() {
@@ -260,15 +267,17 @@ export default function TaggedQuestionsPage() {
                     <span>view{question.views !== 1 ? 's' : ''}</span>
                   </div>
                   <div className="hidden md:block text-gray-400">•</div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-xs flex-shrink-0">
-                      {(question.display_name || question.username).charAt(0).toUpperCase()}
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <UserBadge
+                      username={question.username}
+                      displayName={question.display_name}
+                      avatarUrl={question.avatar_url}
+                      reputation={question.reputation}
+                      badgeCounts={question.badgeCounts}
+                      size="small"
+                    />
                     <span className="text-gray-500">
-                      <Link href={`/users/${question.username}`} className="text-blue-600 font-medium hover:text-blue-800">
-                        {question.display_name || question.username}
-                      </Link>
-                      <span className="hidden md:inline"> asked</span> {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}
+                      <span className="text-gray-400">•</span> asked {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}
                     </span>
                   </div>
                 </div>
