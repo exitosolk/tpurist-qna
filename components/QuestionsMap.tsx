@@ -23,7 +23,7 @@ interface MapProps {
   center?: { lat: number; lng: number };
   zoom?: number;
   tag?: string;
-  onQuestionSelect?: (questionId: number) => void;
+  onQuestionSelect?: (slugOrId: string | number) => void;
 }
 
 export default function QuestionsMap({
@@ -335,7 +335,7 @@ export default function QuestionsMap({
               onClick={(e) => {
                 if (onQuestionSelect) {
                   e.preventDefault();
-                  onQuestionSelect(selectedQuestion.id);
+                  onQuestionSelect(selectedQuestion.slug || selectedQuestion.id);
                 }
               }}
               className="text-blue-600 hover:text-blue-700 font-medium text-sm"

@@ -254,7 +254,7 @@ function QuestionsMapContent() {
               center={mapCenter}
               zoom={mapZoom}
               tag={selectedTag}
-              onQuestionSelect={(id) => router.push(`/questions/${id}`)}
+              onQuestionSelect={(slugOrId) => router.push(`/questions/${slugOrId}`)}
             />
           </div>
         )}
