@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { logPlacesAPIUsage } from "@/lib/places-cache";
 
 // Google Places API configuration
 const GOOGLE_PLACES_API_KEY = "AIzaSyAyDWij1xYKmOV857_CM_dq6fG5lH2FxNM";
@@ -14,6 +15,7 @@ interface PlaceCache {
 
 // GET /api/places/autocomplete - Search for places with caching
 export async function GET(req: NextRequest) {
+  const startTime = Date.now();
   try {
     const { searchParams } = new URL(req.url);
     const input = searchParams.get("input");
@@ -62,6 +64,10 @@ export async function GET(req: NextRequest) {
         ).catch(console.error);
       }
 
+      // Log cache hit
+      const responseTime = Date.now() - startTime;
+      logPlacesAPIUsage('autocomplete', true, input, undefined, responseTime);
+
       return NextResponse.json({ predictions });
     }
 
@@ -79,7 +85,11 @@ export async function GET(req: NextRequest) {
     const data = await response.json();
 
     console.log(`Google Places API response status: ${data.status}`);
-    
+    // Log API call
+      const responseTime = Date.now() - startTime;
+      logPlacesAPIUsage('autocomplete', false, input, undefined, responseTime);
+
+      
     if (data.status === "OK" && data.predictions) {
       // Cache the predictions asynchronously
       cachePredictions(data.predictions, input).catch(console.error);
@@ -158,10 +168,7 @@ async function cachePredictions(predictions: any[], searchTerm: string) {
       console.error("Error caching place:", error);
     }
   }
-}
-
-// POST /api/places/details - Get place details with distance calculation
-export async function POST(req: NextRequest) {
+}const startTime = Date.now();
   try {
     const { place_id, from_place_id } = await req.json();
 
@@ -175,6 +182,12 @@ export async function POST(req: NextRequest) {
       [place_id]
     );
 
+    let placeData;
+    let cacheHit = false;
+
+    if (cacheResult.rows && cacheResult.rows.length > 0) {
+      placeData = cacheResult.rows[0];
+      cacheHit = true
     let placeData;
 
     if (cacheResult.rows && cacheResult.rows.length > 0) {
@@ -229,6 +242,10 @@ export async function POST(req: NextRequest) {
         const fromPlace = fromPlaceResult.rows[0];
         const toLat = placeData.lat || placeData.geometry?.location?.lat;
         const toLng = placeData.lng || placeData.geometry?.location?.lng;
+
+    // Log API usage
+    const responseTime = Date.now() - startTime;
+    logPlacesAPIUsage('details', cacheHit, undefined, place_id, responseTime);
 
         if (fromPlace.lat && fromPlace.lng && toLat && toLng) {
           // Calculate distance using Haversine formula
