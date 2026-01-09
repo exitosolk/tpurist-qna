@@ -21,7 +21,11 @@ export async function POST(
 
     const params = await context.params;
     const body = await req.json();
-    const { body: answerBody, experience_date } = body;
+    const { 
+      body: answerBody, 
+      experience_date,
+      location 
+    } = body;
 
     if (!answerBody) {
       return NextResponse.json(
@@ -72,15 +76,38 @@ export async function POST(
     }
 
     // Create answer
-    const answerResult = await query(
-      experience_date
-        ? `INSERT INTO answers (question_id, user_id, body, experience_date) VALUES (?, ?, ?, ?)`
-        : `INSERT INTO answers (question_id, user_id, body) VALUES (?, ?, ?)`,
-      experience_date
-        ? [questionId, userId, answerBody, experience_date]
-        : [questionId, userId, answerBody]
-    );
-
+    const hasLocation = location?.placeId && location?.latitude && location?.longitude;
+    
+    let insertQuery: string;
+    let insertParams: any[];
+    
+    if (hasLocation && experience_date) {
+      insertQuery = `INSERT INTO answers 
+        (question_id, user_id, body, experience_date, place_id, place_name, formatted_address, latitude, longitude) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      insertParams = [
+        questionId, userId, answerBody, experience_date,
+        location.placeId, location.placeName, location.formattedAddress, 
+        location.latitude, location.longitude
+      ];
+    } else if (hasLocation) {
+      insertQuery = `INSERT INTO answers 
+        (question_id, user_id, body, place_id, place_name, formatted_address, latitude, longitude) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      insertParams = [
+        questionId, userId, answerBody,
+        location.placeId, location.placeName, location.formattedAddress, 
+        location.latitude, location.longitude
+      ];
+    } else if (experience_date) {
+      insertQuery = `INSERT INTO answers (question_id, user_id, body, experience_date) VALUES (?, ?, ?, ?)`;
+      insertParams = [questionId, userId, answerBody, experience_date];
+    } else {
+      insertQuery = `INSERT INTO answers (question_id, user_id, body) VALUES (?, ?, ?)`;
+      insertParams = [questionId, userId, answerBody];
+    }
+    
+    const answerResult = await query(insertQuery, insertParams);
     const answerId = answerResult.insertId;
 
     // Update question answer count and last activity

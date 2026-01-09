@@ -17,7 +17,8 @@ import FlagButton from "@/components/FlagButton";
 import UserBadge from "@/components/UserBadge";
 import TagBadge from "@/components/TagBadge";
 import AddToCollection from "@/components/AddToCollection";
-import { Share2, Edit, Bookmark, Check, Clock, ChevronRight, Home, Bell, BellOff } from "lucide-react";
+import LocationAutocomplete from "@/components/LocationAutocomplete";
+import { Share2, Edit, Bookmark, Check, Clock, ChevronRight, Home, Bell, BellOff, MapPin, Map } from "lucide-react";
 
 interface BadgeTierCounts {
   bronze: number;
@@ -51,6 +52,11 @@ interface Question extends User {
   close_reason?: string;
   close_details?: string;
   auto_closed: boolean;
+  place_id?: string;
+  place_name?: string;
+  formatted_address?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface Answer extends User {
@@ -64,6 +70,11 @@ interface Answer extends User {
   edit_count: number;
   experience_date?: string;
   comments?: Comment[];
+  place_id?: string;
+  place_name?: string;
+  formatted_address?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface UserTagBadge {
@@ -90,6 +101,11 @@ export default function QuestionDetailPage() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [answerBody, setAnswerBody] = useState("");
   const [experienceDate, setExperienceDate] = useState("");
+  const [answerPlaceId, setAnswerPlaceId] = useState("");
+  const [answerPlaceName, setAnswerPlaceName] = useState("");
+  const [answerFormattedAddress, setAnswerFormattedAddress] = useState("");
+  const [answerLatitude, setAnswerLatitude] = useState<number | null>(null);
+  const [answerLongitude, setAnswerLongitude] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
@@ -633,6 +649,13 @@ export default function QuestionDetailPage() {
         body: JSON.stringify({
           body: answerBody,
           experience_date: experienceDate || null,
+          location: answerPlaceId ? {
+            placeId: answerPlaceId,
+            placeName: answerPlaceName,
+            formattedAddress: answerFormattedAddress,
+            latitude: answerLatitude,
+            longitude: answerLongitude,
+          } : null,
         }),
       });
 
@@ -641,6 +664,11 @@ export default function QuestionDetailPage() {
       if (response.ok) {
         setAnswerBody("");
         setExperienceDate("");
+        setAnswerPlaceId("");
+        setAnswerPlaceName("");
+        setAnswerFormattedAddress("");
+        setAnswerLatitude(null);
+        setAnswerLongitude(null);
         setAnswerError("");
         await deleteAnswerDraft(); // Delete draft after successful submission
         fetchQuestion();
@@ -963,6 +991,52 @@ export default function QuestionDetailPage() {
                   ))}
                 </div>
 
+                {/* Location Display */}
+                {question.place_name && (
+                  <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <MapPin className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-sm font-semibold text-green-900">
+                            {question.place_name}
+                          </h4>
+                          <a
+                            href={`/questions/map?lat=${question.latitude}&lng=${question.longitude}&zoom=14`}
+                            className="text-xs text-green-700 hover:text-green-800 underline flex items-center gap-1"
+                          >
+                            <Map className="w-3 h-3" />
+                            View on map
+                          </a>
+                        </div>
+                        {question.formatted_address && (
+                          <p className="text-sm text-green-700 mt-1">
+                            {question.formatted_address}
+                          </p>
+                        )}
+                        <div className="mt-2 flex gap-2 flex-wrap text-xs">
+                          <a
+                            href={`/questions/map?bounds=${question.latitude},${question.longitude},${question.latitude},${question.longitude}&radius=10`}
+                            className="px-2 py-1 bg-white border border-green-300 text-green-700 rounded hover:bg-green-100 transition-colors"
+                          >
+                            Questions nearby
+                          </a>
+                          {question.latitude && question.longitude && (
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${question.latitude},${question.longitude}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-2 py-1 bg-white border border-green-300 text-green-700 rounded hover:bg-green-100 transition-colors"
+                            >
+                              Open in Google Maps
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Question Action Buttons */}
                 <div className="flex flex-wrap gap-4 mb-6 text-sm text-gray-600">
                   <Tooltip content="Share a link to this question">
@@ -1173,6 +1247,25 @@ export default function QuestionDetailPage() {
                         <>
                           <MarkdownRenderer content={answer.body} />
                           
+                          {/* Answer Location Display */}
+                          {answer.place_name && (
+                            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                              <div className="flex items-start gap-2">
+                                <MapPin className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                <div className="flex-1">
+                                  <div className="text-sm font-medium text-blue-900">
+                                    {answer.place_name}
+                                  </div>
+                                  {answer.formatted_address && (
+                                    <p className="text-xs text-blue-700 mt-0.5">
+                                      {answer.formatted_address}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                           {/* Mobile: Compact pill-style voting */}
                           {currentUserId !== answer.user_id && (
                             <div className="md:hidden my-4">
@@ -1443,6 +1536,52 @@ export default function QuestionDetailPage() {
                     />
                   </div>
                 )}
+              </div>
+
+              {/* Location Field */}
+              <div className="mt-4 border border-gray-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-gray-600 mt-1 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900 mb-1">
+                      📍 Add location (Optional)
+                    </div>
+                    <p className="text-sm text-gray-500 mb-3">
+                      If your answer is specific to a location different from the question, add it here
+                    </p>
+                    <LocationAutocomplete
+                      placeholder="e.g., Ella, Galle Fort, Yala National Park..."
+                      onPlaceSelected={(place) => {
+                        setAnswerPlaceId(place.place_id);
+                        setAnswerPlaceName(place.name);
+                        setAnswerFormattedAddress(place.formatted_address);
+                        setAnswerLatitude(place.latitude);
+                        setAnswerLongitude(place.longitude);
+                      }}
+                    />
+                    {answerPlaceName && (
+                      <div className="mt-3 flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                        <div>
+                          <p className="text-sm font-medium text-green-800">{answerPlaceName}</p>
+                          <p className="text-xs text-green-600">{answerFormattedAddress}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAnswerPlaceId("");
+                            setAnswerPlaceName("");
+                            setAnswerFormattedAddress("");
+                            setAnswerLatitude(null);
+                            setAnswerLongitude(null);
+                          }}
+                          className="text-green-700 hover:text-green-900 text-sm font-medium"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <button
