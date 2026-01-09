@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { MapPin, Navigation2, X } from "lucide-react";
 
 interface Question {
@@ -39,6 +39,8 @@ export default function QuestionsMap({
   const [loading, setLoading] = useState(true);
   const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
   const [isMapReady, setIsMapReady] = useState(false);
+  const boundsChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastBoundsRef = useRef<string | null>(null);
 
   // Load Google Maps script (only once globally)
   useEffect(() => {
@@ -112,13 +114,26 @@ export default function QuestionsMap({
     setMap(newMap);
     setIsMapReady(true);
 
-    // Add bounds changed listener to fetch questions in view
+    // Debounced bounds changed listener to prevent API spam
+    let boundsTimeout: NodeJS.Timeout;
     newMap.addListener("bounds_changed", () => {
+      if (boundsTimeout) clearTimeout(boundsTimeout);
+      
+      boundsTimeout = setTimeout(() => {
+        const bounds = newMap.getBounds();
+        if (bounds) {
+          fetchQuestionsInBounds(bounds);
+        }
+      }, 500); // 500ms debounce
+    });
+
+    // Initial load - fetch all questions
+    setTimeout(() => {
       const bounds = newMap.getBounds();
       if (bounds) {
         fetchQuestionsInBounds(bounds);
       }
-    });
+    }, 1000);
   };
 
   const fetchQuestionsInBounds = useCallback(
@@ -127,6 +142,14 @@ export default function QuestionsMap({
         const ne = bounds.getNorthEast();
         const sw = bounds.getSouthWest();
         const boundsParam = `${sw.lat()},${sw.lng()},${ne.lat()},${ne.lng()}`;
+
+        // Prevent duplicate requests for the same bounds
+        if (lastBoundsRef.current === boundsParam) {
+          return;
+        }
+        lastBoundsRef.current = boundsParam;
+
+        setLoading(true);
 
         const url = new URL("/api/questions/map-data", window.location.origin);
         url.searchParams.set("bounds", boundsParam);
