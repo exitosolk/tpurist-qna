@@ -32,12 +32,12 @@ export default function QuestionsMap({
   tag,
   onQuestionSelect,
 }: MapProps) {
-  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [map, setMap] = useState<any>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
+  const [markers, setMarkers] = useState<any[]>([]);
   const [isMapReady, setIsMapReady] = useState(false);
   const boundsChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastBoundsRef = useRef<string | null>(null);
@@ -97,8 +97,9 @@ export default function QuestionsMap({
 
   const initMap = () => {
     const mapElement = document.getElementById("map");
-    if (!mapElement || !google) return;
+    if (!mapElement || !(window as any).google) return;
 
+    const google = (window as any).google;
     const newMap = new google.maps.Map(mapElement, {
       center,
       zoom,
@@ -172,6 +173,9 @@ export default function QuestionsMap({
   useEffect(() => {
     if (!map) return;
 
+    const google = (window as any).google;
+    if (!google) return;
+
     // Clear existing markers
     markers.forEach((marker) => marker.setMap(null));
 
@@ -206,12 +210,13 @@ export default function QuestionsMap({
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          const google = (window as any).google;
           const location = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           };
           setUserLocation(location);
-          if (map) {
+          if (map && google) {
             map.setCenter(location);
             map.setZoom(12);
 
