@@ -17,7 +17,7 @@ export async function GET() {
     const estimatedSavings = {
       autocomplete: autocompleteStats ? (autocompleteStats.cache_hits * apiCostPerAutocomplete).toFixed(2) : '0.00',
       details: detailsStats ? (detailsStats.cache_hits * apiCostPerDetails).toFixed(2) : '0.00',
-      total: 0,
+      total: '0.00',
     };
     estimatedSavings.total = (parseFloat(estimatedSavings.autocomplete) + parseFloat(estimatedSavings.details)).toFixed(2);
 
