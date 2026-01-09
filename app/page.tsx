@@ -1,10 +1,27 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Script from "next/script";
 
 export default function HomePage() {
+  const [locationStats, setLocationStats] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    // Fetch real question counts
+    fetch("/api/locations/stats")
+      .then((res) => res.json())
+      .then((data) => {
+        const stats: Record<string, number> = {};
+        data.locations?.forEach((loc: any) => {
+          stats[loc.name] = loc.count;
+        });
+        setLocationStats(stats);
+      })
+      .catch((err) => console.error("Error fetching location stats:", err));
+  }, []);
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -165,6 +182,128 @@ export default function HomePage() {
                 <span>{tag.name}</span>
               </a>
             ))}
+          </div>
+        </div>
+
+        {/* Discover by Location - Enhanced */}
+        <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-6 md:p-10 rounded-xl shadow-lg text-white mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-3xl font-bold mb-2">📍 Discover by Destination</h3>
+              <p className="text-blue-100">Explore questions from Sri Lanka's most popular places</p>
+            </div>
+            <a 
+              href="/questions/map" 
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-all backdrop-blur-sm border border-white/30"
+            >
+              <span>View Map</span>
+              <span>→</span>
+            </a>
+          </div>
+
+          {/* Trending Locations - Horizontal Scroll */}
+          <div className="mb-6">
+            <h4 className="text-sm uppercase tracking-wide text-blue-200 mb-3 font-semibold">🔥 Trending Now</h4>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {[
+                { name: "Ella", img: "🚂", location: "ella", color: "bg-gradient-to-br from-green-400 to-emerald-500" },
+                { name: "Sigiriya", img: "⛰️", location: "sigiriya", color: "bg-gradient-to-br from-orange-400 to-red-500" },
+                { name: "Kandy", img: "🏛️", location: "kandy", color: "bg-gradient-to-br from-purple-400 to-pink-500" },
+                { name: "Galle", img: "🏰", location: "galle", color: "bg-gradient-to-br from-blue-400 to-cyan-500" },
+                { name: "Colombo", img: "🏙️", location: "colombo", color: "bg-gradient-to-br from-gray-400 to-slate-500" },
+                { name: "Mirissa", img: "🐋", location: "mirissa", color: "bg-gradient-to-br from-teal-400 to-blue-500" },
+              ].map((location) => (
+                <a
+                  key={location.name}
+                  href={`/questions/tagged/${encodeURIComponent(location.location)}`}
+                  className="flex-shrink-0 group"
+                >
+                  <div className="w-32 h-40 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:border-white/40 transition-all p-3 flex flex-col items-center justify-between hover:scale-105 hover:shadow-xl">
+                    <div className={`w-16 h-16 ${location.color} rounded-full flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform`}>
+                      {location.img}
+                    </div>
+                    <div className="text-center">
+                      <p className="font-semibold text-white mb-1">{location.name}</p>
+                      <p className="text-xs text-blue-200">
+                        {locationStats[location.location] ? `${locationStats[location.location]}` : '...'} questions
+                      </p>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Category Groups */}
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* Beaches */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">🏖️</span>
+                <h4 className="font-semibold text-lg">Beaches</h4>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {["Mirissa", "Unawatuna", "Arugam Bay", "Hikkaduwa"].map((beach) => (
+                  <a
+                    key={beach}
+                    href={`/questions/tagged/${encodeURIComponent(beach.toLowerCase())}`}
+                    className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-full text-sm transition-all border border-white/30"
+                  >
+                    {beach}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Mountains & Hill Country */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">⛰️</span>
+                <h4 className="font-semibold text-lg">Mountains</h4>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {["Ella", "Nuwara Eliya", "Haputale", "Adams Peak"].map((mountain) => (
+                  <a
+                    key={mountain}
+                    href={`/questions/tagged/${encodeURIComponent(mountain.toLowerCase())}`}
+                    className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-full text-sm transition-all border border-white/30"
+                  >
+                    {mountain}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Cultural Sites */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">🏛️</span>
+                <h4 className="font-semibold text-lg">Cultural</h4>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {["Kandy", "Sigiriya", "Polonnaruwa", "Anuradhapura"].map((cultural) => (
+                  <a
+                    key={cultural}
+                    href={`/questions/tagged/${encodeURIComponent(cultural.toLowerCase())}`}
+                    className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-full text-sm transition-all border border-white/30"
+                  >
+                    {cultural}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* View All Link - Mobile */}
+          <div className="mt-6 text-center">
+            <a 
+              href="/questions/map" 
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-all font-semibold shadow-lg"
+            >
+              <span>🗺️</span>
+              <span>Explore All Locations on Map</span>
+              <span>→</span>
+            </a>
           </div>
         </div>
       </main>
