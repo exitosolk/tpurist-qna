@@ -38,6 +38,7 @@ export default function QuestionsMap({
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
+  const [isMapReady, setIsMapReady] = useState(false);
 
   // Load Google Maps script (only once globally)
   useEffect(() => {
@@ -71,7 +72,16 @@ export default function QuestionsMap({
       };
     }
     // Don't remove script on cleanup - keep it for other components
-  }, []);
+    
+    // Cleanup: clear markers and reset map state when unmounting
+    return () => {
+      markers.forEach((marker) => marker.setMap(null));
+      setMarkers([]);
+      setQuestions([]);
+      setMap(null);
+      setIsMapReady(false);
+    };
+  }, []); // Re-run when component remounts
 
   // Re-center map when center prop changes
   useEffect(() => {
@@ -100,6 +110,7 @@ export default function QuestionsMap({
     });
 
     setMap(newMap);
+    setIsMapReady(true);
 
     // Add bounds changed listener to fetch questions in view
     newMap.addListener("bounds_changed", () => {
