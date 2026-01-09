@@ -72,6 +72,16 @@ export default function QuestionsMap({
     // Don't remove script on cleanup - keep it for other components
   }, []);
 
+  // Re-center map when center prop changes
+  useEffect(() => {
+    if (map && center) {
+      map.setCenter(center);
+      if (zoom) {
+        map.setZoom(zoom);
+      }
+    }
+  }, [map, center, zoom]);
+
   const initMap = () => {
     const mapElement = document.getElementById("map");
     if (!mapElement || !google) return;

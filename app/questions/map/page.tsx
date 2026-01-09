@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import QuestionsMap from "@/components/QuestionsMap";
 import { MapPin, List, Navigation2, Filter } from "lucide-react";
@@ -27,14 +27,47 @@ interface Question {
 
 export default function QuestionsMapPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
   const [viewMode, setViewMode] = useState<"map" | "list">("map");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>(undefined);
+  const [mapZoom, setMapZoom] = useState<number>(8);
   const [radius, setRadius] = useState(50); // km
   const [selectedTag, setSelectedTag] = useState<string>("");
   const [availableTags, setAvailableTags] = useState<string[]>([]);
+
+  // Read URL parameters on mount
+  useEffect(() => {
+    const lat = searchParams.get("lat");
+    const lng = searchParams.get("lng");
+    const urlRadius = searchParams.get("radius");
+    const zoom = searchParams.get("zoom");
+
+    if (lat && lng) {
+      const latitude = parseFloat(lat);
+      const longitude = parseFloat(lng);
+      const location = { lat: latitude, lng: longitude };
+      
+      setMapCenter(location);
+      setUserLocation(location);
+      
+      if (zoom) {
+        setMapZoom(parseInt(zoom));
+      } else {
+        setMapZoom(14); // Zoom in closer when specific location provided
+      }
+      
+      if (urlRadius) {
+        setRadius(parseInt(urlRadius));
+      }
+      
+      // Fetch nearby questions for list view
+      fetchNearbyQuestions(latitude, longitude, parseInt(urlRadius || "50"));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchPopularTags();
@@ -50,13 +83,13 @@ export default function QuestionsMapPage() {
     }
   };
 
-  const fetchNearbyQuestions = async (lat: number, lng: number) => {
+  const fetchNearbyQuestions = async (lat: number, lng: number, queryRadius?: number) => {
     setLoading(true);
     try {
       const url = new URL("/api/questions/nearby", window.location.origin);
       url.searchParams.set("latitude", lat.toString());
       url.searchParams.set("longitude", lng.toString());
-      url.searchParams.set("radius", radius.toString());
+      url.searchParams.set("radius", (queryRadius || radius).toString());
       if (selectedTag) url.searchParams.set("tag", selectedTag);
 
       const response = await fetch(url.toString());
@@ -210,6 +243,8 @@ export default function QuestionsMapPage() {
         {viewMode === "map" && (
           <div className="bg-white rounded-lg shadow-sm border overflow-hidden" style={{ height: "calc(100vh - 300px)" }}>
             <QuestionsMap
+              center={mapCenter}
+              zoom={mapZoom}
               tag={selectedTag}
               onQuestionSelect={(id) => router.push(`/questions/${id}`)}
             />
