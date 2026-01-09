@@ -147,7 +147,8 @@ export default function QuestionsMapPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Explore Questions by Location</h1>
           <p className="text-gray-600">
@@ -161,10 +162,10 @@ export default function QuestionsMapPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setViewMode("map")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
                   viewMode === "map"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
                 }`}
               >
                 <MapPin className="w-4 h-4" />
@@ -172,10 +173,10 @@ export default function QuestionsMapPage() {
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
                   viewMode === "list"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
                 }`}
               >
                 <List className="w-4 h-4" />
@@ -190,7 +191,7 @@ export default function QuestionsMapPage() {
                 <select
                   value={selectedTag}
                   onChange={(e) => setSelectedTag(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All topics</option>
                   {availableTags.map((tag) => (
@@ -298,45 +299,54 @@ export default function QuestionsMapPage() {
 
             {!loading && questions.length > 0 && (
               <>
-                <div className="text-sm text-gray-600 mb-4">
+                <div className="text-sm text-gray-600 mb-4 font-medium">
                   Found {questions.length} question{questions.length !== 1 ? "s" : ""} within {radius}km
                 </div>
+                <div className="space-y-4">
                 {questions.map((question) => (
                   <div
                     key={question.id}
-                    className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition"
+                    className="bg-white rounded-lg shadow-sm border p-5 hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-start gap-4">
-                      {/* Stats */}
-                      <div className="flex flex-col items-center gap-2 text-sm min-w-[80px]">
-                        <div className="text-center">
-                          <div className="font-semibold text-gray-900">{question.score}</div>
-                          <div className="text-gray-600 text-xs">votes</div>
+                      {/* Stats - Compact */}
+                      <div className="hidden sm:flex flex-col gap-3 text-center min-w-[70px]">
+                        <div>
+                          <div className="text-lg font-bold text-gray-900">{question.score}</div>
+                          <div className="text-xs text-gray-500">votes</div>
                         </div>
                         <div
-                          className={`text-center px-2 py-1 rounded ${
+                          className={`px-2 py-1.5 rounded ${
                             question.answer_count > 0
-                              ? "bg-green-100 text-green-800"
+                              ? "bg-green-100 text-green-700"
                               : "bg-gray-100 text-gray-600"
                           }`}
                         >
-                          <div className="font-semibold">{question.answer_count}</div>
+                          <div className="text-sm font-semibold">{question.answer_count}</div>
                           <div className="text-xs">answers</div>
                         </div>
                       </div>
 
                       {/* Content */}
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <a
                           href={`/questions/${question.id}`}
-                          className="text-lg font-semibold text-blue-600 hover:text-blue-700 mb-2 block"
+                          className="text-xl font-semibold text-blue-600 hover:text-blue-700 mb-2 block leading-tight"
                         >
                           {question.title}
                         </a>
 
+                        {/* Mobile stats */}
+                        <div className="flex sm:hidden gap-4 text-sm text-gray-600 mb-3">
+                          <span>{question.score} votes</span>
+                          <span className={question.answer_count > 0 ? "text-green-600 font-medium" : ""}>
+                            {question.answer_count} answers
+                          </span>
+                        </div>
+
                         {/* Location */}
                         <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                          <MapPin className="w-4 h-4" />
+                          <MapPin className="w-4 h-4 flex-shrink-0" />
                           <span className="font-medium">{question.place_name}</span>
                           <span className="text-gray-400">•</span>
                           <span className="text-green-600 font-medium">
@@ -347,25 +357,29 @@ export default function QuestionsMapPage() {
                         {/* Tags */}
                         <div className="flex flex-wrap gap-2 mb-3">
                           {question.tags.map((tag) => (
-                            <span
+                            <a
                               key={tag.id}
-                              className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded"
+                              href={`/questions/tagged/${encodeURIComponent(tag.name)}`}
+                              className="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full hover:bg-blue-100 transition-colors"
                             >
                               {tag.name}
-                            </span>
+                            </a>
                           ))}
                         </div>
 
                         {/* Meta */}
-                        <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                           <span>asked {formatDate(question.created_at)}</span>
-                          <span>by {question.display_name || question.username}</span>
+                          <span className="text-gray-400">•</span>
+                          <span className="font-medium text-gray-700">{question.display_name || question.username}</span>
+                          <span className="text-gray-400">•</span>
                           <span>{question.views} views</span>
                         </div>
                       </div>
                     </div>
                   </div>
                 ))}
+                </div>
               </>
             )}
           </div>
