@@ -14,8 +14,8 @@ interface PlacePrediction {
 }
 
 interface LocationAutocompleteProps {
-  value: string;
-  onChange: (value: string, placeId?: string, place?: any) => void;
+  value?: string;
+  onChange?: (value: string, placeId?: string, place?: any) => void;
   placeholder?: string;
   label?: string;
   required?: boolean;
@@ -24,20 +24,25 @@ interface LocationAutocompleteProps {
 }
 
 export default function LocationAutocomplete({
-  value,
-  onChange,
+  value: externalValue,
+  onChange: externalOnChange,
   placeholder = "Enter location",
   label,
   required = false,
   onPlaceSelected,
   fromPlaceId,
 }: LocationAutocompleteProps) {
+  const [internalValue, setInternalValue] = useState("");
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionToken] = useState(() => Math.random().toString(36).substring(7));
   const wrapperRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
+
+  // Use external value if provided, otherwise use internal state
+  const value = externalValue !== undefined ? externalValue : internalValue;
+  const onChange = externalOnChange || ((newValue: string) => setInternalValue(newValue));
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -56,7 +61,7 @@ export default function LocationAutocomplete({
       clearTimeout(debounceRef.current);
     }
 
-    if (value.length < 2) {
+    if (!value || value.length < 2) {
       setPredictions([]);
       setIsOpen(false);
       return;
