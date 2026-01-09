@@ -11,6 +11,7 @@ export async function GET(req: Request) {
     let queryText = `
       SELECT 
         q.id,
+        q.slug,
         q.title,
         q.place_name,
         q.formatted_address,

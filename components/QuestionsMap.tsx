@@ -5,6 +5,7 @@ import { MapPin, Navigation2, X } from "lucide-react";
 
 interface Question {
   id: number;
+  slug?: string;
   title: string;
   place_name: string;
   formatted_address: string;
@@ -291,7 +292,7 @@ export default function QuestionsMap({
               by <span className="font-medium">{selectedQuestion.display_name || selectedQuestion.username}</span>
             </p>
             <a
-              href={`/questions/${selectedQuestion.id}`}
+              href={`/questions/${selectedQuestion.slug || selectedQuestion.id}`}
               onClick={(e) => {
                 if (onQuestionSelect) {
                   e.preventDefault();
