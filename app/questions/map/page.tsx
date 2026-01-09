@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
@@ -25,7 +25,7 @@ interface Question {
   tags: { id: number; name: string }[];
 }
 
-export default function QuestionsMapPage() {
+function QuestionsMapContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
@@ -386,5 +386,22 @@ export default function QuestionsMapPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function QuestionsMapPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <main className="container mx-auto px-4 py-8 max-w-7xl">
+          <div className="text-center py-12">
+            <p className="text-gray-600">Loading map...</p>
+          </div>
+        </main>
+      </div>
+    }>
+      <QuestionsMapContent />
+    </Suspense>
   );
 }
