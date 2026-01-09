@@ -93,7 +93,7 @@ export async function POST(
     } else if (hasLocation) {
       insertQuery = `INSERT INTO answers 
         (question_id, user_id, body, place_id, place_name, formatted_address, latitude, longitude) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
       insertParams = [
         questionId, userId, answerBody,
         location.placeId, location.placeName, location.formattedAddress, 
