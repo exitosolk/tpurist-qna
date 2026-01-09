@@ -1016,7 +1016,7 @@ export default function QuestionDetailPage() {
                         )}
                         <div className="mt-2 flex gap-2 flex-wrap text-xs">
                           <a
-                            href={`/questions/map?bounds=${question.latitude},${question.longitude},${question.latitude},${question.longitude}&radius=10`}
+                            href={`/questions/map?lat=${question.latitude}&lng=${question.longitude}&radius=10`}
                             className="px-2 py-1 bg-white border border-green-300 text-green-700 rounded hover:bg-green-100 transition-colors"
                           >
                             Questions nearby
