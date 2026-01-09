@@ -421,7 +421,14 @@ export default function AskQuestionPage() {
                   onClick={() => handleAddTag(tag)}
                   className="text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200"
                   disabled={tags.length >= 5}
-              Location Section */}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Location Section */}
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Location (Optional)
