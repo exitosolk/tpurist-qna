@@ -138,7 +138,7 @@ export default function QuestionsMap({
   };
 
   const fetchQuestionsInBounds = useCallback(
-    async (bounds: google.maps.LatLngBounds) => {
+    async (bounds: any) => {
       try {
         const ne = bounds.getNorthEast();
         const sw = bounds.getSouthWest();
