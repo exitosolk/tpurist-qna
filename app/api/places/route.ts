@@ -168,7 +168,11 @@ async function cachePredictions(predictions: any[], searchTerm: string) {
       console.error("Error caching place:", error);
     }
   }
-}const startTime = Date.now();
+}
+
+// POST /api/places/details - Get place details with distance calculation
+export async function POST(req: NextRequest) {
+  const startTime = Date.now();
   try {
     const { place_id, from_place_id } = await req.json();
 
@@ -187,11 +191,7 @@ async function cachePredictions(predictions: any[], searchTerm: string) {
 
     if (cacheResult.rows && cacheResult.rows.length > 0) {
       placeData = cacheResult.rows[0];
-      cacheHit = true
-    let placeData;
-
-    if (cacheResult.rows && cacheResult.rows.length > 0) {
-      placeData = cacheResult.rows[0];
+      cacheHit = true;
     } else {
       // Fetch from API
       const detailsUrl = new URL("https://maps.googleapis.com/maps/api/place/details/json");
