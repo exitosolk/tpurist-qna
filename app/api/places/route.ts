@@ -243,10 +243,6 @@ export async function POST(req: NextRequest) {
         const toLat = placeData.lat || placeData.geometry?.location?.lat;
         const toLng = placeData.lng || placeData.geometry?.location?.lng;
 
-    // Log API usage
-    const responseTime = Date.now() - startTime;
-    logPlacesAPIUsage('details', cacheHit, undefined, place_id, responseTime);
-
         if (fromPlace.lat && fromPlace.lng && toLat && toLng) {
           // Calculate distance using Haversine formula
           distance = calculateDistance(fromPlace.lat, fromPlace.lng, toLat, toLng);
@@ -254,7 +250,20 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ place: placeData, distance });
+    // Log API usage
+    const responseTime = Date.now() - startTime;
+    logPlacesAPIUsage('details', cacheHit, undefined, place_id, responseTime);
+
+    // Normalize response format
+    const normalizedPlace = {
+      place_id: place_id,
+      name: placeData.name,
+      formatted_address: placeData.formatted_address,
+      latitude: placeData.lat || placeData.geometry?.location?.lat,
+      longitude: placeData.lng || placeData.geometry?.location?.lng,
+    };
+
+    return NextResponse.json({ place: normalizedPlace, distance });
   } catch (error) {
     console.error("Error getting place details:", error);
     return NextResponse.json(
