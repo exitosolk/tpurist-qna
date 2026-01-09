@@ -38,21 +38,38 @@ export default function QuestionsMap({
   const [loading, setLoading] = useState(true);
   const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
 
-  // Load Google Maps script
+  // Load Google Maps script (only once globally)
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAyDWij1xYKmOV857_CM_dq6fG5lH2FxNM&libraries=places`;
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
+    // Check if script already exists
+    const existingScript = document.querySelector(
+      'script[src*="maps.googleapis.com/maps/api/js"]'
+    );
 
-    script.onload = () => {
-      initMap();
-    };
+    if (existingScript) {
+      // Script already loaded, just initialize map
+      if (window.google) {
+        initMap();
+      } else {
+        // Script loading, wait for it
+        existingScript.addEventListener("load", initMap);
+        return () => {
+          existingScript.removeEventListener("load", initMap);
+        };
+      }
+    } else {
+      // Load script for the first time
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAyDWij1xYKmOV857_CM_dq6fG5lH2FxNM&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.id = "google-maps-script";
+      document.head.appendChild(script);
 
-    return () => {
-      document.head.removeChild(script);
-    };
+      script.onload = () => {
+        initMap();
+      };
+    }
+    // Don't remove script on cleanup - keep it for other components
   }, []);
 
   const initMap = () => {
