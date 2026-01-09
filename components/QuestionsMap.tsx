@@ -179,28 +179,108 @@ export default function QuestionsMap({
     // Clear existing markers
     markers.forEach((marker) => marker.setMap(null));
 
-    // Create new markers
-    const newMarkers = questions.map((question) => {
-      const marker = new google.maps.Marker({
-        position: { lat: question.latitude, lng: question.longitude },
-        map,
-        title: question.title,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: question.answer_count > 0 ? "#10b981" : "#3b82f6",
-          fillOpacity: 0.9,
-          strokeColor: "#ffffff",
-          strokeWeight: 2,
-        },
-      });
+    // Group questions by location to handle overlapping markers
+    const locationGroups = new Map<string, typeof questions>();
+    questions.forEach((question) => {
+      const key = `${question.latitude.toFixed(6)},${question.longitude.toFixed(6)}`;
+      if (!locationGroups.has(key)) {
+        locationGroups.set(key, []);
+      }
+      locationGroups.get(key)!.push(question);
+    });
 
-      marker.addListener("click", () => {
-        setSelectedQuestion(question);
-        map.panTo(marker.getPosition()!);
-      });
+    // Create new markers with offset for overlapping locations
+    const newMarkers: any[] = [];
+    locationGroups.forEach((questionsAtLocation, locationKey) => {
+      if (questionsAtLocation.length === 1) {
+        // Single question - no offset needed
+        const question = questionsAtLocation[0];
+        const marker = new google.maps.Marker({
+          position: { lat: question.latitude, lng: question.longitude },
+          map,
+          title: question.title,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: question.answer_count > 0 ? "#10b981" : "#3b82f6",
+            fillOpacity: 0.9,
+            strokeColor: "#ffffff",
+            strokeWeight: 2,
+          },
+        });
 
-      return marker;
+        marker.addListener("click", () => {
+          setSelectedQuestion(question);
+          map.panTo(marker.getPosition()!);
+        });
+
+        newMarkers.push(marker);
+      } else {
+        // Multiple questions at same location - create cluster marker
+        const baseQuestion = questionsAtLocation[0];
+        const clusterMarker = new google.maps.Marker({
+          position: { lat: baseQuestion.latitude, lng: baseQuestion.longitude },
+          map,
+          title: `${questionsAtLocation.length} questions here`,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 12,
+            fillColor: "#f59e0b",
+            fillOpacity: 0.9,
+            strokeColor: "#ffffff",
+            strokeWeight: 2,
+          },
+          label: {
+            text: questionsAtLocation.length.toString(),
+            color: "#ffffff",
+            fontSize: "12px",
+            fontWeight: "bold",
+          },
+        });
+
+        // On click, show all questions in a list
+        clusterMarker.addListener("click", () => {
+          // For now, show the first question and zoom in
+          // Later we can add a list view in the popup
+          setSelectedQuestion(questionsAtLocation[0]);
+          map.setZoom(Math.max(map.getZoom() + 2, 16));
+          map.panTo(clusterMarker.getPosition()!);
+          
+          // Create individual markers for each question in the cluster
+          questionsAtLocation.forEach((question, index) => {
+            const offset = 0.0001; // Small offset to separate markers
+            const angle = (index / questionsAtLocation.length) * 2 * Math.PI;
+            const offsetLat = question.latitude + (offset * Math.cos(angle));
+            const offsetLng = question.longitude + (offset * Math.sin(angle));
+            
+            const individualMarker = new google.maps.Marker({
+              position: { lat: offsetLat, lng: offsetLng },
+              map,
+              title: question.title,
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: question.answer_count > 0 ? "#10b981" : "#3b82f6",
+                fillOpacity: 0.9,
+                strokeColor: "#ffffff",
+                strokeWeight: 2,
+              },
+            });
+
+            individualMarker.addListener("click", () => {
+              setSelectedQuestion(question);
+              map.panTo(individualMarker.getPosition()!);
+            });
+
+            newMarkers.push(individualMarker);
+          });
+
+          // Remove cluster marker
+          clusterMarker.setMap(null);
+        });
+
+        newMarkers.push(clusterMarker);
+      }
     });
 
     setMarkers(newMarkers);
