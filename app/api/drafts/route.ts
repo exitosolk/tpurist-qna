@@ -87,7 +87,7 @@ export async function POST(req: Request) {
 
     const userId = userResult.rows[0].id;
     const body = await req.json();
-    const { draftType, title, bodyText, tags, questionId, draftId } = body;
+    const { draftType, title, bodyText, tags, questionId, draftId, location } = body;
 
     if (!["question", "answer"].includes(draftType)) {
       return NextResponse.json(
@@ -107,9 +107,22 @@ export async function POST(req: Request) {
     if (draftId) {
       await query(
         `UPDATE drafts 
-         SET title = ?, body = ?, tags = ?, updated_at = NOW()
+         SET title = ?, body = ?, tags = ?, 
+             place_id = ?, place_name = ?, formatted_address = ?, latitude = ?, longitude = ?,
+             updated_at = NOW()
          WHERE id = ? AND user_id = ?`,
-        [title || null, bodyText, tags || null, draftId, userId]
+        [
+          title || null, 
+          bodyText, 
+          tags || null, 
+          location?.placeId || null,
+          location?.placeName || null,
+          location?.formattedAddress || null,
+          location?.latitude || null,
+          location?.longitude || null,
+          draftId, 
+          userId
+        ]
       );
 
       return NextResponse.json({
@@ -137,9 +150,21 @@ export async function POST(req: Request) {
       const existingDraftId = existingDraft.rows[0].id;
       await query(
         `UPDATE drafts 
-         SET title = ?, body = ?, tags = ?, updated_at = NOW()
+         SET title = ?, body = ?, tags = ?,
+             place_id = ?, place_name = ?, formatted_address = ?, latitude = ?, longitude = ?,
+             updated_at = NOW()
          WHERE id = ?`,
-        [title || null, bodyText, tags || null, existingDraftId]
+        [
+          title || null, 
+          bodyText, 
+          tags || null, 
+          location?.placeId || null,
+          location?.placeName || null,
+          location?.formattedAddress || null,
+          location?.latitude || null,
+          location?.longitude || null,
+          existingDraftId
+        ]
       );
 
       return NextResponse.json({
@@ -150,9 +175,22 @@ export async function POST(req: Request) {
 
     // Create new draft
     const insertResult = await query(
-      `INSERT INTO drafts (user_id, draft_type, title, body, tags, question_id)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [userId, draftType, title || null, bodyText, tags || null, questionId || null]
+      `INSERT INTO drafts (user_id, draft_type, title, body, tags, question_id, 
+                           place_id, place_name, formatted_address, latitude, longitude)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        userId, 
+        draftType, 
+        title || null, 
+        bodyText, 
+        tags || null, 
+        questionId || null,
+        location?.placeId || null,
+        location?.placeName || null,
+        location?.formattedAddress || null,
+        location?.latitude || null,
+        location?.longitude || null
+      ]
     );
 
     return NextResponse.json({

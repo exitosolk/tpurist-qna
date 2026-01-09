@@ -97,6 +97,15 @@ export default function AskQuestionPage() {
         setBody(draft.body || "");
         setTags(draft.tags ? draft.tags.split(",") : []);
         setDraftId(draft.id);
+        
+        // Restore location data
+        if (draft.place_id) {
+          setPlaceId(draft.place_id);
+          setPlaceName(draft.place_name || "");
+          setFormattedAddress(draft.formatted_address || "");
+          setLatitude(draft.latitude);
+          setLongitude(draft.longitude);
+        }
       }
     } catch (error) {
       console.error("Error loading draft:", error);
@@ -117,6 +126,13 @@ export default function AskQuestionPage() {
           bodyText: body,
           tags: tags.join(","),
           draftId,
+          location: placeId ? {
+            placeId,
+            placeName,
+            formattedAddress,
+            latitude,
+            longitude,
+          } : null,
         }),
       });
 
@@ -131,7 +147,7 @@ export default function AskQuestionPage() {
     } catch (error) {
       console.error("Error saving draft:", error);
     }
-  }, [title, body, tags, draftId]);
+  }, [title, body, tags, draftId, placeId, placeName, formattedAddress, latitude, longitude]);
 
   const deleteDraft = async () => {
     if (!draftId) return;
