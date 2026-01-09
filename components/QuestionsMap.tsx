@@ -51,7 +51,7 @@ export default function QuestionsMap({
 
     if (existingScript) {
       // Script already loaded, just initialize map
-      if (window.google) {
+      if ((window as any).google) {
         initMap();
       } else {
         // Script loading, wait for it
