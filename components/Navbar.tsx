@@ -113,6 +113,12 @@ export default function Navbar() {
                   <div className="absolute top-full left-0 pt-2 w-48">
                     <div className="bg-white border rounded-lg shadow-lg py-2">
                     <Link
+                      href="/questions/map"
+                      className="block px-4 py-2 hover:bg-gray-100 text-gray-700"
+                    >
+                      📍 Questions by Location
+                    </Link>
+                    <Link
                       href="/tags"
                       className="block px-4 py-2 hover:bg-gray-100 text-gray-700"
                     >
@@ -244,6 +250,13 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Questions
+              </Link>
+              <Link
+                href="/questions/map"
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                📍 Questions by Location
               </Link>
               <Link
                 href="/tuktuk-prices"

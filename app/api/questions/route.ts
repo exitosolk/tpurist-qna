@@ -126,7 +126,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { title, body: questionBody, tags, collectives } = body;
+    const { title, body: questionBody, tags, collectives, location } = body;
 
     if (!title || !questionBody) {
       return NextResponse.json(
@@ -190,9 +190,20 @@ export async function POST(req: Request) {
 
     // Create question
     const questionResult = await query(
-      `INSERT INTO questions (user_id, title, body) 
-       VALUES (?, ?, ?)`,
-      [userId, title, questionBody]
+      `INSERT INTO questions (
+        user_id, title, body,
+        place_id, place_name, formatted_address, latitude, longitude
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        userId, 
+        title, 
+        questionBody,
+        location?.placeId || null,
+        location?.placeName || null,
+        location?.formattedAddress || null,
+        location?.latitude || null,
+        location?.longitude || null,
+      ]
     );
 
     const questionId = questionResult.insertId;

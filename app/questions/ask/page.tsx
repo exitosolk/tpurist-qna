@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import MarkdownEditor from "@/components/MarkdownEditor";
+import LocationAutocomplete from "@/components/LocationAutocomplete";
 
 const POPULAR_TAGS = [
   "colombo", "kandy", "galle", "ella", "sigiriya", "beaches", "wildlife",
@@ -36,6 +37,13 @@ export default function AskQuestionPage() {
   const [userReputation, setUserReputation] = useState(0);
   const [draftId, setDraftId] = useState<number | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<"saved" | "saving" | "">("");
+  
+  // Location fields
+  const [placeId, setPlaceId] = useState("");
+  const [placeName, setPlaceName] = useState("");
+  const [formattedAddress, setFormattedAddress] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCollectives();
@@ -223,6 +231,13 @@ export default function AskQuestionPage() {
           body,
           tags,
           collectives: selectedCollectives,
+          location: placeId ? {
+            placeId,
+            placeName,
+            formattedAddress,
+            latitude,
+            longitude,
+          } : null,
         }),
       });
 
@@ -406,7 +421,48 @@ export default function AskQuestionPage() {
                   onClick={() => handleAddTag(tag)}
                   className="text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200"
                   disabled={tags.length >= 5}
+              Location Section */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Location (Optional)
+            </label>
+            <p className="text-sm text-gray-500 mb-3">
+              Pin your question to a specific place in Sri Lanka - helps travelers find relevant local answers
+            </p>
+            <LocationAutocomplete
+              placeholder="e.g., Ella, Galle Fort, Yala National Park..."
+              onPlaceSelected={(place) => {
+                setPlaceId(place.place_id);
+                setPlaceName(place.name);
+                setFormattedAddress(place.formatted_address);
+                setLatitude(place.latitude);
+                setLongitude(place.longitude);
+              }}
+            />
+            {placeName && (
+              <div className="mt-3 flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <div>
+                  <p className="text-sm font-medium text-green-800">{placeName}</p>
+                  <p className="text-xs text-green-600">{formattedAddress}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPlaceId("");
+                    setPlaceName("");
+                    setFormattedAddress("");
+                    setLatitude(null);
+                    setLongitude(null);
+                  }}
+                  className="text-green-700 hover:text-green-900 text-sm font-medium"
                 >
+                  Remove
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/*   >
                   {tag}
                 </button>
               ))}
